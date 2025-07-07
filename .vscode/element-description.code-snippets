@@ -1,0 +1,24 @@
+{
+	"locator-description": {
+		"prefix": "locator-desc",
+		"body": [
+			"import { BasePage } from '../../internals';",
+			"import { Locator, Page } from '@playwright/test';",
+			"",
+			"export class ${1:ClassName} extends BasePage {",
+			"    ",
+			"    ${2:LocatorName}: Locator;",
+			" ",
+			"    constructor(public readonly page: Page) {",
+			"        super(page);",
+			"        // Add your locators here",
+			"        this.${2:LocatorName} = page.locator('${3:locator-selector}');",
+			"    }",
+			"",
+			"    // Add your methods here",
+			"}",
+			""
+		],
+		"description": "Playwright Page Object class template"
+	}
+}

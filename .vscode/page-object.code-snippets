@@ -1,0 +1,46 @@
+{
+	"page-object": {
+		"prefix": "po",
+		"body": [
+			"import { BasePage } from '../../internals';",
+			"import { Locator, Page } from '@playwright/test';",
+			"",
+			"export class ${1:ClassName} extends BasePage {",
+			"    ",
+			"    ${2:LocatorName}: Locator;",
+			" ",
+			"    constructor(public readonly page: Page) {",
+			"        super(page);",
+			"        // Add your locators here",
+			"        this.${2:LocatorName} = page.locator('${3:locator-selector}');",
+			"    }",
+			"",
+			"    // Add your methods here",
+			"}",
+			""
+		],
+		"description": "Playwright Page Object class template"
+	},
+	"element-description": {
+		"prefix": "element-desc",
+		"body": [
+			"/**",
+			" * ## Purpose",
+			" * Locator for the ${1:element description}.",
+			" *",
+			" * ## Available Actions",
+			" * - ${2:Fill}",
+			" * - ${3:Get value}",
+			" *",
+			" * ## Navigation",
+			" * - ${4:Usage context}",
+			" *",
+			" * ## Example Usage",
+			" * ```typescript",
+			" * ",
+			" * ```",
+			" */"
+		],
+		"description": "JSDoc element description for Playwright page object locator"
+	}
+}
