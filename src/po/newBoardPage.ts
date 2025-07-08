@@ -14,6 +14,8 @@ export class BoardPage extends BasePage {
      * ## Example Usage
      * ```typescript
      * await newBoardPage.boardNameTextbox.fill('My Board Name');
+     * const boardName = await newBoardPage.boardNameTextbox.textContent(); // to get the current value
+     * await expect(newBoardPage.boardNameTextbox).toHaveText('My Board Name');
      * ```
      */
     boardNameTextbox: Locator;
@@ -64,7 +66,9 @@ export class BoardPage extends BasePage {
         // Add your locators here
         this.listNameTextbox = page.getByPlaceholder("Name of this view");
         this.addListToBoardLink = page.getByText('Add list to board');
-        this.boardNameTextbox = page.getByText('Add list to board').first();
+        this.boardNameTextbox = this.listNameTextbox.first(); // Assuming the first list name is the board name
+        
+        
     }
 
     // Add your methods here

@@ -52,7 +52,7 @@ export class BoardsPage extends BasePage {
         super(page);
         // Add your locators here
         this.createNewBoardButton = page.locator('.toolbar-items [title="Create new board"]');
-        this.boardNamesTds = page.locator('table.generic-table td.name');
+        this.boardNamesTds = page.locator('table.generic-table td.name > a');
     }
 
 }
