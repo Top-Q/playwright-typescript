@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { test } from './fixtures/overview-page-fixture'
+import { test } from './fixtures'
 import { BoardsPage, BoardTypePage, BoardPage } from '../internals';
 
 
@@ -73,3 +73,36 @@ test('all listed boards can be opened and have correct name', async ({ page, rea
         }
     });
 });
+
+test('add two boards and then delete all boards', async ({ page, readyOverviewPage }) => {
+    let boardNames: string[] = [];
+    await test.step("And the user selects the 'Boards' item from the sidebar menu", async () => {
+        await readyOverviewPage.menuSidebarContainer.getByText('Boards').click();
+    });
+    await test.step("When the user creates two new boards", async () => {
+        for (let i = 0; i < 2; i++) {
+            const boardsPage = new BoardsPage(page);
+            await boardsPage.createNewBoardButton.click();
+            const boardTypePage = new BoardTypePage(page);
+            await boardTypePage.basicBoardButton.click();
+            const boardName = `Board to delete ${Date.now()}-${i}`;
+            const newBoardPage = new BoardPage(page);
+            await newBoardPage.listNameTextbox.nth(0).fill(boardName); // Set board name
+            boardNames.push(boardName);
+            await newBoardPage.boardsLink.click(); // Go back to Boards list using boardsLink
+            await expect(new BoardsPage(page).boardNamesTds.first()).toBeVisible({ timeout: 10000 });
+        }
+    });
+    await test.step("Then all boards are deleted from the boards list", async () => {
+        const boardsPage = new BoardsPage(page);
+        // Accept all confirmation dialogs automatically
+        page.on('dialog', dialog => dialog.accept());
+        while (await boardsPage.deleteButtons.count() > 0) {
+            await boardsPage.deleteButtons.first().click();
+            // Wait for the boards table to update
+            await page.waitForTimeout(500); // Small wait to allow UI update
+        }
+        expect(await boardsPage.deleteButtons.count()).toBe(0);
+    });
+});
+

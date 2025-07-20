@@ -1,6 +1,21 @@
 {
+	"test": {
+		"prefix": "test-file",
+		"body": [
+			"import { expect } from '@playwright/test';",
+			"import { test } from './fixtures'",
+			"import { HomePage } from '../internals';",
+			"",
+			"test('${1:describe the test}', async ({ page, readyOverviewPage }) => {",
+			"    // Test code here",
+			"    expect(true).toBe(true); // Example assertion",
+			"});",
+			
+		],
+		"description": "Playwright test template"
+	},
 	"page-object": {
-		"prefix": "po",
+		"prefix": "po-file",
 		"body": [
 			"import { BasePage } from '../../internals';",
 			"import { Locator, Page } from '@playwright/test';",
@@ -25,15 +40,9 @@
 		"prefix": "element-desc",
 		"body": [
 			"/**",
-			" * ## Purpose",
-			" * Locator for the ${1:element description}.",
-			" *",
-			" * ## Available Actions",
-			" * - ${2:Fill}",
-			" * - ${3:Get value}",
 			" *",
 			" * ## Navigation",
-			" * - ${4:Usage context}",
+			" * - ${1:Usage context}",
 			" *",
 			" * ## Example Usage",
 			" * ```typescript",

@@ -1,0 +1,26 @@
+import { expect } from '@playwright/test';
+import { test } from './fixtures'
+import { HomePage, WorkPackagesPage, NewMilestonePage, TaskTypeMenu } from '../internals';
+
+test('create new milestone and assert creation', async ({ page, readyOverviewPage }) => {
+    await test.step("And the user selects the 'Work packages' item from the sidebar menu", async () => {
+        await readyOverviewPage.menuSidebarContainer.getByText('Work packages').click();
+    });
+    let randomMilestoneName: string;
+    await test.step("When the user creates new milestone and provide the name 'My new milestone'", async () => {
+        const workPackagesPage = new WorkPackagesPage(page);
+        await workPackagesPage.createButton.click();
+        const taskTypeMenu = new TaskTypeMenu(page);
+        await taskTypeMenu.milestoneLink.click();
+        const newMilestonePage = new NewMilestonePage(page);
+        randomMilestoneName = `My new milestone ${Date.now()}`;
+        await newMilestonePage.subjectTextBox.fill(randomMilestoneName);
+        await newMilestonePage.saveButton.click();
+    });
+    await test.step("Then the milestone is created", async () => {
+        await readyOverviewPage.activateFilterButton.click();
+        await readyOverviewPage.filterByTextTextBox.fill(randomMilestoneName);
+        const workPackagesPage = new WorkPackagesPage(page);
+        await expect(workPackagesPage.workPackagesResultTableContainer.getByText(randomMilestoneName)).toBeVisible();
+    });
+});
