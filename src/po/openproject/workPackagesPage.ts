@@ -1,6 +1,11 @@
 import { BasePage } from '../../../internals';
 import { Locator, Page } from '@playwright/test';
 
+/**
+ * # Task Type Menu Class
+ * This class represents the task type selection menu in OpenProject.
+ * It provides links to create different types of work packages such as tasks, milestones, and phases.
+ */
 export class TaskTypeMenu {
 
     /**
@@ -22,9 +27,10 @@ export class TaskTypeMenu {
     phaseLink: Locator;
 
     constructor(readonly page: Page) {
-        this.taskLink = this.page.getByRole("link", {name:"Task"}).describe('Task type link');
-        this.milestoneLink = this.page.getByRole("link", {name:"Milestone"}).describe('Milestone type link');
-        this.phaseLink = this.page.getByRole("link", {name:"Phase"}).describe('Phase type link');
+        const menu: Locator = this.page.getByRole("menu");
+        this.taskLink = menu.getByRole("link", {name:"Task"}).describe('Task type link');
+        this.milestoneLink = menu.getByRole("link", {name:"Milestone"}).describe('Milestone type link');
+        this.phaseLink = menu.getByRole("link", {name:"Phase"}).describe('Phase type link');
     }
 
 }

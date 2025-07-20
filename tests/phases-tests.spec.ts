@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
 import { test } from './fixtures'
-import { HomePage, WorkPackagesPage, NewPhasePage } from '../internals';
-import { TaskTypeMenu } from '../src/po/openproject/workPackagesPage';
+import { WorkPackagesPage, TaskTypeMenu } from '../internals';
+import { NewPhasePage } from '../src/po/openproject/newWorkpackagePage';
 
 test('create new phase and assert creation', async ({ page, readyOverviewPage }) => {
     await test.step("And the user selects the 'Work packages' item from the sidebar menu", async () => {
@@ -16,6 +16,7 @@ test('create new phase and assert creation', async ({ page, readyOverviewPage })
         const newPhasePage = new NewPhasePage(page);
         randomPhaseName = `My new phase ${Date.now()}`;
         await newPhasePage.subjectTextBox.fill(randomPhaseName);
+        await newPhasePage.descriptionTextBox.fill(`Random description ${Date.now()}`);
         await newPhasePage.saveButton.click();
     });
     await test.step("Then the phase is created", async () => {
