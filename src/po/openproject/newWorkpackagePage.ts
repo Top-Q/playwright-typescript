@@ -25,10 +25,20 @@ abstract class NewWorkpackagePage extends BasePage {
      */
     descriptionTextBox: Locator;
 
-       /**
+    /**
+     * ## Navigation
+     * *Successful* - New work package is created and saved.
+     * *Failure* - If the work package cannot be saved, an error message is displayed. 
+     * The error can be asserted using the following expression: `await getByText('Subject can't be blank.', { exact: true })`
+     * 
      * ## Example Usage
      * ```typescript
      * await newPhasePage.saveButton.click();
+     * 
+     * // or, in case of failure in saving the work package
+     * await newPhasePage.saveButton.click();
+     * await getByText('Subject can't be blank.', { exact: true })
+     * 
      * ```
      */
     saveButton: Locator;

@@ -51,3 +51,22 @@ test('add task with very long name', async ({ page, readyOverviewPage }) => {
     });
 });
 
+test('attempt to create task without a name', async ({ page, readyOverviewPage }) => {
+    await test.step("And the user selects the 'Work packages' item from the sidebar menu", async () => {
+        await readyOverviewPage.menuSidebarContainer.getByText('Work packages').click();
+    });
+    await test.step("When the user tries to create a new task without providing a name", async () => {
+        const workPackagesPage = new WorkPackagesPage(page);
+        await workPackagesPage.createButton.click();
+        const taskTypeMenu = new TaskTypeMenu(page);
+        await taskTypeMenu.taskLink.click();
+        const newTaskPage = new NewTaskPage(page);
+        await newTaskPage.subjectTextBox.fill(''); // Leave name empty
+        await newTaskPage.descriptionTextBox.fill(`Random description ${Date.now()}`);
+        await newTaskPage.saveButton.click();
+    });
+    await test.step("Then the UI should prevent creation or show an error", async () => {
+        await expect(page.getByText("Subject can't be blank.", { exact: true })).toBeVisible();
+    });
+});
+
