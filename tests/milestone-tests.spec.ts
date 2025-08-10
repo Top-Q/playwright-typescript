@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
 import { test } from './fixtures'
-import { HomePage, WorkPackagesPage, TaskTypeMenu } from '../internals';
+import { WorkPackagesPage, TaskTypeMenu } from '../internals';
 import { NewMilestonePage } from '../src/po/openproject/newWorkpackagePage';
 
 test('create new milestone and assert creation', async ({ page, readyOverviewPage }) => {

@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
 import { test } from './fixtures'
-import { HomePage, WorkPackagesPage, TaskTypeMenu, NewTaskPage, NewPhasePage, NewMilestonePage } from '../internals';
+import { WorkPackagesPage, TaskTypeMenu, NewTaskPage } from '../internals';
 
 
 test('add task', async ({ page, readyOverviewPage }) => {
@@ -69,4 +69,49 @@ test('attempt to create task without a name', async ({ page, readyOverviewPage }
         await expect(page.getByText("Subject can't be blank.", { exact: true })).toBeVisible();
     });
 });
+
+test('create two new tasks and verify their creation', async ({ page, readyOverviewPage }) => {
+    await test.step("And the user selects the 'Work packages' item from the sidebar menu", async () => {
+        await readyOverviewPage.menuSidebarContainer.getByText('Work packages').click();
+    });
+
+    let firstTaskName: string;
+    let secondTaskName: string;
+
+    await test.step("When the user creates the first task with the name 'First Task'", async () => {
+        const workPackagesPage = new WorkPackagesPage(page);
+        await workPackagesPage.createButton.click();
+        const taskTypeMenu = new TaskTypeMenu(page);
+        await taskTypeMenu.taskLink.click();
+        const newTaskPage = new NewTaskPage(page);
+        firstTaskName = `First Task ${Date.now()}`;
+        await newTaskPage.subjectTextBox.fill(firstTaskName);
+        await newTaskPage.descriptionTextBox.fill(`Description for ${firstTaskName}`);
+        await newTaskPage.saveButton.click();
+    });
+
+    await test.step("And the user creates the second task with the name 'Second Task'", async () => {
+        const workPackagesPage = new WorkPackagesPage(page);
+        await workPackagesPage.createButton.click();
+        const taskTypeMenu = new TaskTypeMenu(page);
+        await taskTypeMenu.taskLink.click();
+        const newTaskPage = new NewTaskPage(page);
+        secondTaskName = `Second Task ${Date.now()}`;
+        await newTaskPage.subjectTextBox.fill(secondTaskName);
+        await newTaskPage.descriptionTextBox.fill(`Description for ${secondTaskName}`);
+        await newTaskPage.saveButton.click();
+    });
+
+    await test.step("Then both tasks are created and visible in the work packages list", async () => {
+        await readyOverviewPage.activateFilterButton.click();
+        await readyOverviewPage.filterByTextTextBox.fill(firstTaskName);
+        const workPackagesPage = new WorkPackagesPage(page);
+        await expect(workPackagesPage.workPackagesResultTableContainer.getByText(firstTaskName)).toBeVisible();
+
+        await readyOverviewPage.filterByTextTextBox.fill(secondTaskName);
+        await expect(workPackagesPage.workPackagesResultTableContainer.getByText(secondTaskName)).toBeVisible();
+    });
+});
+
+
 

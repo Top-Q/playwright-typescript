@@ -75,7 +75,7 @@ test('all listed boards can be opened and have correct name', async ({ page, rea
 });
 
 test('add two boards and then delete all boards', async ({ page, readyOverviewPage }) => {
-    let boardNames: string[] = [];
+    const boardNames: string[] = [];
     await test.step("And the user selects the 'Boards' item from the sidebar menu", async () => {
         await readyOverviewPage.menuSidebarContainer.getByText('Boards').click();
     });
