@@ -3,7 +3,7 @@ import { test } from './fixtures'
 import { WorkPackagesPage, TaskTypeMenu, NewTaskPage } from '../internals';
 
 
-test('add task', async ({ readyOverviewPage }) => {
+test('add task 1', async ({ readyOverviewPage }) => {
     let workPackagesPage: WorkPackagesPage;
     await test.step("And the user selects the 'Work packages' item from the sidebar menu", async () => {
         workPackagesPage = await readyOverviewPage.mainMenu().clickWorkPackagesLink();
@@ -20,11 +20,13 @@ test('add task', async ({ readyOverviewPage }) => {
     await test.step("Then the task is created", async () => {
         await readyOverviewPage.clickActivateFilterButton();
         await readyOverviewPage.fillFilterByText(randomTaskName);
-        await expect(workPackagesPage.isWorkPackageVisible(randomTaskName)).resolves.toBeTruthy();
+        await workPackagesPage.workPackageTable().waitForTableToLoad();
+        const isVisible = await workPackagesPage.workPackageTable().isWorkPackageVisible(randomTaskName);
+        expect(isVisible).toBeTruthy();
     });
 });
 
-test('add task with very long name', async ({ page, readyOverviewPage }) => {
+test('add task with very long name', async ({ readyOverviewPage }) => {
     let workPackagesPage: WorkPackagesPage;
     await test.step("And the user selects the 'Work packages' item from the sidebar menu", async () => {
         workPackagesPage = await readyOverviewPage.mainMenu().clickWorkPackagesLink();
@@ -41,43 +43,40 @@ test('add task with very long name', async ({ page, readyOverviewPage }) => {
     await test.step("Then the task with the long name is created", async () => {
         await readyOverviewPage.clickActivateFilterButton();
         await readyOverviewPage.fillFilterByText(longTaskName);
-        await expect(workPackagesPage.isWorkPackageVisible(longTaskName)).resolves.toBeTruthy();
+        await workPackagesPage.workPackageTable().waitForTableToLoad();
+        await expect(workPackagesPage.workPackageTable().isWorkPackageVisible(longTaskName)).resolves.toBeTruthy();
     });
 });
 
-test('attempt to create task without a name', async ({ page, readyOverviewPage }) => {
+test('attempt to create task without a name', async ({ readyOverviewPage }) => {
+    let workPackagesPage: WorkPackagesPage;
     await test.step("And the user selects the 'Work packages' item from the sidebar menu", async () => {
-        await readyOverviewPage.clickMenuSidebarOption('Work packages');
+        workPackagesPage = await readyOverviewPage.mainMenu().clickWorkPackagesLink();
     });
     await test.step("When the user tries to create a new task without providing a name", async () => {
-        const workPackagesPage = new WorkPackagesPage(page);
-        await workPackagesPage.clickCreateButton();
-        const taskTypeMenu = new TaskTypeMenu(page);
-        await taskTypeMenu.clickTaskLink();
-        const newTaskPage = new NewTaskPage(page);
+        const taskTypeMenu: TaskTypeMenu = await workPackagesPage.clickCreateButton();
+        const newTaskPage: NewTaskPage = await taskTypeMenu.clickTaskLink();
         await newTaskPage.fillSubject(''); // Leave name empty
         await newTaskPage.fillDescription(`Random description ${Date.now()}`);
         await newTaskPage.clickSaveButton();
     });
     await test.step("Then the UI should prevent creation or show an error", async () => {
-        await expect(page.getByText("Subject can't be blank.", { exact: true })).toBeVisible();
+        await expect(readyOverviewPage.page.getByText("Subject can't be blank.", { exact: true })).toBeVisible();
     });
 });
 
-test('create two new tasks and verify their creation', async ({ page, readyOverviewPage }) => {
+test('create two new tasks and verify their creation', async ({ readyOverviewPage }) => {
+    let workPackagesPage: WorkPackagesPage;
     await test.step("And the user selects the 'Work packages' item from the sidebar menu", async () => {
-        await readyOverviewPage.clickMenuSidebarOption('Work packages');
+        workPackagesPage = await readyOverviewPage.mainMenu().clickWorkPackagesLink();
     });
 
     let firstTaskName: string;
     let secondTaskName: string;
 
     await test.step("When the user creates the first task with the name 'First Task'", async () => {
-        const workPackagesPage = new WorkPackagesPage(page);
-        await workPackagesPage.clickCreateButton();
-        const taskTypeMenu = new TaskTypeMenu(page);
-        await taskTypeMenu.clickTaskLink();
-        const newTaskPage = new NewTaskPage(page);
+        const taskTypeMenu: TaskTypeMenu = await workPackagesPage.clickCreateButton();
+        const newTaskPage: NewTaskPage = await taskTypeMenu.clickTaskLink();
         firstTaskName = `First Task ${Date.now()}`;
         await newTaskPage.fillSubject(firstTaskName);
         await newTaskPage.fillDescription(`Description for ${firstTaskName}`);
@@ -85,11 +84,8 @@ test('create two new tasks and verify their creation', async ({ page, readyOverv
     });
 
     await test.step("And the user creates the second task with the name 'Second Task'", async () => {
-        const workPackagesPage = new WorkPackagesPage(page);
-        await workPackagesPage.clickCreateButton();
-        const taskTypeMenu = new TaskTypeMenu(page);
-        await taskTypeMenu.clickTaskLink();
-        const newTaskPage = new NewTaskPage(page);
+        const taskTypeMenu: TaskTypeMenu = await workPackagesPage.clickCreateButton();
+        const newTaskPage: NewTaskPage = await taskTypeMenu.clickTaskLink();
         secondTaskName = `Second Task ${Date.now()}`;
         await newTaskPage.fillSubject(secondTaskName);
         await newTaskPage.fillDescription(`Description for ${secondTaskName}`);
@@ -99,11 +95,12 @@ test('create two new tasks and verify their creation', async ({ page, readyOverv
     await test.step("Then both tasks are created and visible in the work packages list", async () => {
         await readyOverviewPage.clickActivateFilterButton();
         await readyOverviewPage.fillFilterByText(firstTaskName);
-        const workPackagesPage = new WorkPackagesPage(page);
-        await expect(workPackagesPage.isWorkPackageVisible(firstTaskName)).resolves.toBeTruthy();
+        await workPackagesPage.workPackageTable().waitForTableToLoad();
+        await expect(workPackagesPage.workPackageTable().isWorkPackageVisible(firstTaskName)).resolves.toBeTruthy();
 
         await readyOverviewPage.fillFilterByText(secondTaskName);
-        await expect(workPackagesPage.isWorkPackageVisible(secondTaskName)).resolves.toBeTruthy();
+        await workPackagesPage.workPackageTable().waitForTableToLoad();
+        await expect(workPackagesPage.workPackageTable().isWorkPackageVisible(secondTaskName)).resolves.toBeTruthy();
     });
 });
 

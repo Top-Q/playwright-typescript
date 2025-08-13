@@ -1,4 +1,4 @@
-import { BasePage, NewMilestonePage, NewPhasePage, NewTaskPage } from '../../../internals';
+import { BaseComponent, BasePage, NewMilestonePage, NewPhasePage, NewTaskPage } from '../../../internals';
 import { Locator, Page } from '@playwright/test';
 
 export class TaskTypeMenu {
@@ -30,15 +30,32 @@ export class TaskTypeMenu {
     }
 }
 
+export class WorkpackageTable extends BaseComponent {
+    private readonly workPackageRows: Locator;
+
+    constructor(page: Page) {
+        super(page, page.locator('table tbody'));
+        this.workPackageRows = this.rootComponent.locator('tr');
+    }
+
+    async isWorkPackageVisible(name: string): Promise<boolean> {
+        return await this.rootComponent.getByText(name).isVisible();
+    }
+
+    async waitForTableToLoad(): Promise<void> {
+        await this.page.waitForResponse("**/queries/*");
+    }
+}
+
+
 export class WorkPackagesPage extends BasePage {
 
     private readonly createButton: Locator;
-    private readonly workPackagesResultTableContainer: Locator;
+    
 
     constructor(readonly page: Page) {
         super(page);
         this.createButton = this.page.locator("div.wp-create-button > [aria-label='Create new work package']");
-        this.workPackagesResultTableContainer = this.page.locator('table tbody');
     }
 
     async clickCreateButton(): Promise<TaskTypeMenu> {
@@ -46,11 +63,8 @@ export class WorkPackagesPage extends BasePage {
         return new TaskTypeMenu(this.page);
     }
 
-    async isWorkPackagesResultTableVisible(): Promise<boolean> {
-        return await this.workPackagesResultTableContainer.isVisible();
+    workPackageTable(): WorkpackageTable {
+        return new WorkpackageTable(this.page);
     }
 
-    async isWorkPackageVisible(name: string): Promise<boolean> {
-        return await this.workPackagesResultTableContainer.getByText(name).isVisible();
-    }
 }
