@@ -24,10 +24,10 @@ Common business workflows include:
 
 ### 1. Generate Page Objects
 - Start from recorded Playwright scripts or MCP-based site scans.
-- For each distinct screen, create a **locator-only Page Object Model (POM)** class.
+- For each distinct screen, create a **Page Object Model (POM)** class.
 - Include **`.describe()` documentation** for each locator, explaining its business purpose and navigation behavior.
 - Do not use headless mode when scanning; explore all reachable links/buttons, return from external links.
-- Follow the existing POM style in `/page-objects/`.
+- Follow the existing POM style in `src/po/`.
 
 ### 2. Write Tests from Business Specs
 - Accept **business-language** prompts (e.g., “Add a workflow of type Task and verify it exists”) — never require low-level UI steps in the prompt.
@@ -37,7 +37,6 @@ Common business workflows include:
 
 ### 3. Execute and Analyze Tests
 - Use Playwright CLI (`npx playwright test`) for execution.
-- Always display and confirm the exact command before execution.
 - Run only the requested test(s) using `-g "<test name>"`.
 - On failure:
   - Summarize error and pinpoint the failing step.
@@ -49,7 +48,6 @@ Common business workflows include:
 
 ## Page Object Rules
 
-- **Locator-only** — no helper methods.
 - Class name format: `<Name>Page`.
 - Locator names: `camelCase` and self-descriptive (e.g., `signInButton`, `userNameTextBox`).
 - **Selectors**: Prefer `data-testid`, ARIA roles, or `getByText`; avoid brittle CSS/XPath.
@@ -93,15 +91,6 @@ export class WorkPackagesPage {
 
 ---
 
-## Common Patterns
-
-| Task                      | Example                                                                 |
-|---------------------------|-------------------------------------------------------------------------|
-| Navigate to Work Packages | `await readyOverviewPage.menuSidebarContainer.getByText('Work packages').click();` |
-| Create Task               | `await workPackagesPage.createButton.click();` + fill form in `NewTaskPage` |
-| Assert Created Entity     | `await expect(page.locator(...)).toBeVisible();`                         |
-
----
 
 ## Guardrails
 
@@ -115,7 +104,7 @@ export class WorkPackagesPage {
 
 ## References
 
-- **Page Object Examples**: `/page-objects/`
+- **Page Object Examples**: `/src/po/`
 - **Test Fixtures**: `readyOverviewPage` in test setup
 - **Playwright MCP**: for DOM inspection and selector validation during triage
 - **Chat Modes**:

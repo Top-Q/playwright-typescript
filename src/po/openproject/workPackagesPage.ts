@@ -1,81 +1,56 @@
-import { BasePage } from '../../../internals';
+import { BasePage, NewMilestonePage, NewPhasePage, NewTaskPage } from '../../../internals';
 import { Locator, Page } from '@playwright/test';
 
-/**
- * # Task Type Menu Class
- * This class represents the task type selection menu in OpenProject.
- * It provides links to create different types of work packages such as tasks, milestones, and phases.
- */
 export class TaskTypeMenu {
 
-    /**
-     * ## Navigation
-     * - Opens the `NewTaskPage` for creating a new task.
-     */
-    taskLink: Locator;
-
-    /**
-     * ## Navigation
-     * - Opens the `NewMilestonePage` for creating a new milestone.
-     */
-    milestoneLink: Locator;
-
-    /**
-     * ## Navigation
-     * - Opens the `NewPhasePage` for creating a new phase.
-     */
-    phaseLink: Locator;
+    private readonly taskLink: Locator;
+    private readonly milestoneLink: Locator;
+    private readonly phaseLink: Locator;
 
     constructor(readonly page: Page) {
         const menu: Locator = this.page.getByRole("menu");
-        this.taskLink = menu.getByRole("link", {name:"Task"}).describe('Task type link');
-        this.milestoneLink = menu.getByRole("link", {name:"Milestone"}).describe('Milestone type link');
-        this.phaseLink = menu.getByRole("link", {name:"Phase"}).describe('Phase type link');
+        this.taskLink = menu.getByRole("link", {name:"Task"});
+        this.milestoneLink = menu.getByRole("link", {name:"Milestone"});
+        this.phaseLink = menu.getByRole("link", {name:"Phase"});
     }
 
+    async clickTaskLink(): Promise<NewTaskPage> {
+        await this.taskLink.click();
+        return new NewTaskPage(this.page);
+    }
+
+    async clickMilestoneLink(): Promise<NewMilestonePage> {
+        await this.milestoneLink.click();
+        return new NewMilestonePage(this.page);
+    }
+
+    async clickPhaseLink(): Promise<NewPhasePage> {
+        await this.phaseLink.click();
+        return new NewPhasePage(this.page);
+    }
 }
 
-/**
- * # Work Packages Page Class
- * This class represents the work packages page in OpenProject.
- * It includes table for displaying work packages, a button for creating new work packages,
- */
 export class WorkPackagesPage extends BasePage {
 
-    /**
-    * ## Navigation
-    * - Opens the work package type selection menu
-    *
-    * ## Example Usage
-    * ```typescript
-    * await workPackagesPage.createButton.click();
-    * let taskTypeMenu = new TaskTypeMenu(page);
-    * await taskTypeMenu.taskLink.click();
-    * ```
-    */
-    createButton: Locator;
-
-   
-    /**
-    * ## Purpose
-    * Locator for the work packages result table container.
-    *
-    * ## Available Actions
-    * - Query for rows/cells
-    * - Get text
-    * 
-    *   
-    * ## Example Usage
-    * ```typescript
-    * await workPackagesPage.workPackagesResultTableContainer.getByText('My new task').isVisible();
-    * ```
-    */
-    workPackagesResultTableContainer: Locator;
+    private readonly createButton: Locator;
+    private readonly workPackagesResultTableContainer: Locator;
 
     constructor(readonly page: Page) {
         super(page);
-        this.createButton = this.page.locator("div.wp-create-button > [aria-label='Create new work package']").describe('Create button');        
-        this.workPackagesResultTableContainer = this.page.locator('table tbody').describe('Work packages result table container');
-    }       
+        this.createButton = this.page.locator("div.wp-create-button > [aria-label='Create new work package']");
+        this.workPackagesResultTableContainer = this.page.locator('table tbody');
+    }
 
+    async clickCreateButton(): Promise<TaskTypeMenu> {
+        await this.createButton.click();
+        return new TaskTypeMenu(this.page);
+    }
+
+    async isWorkPackagesResultTableVisible(): Promise<boolean> {
+        return await this.workPackagesResultTableContainer.isVisible();
+    }
+
+    async isWorkPackageVisible(name: string): Promise<boolean> {
+        return await this.workPackagesResultTableContainer.getByText(name).isVisible();
+    }
 }

@@ -1,5 +1,6 @@
 import { BasePage } from '../../../internals';
 import { Locator, Page } from '@playwright/test';
+import { HomePage } from './homePage';
 
 /**
  * # Page Description
@@ -8,43 +9,10 @@ import { Locator, Page } from '@playwright/test';
  */
 export class IntroPage extends BasePage {
 
-    /**
-    *
-    * ## Navigation
-    * - Successful: Shows login form on IntroPage
-    *
-    */
-    signInLink: Locator;
-
-    /**
-    *
-    *
-    * ## Example Usage
-    * ```typescript
-    * await introPage.userNameTextBox.fill('admin');
-    * ```
-    */
-    userNameTextBox: Locator;
-
-    /**
-    *
-    * ## Example Usage
-    * ```typescript
-    * await introPage.passwordTextBox.fill('adminadmin');
-    * ```
-    */
-    passwordTextBox: Locator;
-
-    /**
-    * ## Navigation
-    * - Successful: Redirects to the home page `HomePage` after signing in.
-    *
-    * ## Example Usage
-    * ```typescript
-    * await introPage.signInButton.click();
-    * ```
-    */
-    signInButton: Locator;
+    private readonly signInLink: Locator;
+    private readonly userNameTextBox: Locator;
+    private readonly passwordTextBox: Locator;
+    private readonly signInButton: Locator;
 
 
     constructor(public readonly page: Page) {
@@ -56,5 +24,35 @@ export class IntroPage extends BasePage {
         
     }
 
+    /**
+     * Clicks on the sign-in link.
+     */
+    async clickOnSignInLink(): Promise<void> {
+        await this.signInLink.click();
+    }
+
+    /**
+     * Fills the username text box with the provided text.
+     * @param username - The username to fill in.
+     */
+    async fillUserNameTextBox(username: string): Promise<void> {
+        await this.userNameTextBox.fill(username);
+    }
+
+    /**
+     * Fills the password text box with the provided text.
+     * @param password - The password to fill in.
+     */
+    async fillPasswordTextBox(password: string): Promise<void> {
+        await this.passwordTextBox.fill(password);
+    }
+
+    /**
+     * Clicks on the sign-in button and returns a new instance of the HomePage.
+     */
+    async clickOnSignInButton(): Promise<HomePage> {
+        await this.signInButton.click();
+        return new HomePage(this.page);
+    }
 
 }
