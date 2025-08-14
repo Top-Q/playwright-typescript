@@ -1,6 +1,6 @@
 import { BasePage } from '../../../internals';
 import { Locator, Page } from '@playwright/test';
-import { MainMenuComp } from './MainMenuComp';
+import { MainMenuComp } from './mainMenuComp';
 
 /**
  * # Overview Page Class

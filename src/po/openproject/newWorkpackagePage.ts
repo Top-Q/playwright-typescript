@@ -1,6 +1,10 @@
 import { BasePage } from '../../../internals';
 import { Locator, Page } from '@playwright/test';
-
+/**
+ * # Base Workpackage Page Class
+ * This class serves as a base for all workpackage creation pages in the OpenProject application.
+ * The workpackage types include Milestone, Phase, and Task.
+ */
 abstract class NewWorkpackagePage extends BasePage {
     private readonly subjectTextBox: Locator;
     private readonly descriptionTextBox: Locator;
@@ -26,6 +30,10 @@ abstract class NewWorkpackagePage extends BasePage {
     }
 }
 
+/**
+ * # New Workpackage Page Class
+ * 
+ */
 export class NewMilestonePage extends NewWorkpackagePage {}
 
 export class NewPhasePage extends NewWorkpackagePage {}
