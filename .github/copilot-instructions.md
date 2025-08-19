@@ -19,88 +19,25 @@ Common business workflows include:
 - Navigating between boards, timelines, and overview pages
 
 ---
+## Gurdrails
+* **Import Page Objects**: When page objects are required, import them only from the 'internals.ts' file.
+* **Defining variables in a test**: Always define variables with the specific type of the page object. If needed, import the type from the `internals.ts` file and use it to define the variable.
 
-## Automation Workflow
-
-### 1. Generate Page Objects
-- Start from recorded Playwright scripts or MCP-based site scans.
-- For each distinct screen, create a **Page Object Model (POM)** class.
-- Include **`.describe()` documentation** for each locator, explaining its business purpose and navigation behavior.
-- Do not use headless mode when scanning; explore all reachable links/buttons, return from external links.
-- Follow the existing POM style in `src/po/`.
-
-### 2. Write Tests from Business Specs
-- Accept **business-language** prompts (e.g., “Add a workflow of type Task and verify it exists”) — never require low-level UI steps in the prompt.
-- Use only provided POM locators — **no raw selectors**.
-- Wrap all steps in `test.step()` with **Gherkin prefixes**: Given, When, Then, And, But.
-- Follow the `readyOverviewPage` fixture usage unless instructed otherwise.
-
-### 3. Execute and Analyze Tests
-- Use Playwright CLI (`npx playwright test`) for execution.
-- Run only the requested test(s) using `-g "<test name>"`.
-- On failure:
-  - Summarize error and pinpoint the failing step.
-  - Suggest **minimal fixes** (selector, wait, or data adjustment).
-  - Use Playwright MCP tools (if enabled) to inspect DOM, validate selectors, and propose stable alternatives.
-- Support running “last implemented test” by identifying the newest test in the file.
-
----
-
-## Page Object Rules
-
-- Class name format: `<Name>Page`.
-- Locator names: `camelCase` and self-descriptive (e.g., `signInButton`, `userNameTextBox`).
-- **Selectors**: Prefer `data-testid`, ARIA roles, or `getByText`; avoid brittle CSS/XPath.
-- **Navigation**: Instantiate a new Page Object only when documented navigation occurs.
-- **Child Selection** inside locators: only `.getByText()`, `.getByRole()`, or `.nth()`.
-
-**Example:**
+For example:
 ```ts
-export class WorkPackagesPage {
-  constructor(private readonly page: Page) {}
+import { WorkPackagesPage } from '../internals';
 
-  /** Create button - navigates to NewTaskPage */
-  readonly createButton: Locator = this.page
-    .getByRole('button', { name: 'Create' })
-    .describe('Create work package button');
+test('example test', async ({ readyOverviewPage }) => {
+  // Define the variable with the specific type
+  let workPackagesPage: WorkPackagesPage;
+  
+  // Use the page object methods
+  workPackagesPage = await readyOverviewPage.mainMenu().clickWorkPackagesLink();  
 }
 ```
 
----
+* **Read Class and Method Comments**: Always read the class and method comments in the page objects to understand their purpose and usage.
 
-## Test Rules
-
-- **Fixture**: Always use `readyOverviewPage` for a logged-in, project-ready state unless explicitly told otherwise.
-- **Structure**: One business scenario per file.
-- **Steps**: One `test.step()` per action/assertion, using Gherkin prefixes.
-- **Assertions**: Focus on business outcomes (entity visible, created, updated) rather than incidental UI state.
-- **Naming**: Use clear, business-relevant test names.
-
----
-
-## Execution Rules (from Test Execution Mode)
-
-1. **Transparency**: Always display the command before running.
-2. **Isolation**: Use `-g` to run only the named test.
-3. **Confirmation**: Confirm command correctness before execution.
-4. **Logging**: Present commands in a copyable format.
-5. **Failure Investigation**:
-   - Provide specific error message, failing step, possible causes.
-   - Suggest fixes based on POM and selector guidelines.
-6. **Run Last Test**: Identify the most recently added test and run it by name.
-
----
-
-
-## Guardrails
-
-- No `waitForTimeout` — rely on Playwright’s auto-waiting and assertions.
-- No brittle CSS or XPath selectors.
-- No navigation assumptions — follow locator documentation.
-- Keep tests idempotent and parallel-safe.
-- Use descriptive `.describe()` on every locator.
-
----
 
 ## References
 
@@ -108,6 +45,9 @@ export class WorkPackagesPage {
 - **Test Fixtures**: `readyOverviewPage` in test setup
 - **Playwright MCP**: for DOM inspection and selector validation during triage
 - **Chat Modes**:
-  - *Create Page Objects* — build/maintain POMs via Playwright/MCP.
+  - *Implement Page Objects* — build/maintain POMs via Playwright/MCP.
   - *Write Tests* — generate tests from business specs using POMs.
   - *Test Execution* — run tests, confirm commands, analyze failures.
+
+## Writing Tests
+* **Missing Methods**: If you are asked to write a test that requires a method not present in the page object, first, check yourself again and make sure that there is not existing way to achive the task. In case you still think that the method is missing, do not implement it directly. Instead, write a comment in the test indicating the missing methods.

@@ -15,5 +15,4 @@ export * from './src/po/openproject/workPackagesPage'
 export * from './src/po/openproject/boardsPage'
 export * from './src/po/openproject/boardTypePage'
 export * from './src/po/openproject/newBoardPage'
-export * from './src/po/openproject/workPackagesPage' // Re-export TaskTypeMenu and WorkPackagesPage
 export * from './src/po/openproject/newWorkpackagePage'

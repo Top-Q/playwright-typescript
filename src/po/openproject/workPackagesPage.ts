@@ -1,29 +1,46 @@
 import { BaseComponent, BasePage, NewMilestonePage, NewPhasePage, NewTaskPage } from '../../../internals';
 import { Locator, Page } from '@playwright/test';
 
-export class TaskTypeMenu {
+/**
+ * # Task Type Menu Class
+ * Small component that represents the task type menu tha appears when the user clicks the "Create" button.
+ * It allows the user to select the type of work package they want to create, such as Task, Milestone, or Phase.
+ */
+export class TaskTypeMenu extends BaseComponent {
 
-    private readonly taskLink: Locator;
-    private readonly milestoneLink: Locator;
-    private readonly phaseLink: Locator;
+    readonly taskLink: Locator;
+    readonly milestoneLink: Locator;
+    readonly phaseLink: Locator;
 
     constructor(readonly page: Page) {
-        const menu: Locator = this.page.getByRole("menu");
-        this.taskLink = menu.getByRole("link", {name:"Task"});
-        this.milestoneLink = menu.getByRole("link", {name:"Milestone"});
-        this.phaseLink = menu.getByRole("link", {name:"Phase"});
+        super(page, page.locator("ul.dropdown-menu[role='menu']")); 
+        this.taskLink = this.rootComponent.getByRole("link", {name:"Task"});
+        this.milestoneLink = this.rootComponent.getByRole("link", {name:"Milestone"});
+        this.phaseLink = this.rootComponent.getByRole("link", {name:"Phase"});
     }
 
+    /**
+     * Clicks the task link in the task type menu and returns a NewTaskPage instance.
+     * @returns NewTaskPage
+     */
     async clickTaskLink(): Promise<NewTaskPage> {
         await this.taskLink.click();
         return new NewTaskPage(this.page);
     }
 
+    /**
+     * Clicks the milestone link in the task type menu and returns a NewMilestonePage instance.
+     * @returns NewMilestonePage
+     */
     async clickMilestoneLink(): Promise<NewMilestonePage> {
         await this.milestoneLink.click();
         return new NewMilestonePage(this.page);
     }
 
+    /**
+     * Clicks the phase link in the task type menu and returns a NewPhasePage instance.
+     * @returns NewPhasePage
+     */
     async clickPhaseLink(): Promise<NewPhasePage> {
         await this.phaseLink.click();
         return new NewPhasePage(this.page);

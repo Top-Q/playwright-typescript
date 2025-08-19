@@ -7,9 +7,9 @@ import { BaseComponent, BoardsPage, WorkPackagesPage } from '../../../internals'
  */
 export class MainMenuComp extends BaseComponent {
 
-    private readonly workPackagesLink: Locator;
+    readonly workPackagesLink: Locator;
 
-    private readonly boardsLink: Locator;
+    readonly boardsLink: Locator;
  
     constructor(page: Page) {
         super(page, page.locator('.main-menu'));

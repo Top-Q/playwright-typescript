@@ -9,7 +9,7 @@ import { Locator, Page } from '@playwright/test';
  */
 export class HomePage extends BasePage {
 
-    private readonly selectAProjectLink: Locator;
+    readonly selectAProjectLink: Locator;
 
     constructor(public readonly page: Page) {
         super(page);

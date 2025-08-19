@@ -6,7 +6,7 @@ import { Locator, Page } from '@playwright/test';
  */
 export class ProjectSelectionComponent extends BasePage {
 
-    private readonly projectsListContainer: Locator;
+    readonly projectsListContainer: Locator;
 
     constructor(public readonly page: Page) {
         super(page);

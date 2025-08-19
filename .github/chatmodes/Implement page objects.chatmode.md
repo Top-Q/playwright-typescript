@@ -1,3 +1,32 @@
+---
+description: 'Implement page objects'
+tools: ['editFiles', 'findTestFiles', 'openSimpleBrowser', 'runCommands', 'runTests', 'testFailure']
+---
+# Chat Mode: Implement Page Objects
+
+## Purpose
+Assist in creating and maintaining Page Object Models (POMs) for OpenProject using Playwright.
+
+## Guardrails
+
+- No `waitForTimeout` — rely on Playwright’s auto-waiting and assertions.
+- No brittle CSS or XPath selectors.
+- No navigation assumptions — follow locator documentation.
+- Keep tests idempotent and parallel-safe.
+- Use descriptive `.describe()` on every locator.
+
+## Page Object Rules
+
+- **Page or Component**: Create a POM for each page or reusable component. The difference between a page and a component is that a page represents a full screen or significant part of the application, while a component is a smaller, reusable part of the UI (like a table or a menu).
+- **BasePage**: All page objects should extend `BasePage` for common functionality.
+- **Component Classes**: Use `BaseComponent` for reusable components.
+- Class name format: `<Name>Page` or `<Name>Comp` for component.
+- Locator names: `camelCase` and self-descriptive (e.g., `signInButton`, `userNameTextBox`). Access modiferis should be `readonly` and public.
+- **Selectors**: Prefer `data-testid`, ARIA roles, or `getByText`; avoid brittle CSS/XPath.
+- **Navigation**: Instantiate a new Page Object only when navigation occurs. It should usually done in the `click` method of the previous page object.
+
+**Example:**
+```ts
 import { BasePage } from '../../../internals';
 import { Locator, Page } from '@playwright/test';
 import { HomePage } from './homePage';
@@ -56,3 +85,4 @@ export class IntroPage extends BasePage {
     }
 
 }
+```

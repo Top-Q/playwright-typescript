@@ -9,9 +9,9 @@ import { MainMenuComp } from './mainMenuComp';
  */
 export class OverviewPage extends BasePage {
 
-    private readonly menuSidebarContainer: Locator;
-    private readonly activateFilterButton: Locator;
-    private readonly filterByTextTextBox: Locator;
+    readonly menuSidebarContainer: Locator;
+    readonly activateFilterButton: Locator;
+    readonly filterByTextTextBox: Locator;
 
     constructor(public readonly page: Page) {
         super(page);

@@ -8,7 +8,7 @@ import { Locator, Page } from '@playwright/test';
  */
 export class BoardTypePage extends BasePage {
 
-    private readonly basicBoardButton: Locator;
+    readonly basicBoardButton: Locator;
 
     constructor(public readonly page: Page) {
         super(page);
@@ -17,7 +17,9 @@ export class BoardTypePage extends BasePage {
     }
 
     /**
-     * Clicks the button to select the Basic board type.
+     * Clicks the button to select the *Basic* board type.
+     * 
+     * @return BoardPage - Returns an instance of the BoardPage class after clicking the button.
      */
     async clickBasicBoardButton(): Promise<BoardPage> {
         await this.basicBoardButton.click();
