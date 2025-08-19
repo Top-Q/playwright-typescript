@@ -1,8 +1,8 @@
 # Test Cases
 
-## Workpackages Test Cases
+## Work packages Test Cases
 
-*Test*: Create workpackage from type task
+*Test*: Create work package from type task
 
 Given the user is on the Work packages table
 When the user create a new work package from type task
@@ -19,18 +19,18 @@ When the user deletes the work package
 Then the work package no longer exists
 
 
-*Test*: Create workpackage from type phase
+*Test*: Create work package from type phase
 
 Given the user is on the Work packages table
-When the user create a new workpackage from type phase
+When the user create a new work package from type phase
 And the user adds a random name and description
 And the user saves the work package
 Then the work package is added to the system
 
-*Test*: Create workpackage from type milestone
+*Test*: Create work package from type milestone
 
 Given the user is on the Work packages table
-When the user create a new workpackage from type milestone
+When the user create a new work package from type milestone
 And the user adds a random name and description
 And the user saves the work package
 Then the work package is added to the system
@@ -43,7 +43,7 @@ Then the work package is added to the system
 
 Given the user is on the boards page
 When the user creates a new basic board with the name "Automated board<random>"
-And the user adds a list with the name "Automated List"
+And the user adds a list with the name "Automated List<random>"
 And the user returns to the boards page
 Then the new board is visible on the boards page table
 
