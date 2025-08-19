@@ -1,4 +1,4 @@
-import { BasePage, BoardPage } from '../../../internals';
+import { BasePage, NewBoardPage } from '../../../internals';
 import { Locator, Page } from '@playwright/test';
 
 /**
@@ -8,7 +8,7 @@ import { Locator, Page } from '@playwright/test';
  */
 export class BoardTypePage extends BasePage {
 
-    readonly basicBoardButton: Locator;
+    private readonly basicBoardButton: Locator;
 
     constructor(public readonly page: Page) {
         super(page);
@@ -16,13 +16,24 @@ export class BoardTypePage extends BasePage {
             .describe('Button to select the Basic board type');
     }
 
-    /**
-     * Clicks the button to select the *Basic* board type.
-     * 
-     * @return BoardPage - Returns an instance of the BoardPage class after clicking the button.
-     */
-    async clickBasicBoardButton(): Promise<BoardPage> {
+   /**
+    *
+    * ## Method Aliases
+    * - Aliases
+    * ```ts
+    * createBasicBoard();
+    * selectBasicBoardType();
+    * ```
+    *
+    * ## Example Usage
+    * ```ts
+    * const boardPage: NewBoardPage = await boardTypePage.clickBasicBoardButton();
+    * ```
+    * ## Expected Result
+    * - New Board Page is returned after clicking the Basic board button.
+    */
+    async clickBasicBoardButton(): Promise<NewBoardPage> {
         await this.basicBoardButton.click();
-        return new BoardPage(this.page);
+        return new NewBoardPage(this.page);
     }
 }

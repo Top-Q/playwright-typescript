@@ -1,8 +1,0 @@
-Write the following test case
-
-```
-Given the user is in the boards page.
-When the user creats new basic board with name "Automated board".
-And the user adds one list with name "My list".
-Then the new board is created
-```

@@ -38,16 +38,21 @@ export class ListComp extends BaseComponent {
 
 
 /**
- * # Board Page Class
+ * # New Board Page Class
+ * 
+ * ## Description
  * This class represents the new board page in the OpenProject application.
  * Users can create and manage boards, including adding lists and setting the board name.
+ * 
+ * ## Usage
+ * * There is no need to save the board after filling the name, as it is automatically saved.
+ * * Use the `clickBoardsLink` method to navigate back to the boards list page.
  */
-export class BoardPage extends BasePage {
+export class NewBoardPage extends BasePage {
 
-    readonly boardNameTextbox: Locator;
-    readonly listNameTextbox: Locator;
-    readonly addListToBoardLink: Locator;
-    readonly boardsLink: Locator;
+    private readonly boardNameTextbox: Locator;    
+    private readonly addListToBoardLink: Locator;
+    private readonly boardsLink: Locator;
 
     constructor(public readonly page: Page) {
         super(page);
@@ -65,7 +70,7 @@ export class BoardPage extends BasePage {
      * @param index - The index of the list to retrieve.
      * @returns ListComp - An instance of the ListComp class representing the list at the specified index.
      */
-    async getListByIndex(index: number): Promise<ListComp> {
+    getListByIndex(index: number): ListComp {
         const listLocator = this.page.locator("board-list").nth(index);
         return new ListComp(this.page, listLocator);
     }
@@ -80,14 +85,42 @@ export class BoardPage extends BasePage {
     }
 
     /**
+     * ## Description
+     * 
      * Clicks the link to add a new list to the board.
+     * 
+     * ## Usage
+     * Use this method to add a new list to the board being created.
+     * You can then use the `getListByIndex` method to interact with the newly added list.
+     * 
+     * ## Aliases
+     * ```ts     
+     * clickAddListToBoardLink();
+     * addList();
+     * ```
+     * 
+     * ## Example
+     * ```typescript
+     * await newBoardPage.clickAddListToBoard();
+     * let list: ListComp = newBoardPage.getListByIndex(0);
+     * ```
+     * ## Results
+     * The new list will be added to the board, and you can interact with it.
      */
-    async clickAddListToBoard(): Promise<void> {
+    async clickAddListToBoardLink(): Promise<void> {
         await this.addListToBoardLink.click();
     }
 
     /**
+     * ## Description
      * Clicks the link to navigate back to the boards list page.
+     * 
+     * ## Aliases
+     * clickBackToBoardsPage()
+     * 
+     * ## Results
+     * Return to the boards list page where all boards are displayed.
+     * 
      * @returns BoardsPage - Returns an instance of the BoardsPage class after clicking the link.
      */
     async clickBoardsLink(): Promise<BoardsPage> {

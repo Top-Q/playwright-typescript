@@ -9,10 +9,10 @@ import { HomePage } from './homePage';
  */
 export class IntroPage extends BasePage {
 
-    readonly signInLink: Locator;
-    readonly userNameTextBox: Locator;
-    readonly passwordTextBox: Locator;
-    readonly signInButton: Locator;
+    private readonly signInLink: Locator;
+    private readonly userNameTextBox: Locator;
+    private readonly passwordTextBox: Locator;
+    private readonly signInButton: Locator;
 
 
     constructor(public readonly page: Page) {

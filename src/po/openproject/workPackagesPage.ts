@@ -47,6 +47,81 @@ export class TaskTypeMenu extends BaseComponent {
     }
 }
 
+export class WorkPackageDeletionConfirmationDialogComp extends BaseComponent {
+    constructor(readonly page: Page) {
+        super(page, page.locator("#wp_destroy_modal"));
+    } 
+
+    /**
+     * ## Description
+     * This method clicks the "Confirm" button in the work package deletion confirmation dialog.
+     * 
+     * ## Aliases
+     * - `clickConfirmButton()`
+     * - `confirmDeletion()`
+     */
+    async clickOnConfirmButton(): Promise<void> {
+        await this.rootComponent.getByRole("button", {name: "Confirm"}).click();
+        // There is a bug here. When deleting a work package in the filter 
+        // page the message is "Successful creation" instead of "Successfully deleted work packages"
+        const SuccessfullyDelete: Locator = this.page.getByRole('alert').getByText('Successfully deleted work packages.');
+        const SuccessfulCreation: Locator = this.page.getByRole('alert').getByText('Successful creation');
+        const compbinedLocator = SuccessfullyDelete.or(SuccessfulCreation);
+        await compbinedLocator.waitFor({state: 'visible', timeout: 5000});
+    }
+}
+
+
+/**
+ * # Work Package Row Context Menu Class
+ * This class represents the context menu that appears when a user clicks on a work package row.
+ * It allows the user to perform actions on the work package, such as deleting, copying, Open details and more.
+ */
+export class workPackageRowContextMenu extends BaseComponent {
+    constructor(readonly page: Page, readonly locator: Locator) {
+        super(page, locator);
+    }
+
+    
+    /**
+     * ## Description
+     * This method clicks the "Delete" menu item in the work package context menu.
+     * 
+     * ## Aliases
+     * - `clickDeleteMenuItem()`
+     * - `deleteWorkPackage()`
+     * - `clickDelete()`
+     * - `clickDeleteOption()`
+     * 
+     */
+    async clickDeleteMenuItem(): Promise<WorkPackageDeletionConfirmationDialogComp> {
+        await this.page.getByRole("menu").getByRole("button", {name: "Delete"}).click();   
+        return new WorkPackageDeletionConfirmationDialogComp(this.page);
+
+    }
+}
+
+/**
+ * # Work Package Row Class
+ * This class represents a single row in the work package table.
+ * 
+ */
+export class WorkPackageRow extends BaseComponent {
+    constructor(readonly page: Page, readonly locator: Locator) {
+        super(page, locator);
+    }
+
+    async clickOpenContextMenu(): Promise<workPackageRowContextMenu> {
+        // We have to hover the row first to make the context menu appear.
+        await this.rootComponent.hover();
+        await this.rootComponent.getByRole('link', {name: 'Open context menu'}).click();
+        return new workPackageRowContextMenu(this.page, this.rootComponent.locator("#work-package-context-menu"));
+    }
+
+
+
+}
+
 /**
  * # Workpackage Table Class
  * This class represents the work package table in the OpenProject application.
@@ -78,6 +153,14 @@ export class WorkpackageTable extends BaseComponent {
     async waitForTableToLoad(): Promise<void> {
         await this.page.waitForResponse("**/queries/*");
     }
+
+    async getWorkPackageRowBySubject(name: string): Promise<WorkPackageRow> {
+        const rowLocator = this.workPackageRows.filter({has: this.page.locator(`td.subject span:has-text("${name}")`)});
+        if (await rowLocator.count() === 0) {
+            throw new Error(`Work package with subject "${name}" not found.`);
+        }
+        return new WorkPackageRow(this.page, rowLocator);
+    }   
 }
 
 /**

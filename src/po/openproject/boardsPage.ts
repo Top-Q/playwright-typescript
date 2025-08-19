@@ -7,20 +7,19 @@ import { Locator, Page } from '@playwright/test';
  * It provides methods to interact with the board's details such as name, type, creation date, and delete button.
  */
 export class BoardTableRowComp extends BaseComponent {
-    
+
     /**
      * Locator for the name of the board.
      */
     readonly name: Locator;
 
-    
     readonly boardType: Locator;
 
     readonly createdOn: Locator;
 
-    readonly deleteButton: Locator;
+    private readonly deleteButton: Locator;
 
-       
+
     constructor(protected readonly page: Page, protected readonly locator: Locator) {
         super(page, locator);
         this.name = this.rootComponent.getByRole('cell').nth(0).describe('Name of the board');
@@ -30,12 +29,28 @@ export class BoardTableRowComp extends BaseComponent {
     }
 
     /**
+     * ## Description
      * Clicks the delete button for the board.
-     * This method will trigger a dialog to confirm the deletion.
-     * The dialog will be automatically accepted by the test framework.
+     * 
+     * ## Method Aliaes
+     * ```ts
+     * clickDeleteButton();
+     * clickDelete();
+     * ```
+     * ----
+     * 
+     * ## Expected Result
+     * * The board is deleted from the boards page.
+     * * The deletion is confirmed automatically through a dialog.
+     * 
      */
-    async clickDeleteButton(): Promise<void> {
+    async clickDeleteButtonAndAcceptDeletion(): Promise<void> {
+        this.page.once('dialog', async dialog => {
+            await dialog.accept();
+        });
         await this.deleteButton.click();
+        await this.page.getByRole('alert').getByText('Successful deletion.').waitFor();
+        
     }
 
 }
@@ -46,8 +61,63 @@ export class BoardTableRowComp extends BaseComponent {
  * It provides methods to interact with the rows of the table.
  */
 export class BoardTableComp extends BaseComponent {
-    constructor(protected readonly page: Page, protected readonly locator: Locator) {
-        super(page, locator);
+
+    readonly nameColumnHeader: Locator
+
+    constructor(protected readonly page: Page, protected readonly rootLocator: Locator) {
+        super(page, rootLocator);
+        this.nameColumnHeader = this.rootComponent.getByText('Name', { exact: true });
+    }
+
+    /**
+     * ## Description
+     * Refreshes the board table by reloading the page.
+     * This method is useful to ensure that the latest data is displayed in the table.
+     * For example, after deleting a board, you might want to refresh the table to see the changes.
+     * 
+     * ---
+     * ## Aliases
+     * 
+     * waitForTableToLoad();
+     * 
+     * ---
+     * 
+     * 
+     * ## Example usage:
+     * 
+     * ```typescript
+     * await boardTable.refresh();
+     * await expect(boardTable.isRowForTableWithNameExists(boardName)).resolves.toBeFalsy();     
+     * ```
+     */
+    async refresh(): Promise<void> {
+        await this.page.reload();
+    }
+
+    /**
+     * ## Description
+     * Returns the number of rows in the board table. That is actually the number of boards in the table.
+     * 
+     * ## Aliases
+     * ```ts
+     * getRowCount();
+     * getNumberOfBoards();
+     * ```
+     * 
+     * @returns 
+     */
+    async getNumberOfRows(): Promise<number> {
+        await this.page.waitForLoadState('domcontentloaded');
+        await this.nameColumnHeader.waitFor();
+        const numOfRows: number = await this.rootLocator.locator('tbody tr').count();
+        if (numOfRows === 1) {
+            if (await this.rootLocator.getByText('No visible results to display.').count() > 0) {
+                // If there is only one row and it says "No visible results to display", then   
+                // there are no boards in the table.
+                return 0;
+            }
+        }
+        return numOfRows;
     }
 
     /**
@@ -57,8 +127,28 @@ export class BoardTableComp extends BaseComponent {
      * @returns BoardTableRowComp - An instance of the BoardTableRowComp class representing the row at the specified index.
      */
     async getRowByIndex(index: number): Promise<BoardTableRowComp> {
-        const rowLocator = this.locator.locator('tbody tr').nth(index);
+        await this.nameColumnHeader.waitFor();
+        const rowLocator = this.rootLocator.locator('tbody tr').nth(index);
         return new BoardTableRowComp(this.page, rowLocator);
+    }
+
+    /**
+     * ## Description
+     * Checks if a row for the board with the specified name exists in the table.
+     * 
+     * ## Aliases
+     * ```ts
+     * isBoardVisible(boardName: string);
+     * isRowForTableWithNameExists(boardName: string);
+     * ```
+     * 
+     * @param boardName - The name of the board to check for.
+     * @returns A promise that resolves to true if the row exists, false otherwise.
+     */
+    async isRowForTableWithNameExists(boardName: string): Promise<boolean> {
+        await this.nameColumnHeader.waitFor();
+        const rowLocator = this.rootLocator.locator('tbody tr').filter({ hasText: boardName });
+        return await rowLocator.count() > 0;
     }
 
     /**
@@ -68,7 +158,10 @@ export class BoardTableComp extends BaseComponent {
      * @returns 
      */
     async getRowByBoardName(boardName: string, index: number = 0): Promise<BoardTableRowComp> {
-        const rowLocator = this.locator.locator('tbody tr').filter({ hasText: boardName });
+        await this.page.waitForLoadState('domcontentloaded');
+        await this.nameColumnHeader.waitFor();
+        await this.page.waitForTimeout(1000); // Ensure the table is fully loaded
+        const rowLocator = this.rootLocator.locator('tbody tr').filter({ hasText: boardName });
         if (await rowLocator.count() === 0) {
             throw new Error(`No row found with board name: ${boardName}`);
         }
@@ -79,8 +172,8 @@ export class BoardTableComp extends BaseComponent {
     }
 
     async getRowCount(): Promise<number> {
-        return await this.locator.locator('tbody tr').count();
-    }   
+        return await this.rootLocator.locator('tbody tr').count();
+    }
 
 }
 
@@ -108,11 +201,6 @@ export class BoardsPage extends BasePage {
             .describe('Root locator for the board table');
     }
 
-    async waitForPageToLoad() {        
-        await this.boardTableRoot.waitFor({ state: 'visible' });
-    }
-
-
     /**
      * Returns the board table component on the boards page.
      * The board table contains rows of boards with their details.
@@ -120,20 +208,28 @@ export class BoardsPage extends BasePage {
      * 
      * @returns A BoardTableComp instance representing the board table on the page.
      */
-    async boardTable(): Promise<BoardTableComp> {
+    boardTable(): BoardTableComp {
         return new BoardTableComp(this.page, this.boardTableRoot);
     }
     /**
      * Clicks the button to create a new board.
      * This will navigate the user to the board type selection page.
      * The user will usually select board type
+     * 
+     * Example usage:
+     * ```typescript
+     *       const boardTypePage = await boardsPage.clickCreateBoardButton();
+     *       const boardPage: BoardPage = await boardTypePage.clickBasicBoardButton();
+     *       await boardPage.fillBoardName('Automated board');
+     * ```
+     * 
      */
     async clickCreateBoardButton(): Promise<BoardTypePage> {
         await this.createNewBoardButton.click();
         return new BoardTypePage(this.page);
     }
 
-  
+
     /**
      * Gets the name of a board by its index in the list.
      * @param index - The index of the board.

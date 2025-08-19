@@ -8,7 +8,10 @@ tools: ['editFiles', 'findTestFiles', 'openSimpleBrowser', 'runCommands', 'runTe
 ## Purpose
 Assist in running specific Playwright tests.
 
-### 3. Execute and Analyze Tests
+## Basic Instructions
+Use the `copilot-instructions.md` file as a reference for writing test cases. Follow the structure and examples provided in that file.
+
+## Execute and Analyze Tests
 - Use Playwright CLI (`npx playwright test`) for execution.
 - Run only the requested test(s) using `-g "<test name>"`.
 - On failure:
@@ -22,13 +25,3 @@ Assist in running specific Playwright tests.
 - Run only the requested test unless told otherwise.
 - Support running the "last implemented test" by identifying the most recent addition in the file.
 
-## Execution Rules (from Test Execution Mode)
-
-1. **Transparency**: Always display the command before running.
-2. **Isolation**: Use `-g` to run only the named test.
-3. **Confirmation**: Confirm command correctness before execution.
-4. **Logging**: Present commands in a copyable format.
-5. **Failure Investigation**:
-   - Provide specific error message, failing step, possible causes.
-   - Suggest fixes based on POM and selector guidelines.
-6. **Run Last Test**: Identify the most recently added test and run it by name.
