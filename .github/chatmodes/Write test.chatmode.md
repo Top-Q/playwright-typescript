@@ -13,7 +13,51 @@ Use the `copilot-instructions.md` file as a reference for writing test cases. Fo
 - **Importing Test Function**: Always import the `test` function from the `./fixtures` file.
 - **Importing Page Objects**: Import Page Objects from the `../internals`
 - **Page Object Insantiation**: Except the first page object instantiation, do not use `new` keyword to instantiate Page Objects. Use the methods provided by the previous page object to get the next page object.
+* **Gherkin Steps**: Create one test.step per Gherkin sentence and use the sentence exactly (or a very close, readable phrasing) as the step description.
 
+For example:
+```ts
+test('Create work package (task)', async ({ readyOverviewPage }) => {
+  let workPackagesPage: WorkPackagesPage;
+  let newTaskPage: NewTaskPage;
+
+  const name = `Auto WP ${Date.now()}`;
+  const description = `Auto description ${new Date().toISOString()}`;
+
+  await test.step('Given the user is authenticated as "default"', async () => {
+    // The {@readyOverviewPage} fixture already handles authentication.
+  });
+
+  await test.step('And the user is on the Work packages page', async () => {
+    workPackagesPage = await readyOverviewPage.mainMenu().clickWorkPackagesLink();
+  });
+
+  await test.step('When the user creates a new work package of type "task"', async () => {
+    const taskTypeMenu = await workPackagesPage.clickCreateButton();
+    newTaskPage = await taskTypeMenu.clickTaskLink();
+  });
+
+  await test.step(`And the user sets the work package name to "${name}"`, async () => {
+    await newTaskPage.fillSubject(name);
+  });
+
+  await test.step(`And the user sets the work package description to "${description}"`, async () => {
+    await newTaskPage.fillDescription(description);
+  });
+
+  await test.step('And the user saves the work package', async () => {
+    await newTaskPage.clickSaveButton();
+  });
+
+  await test.step(`Then the work package named "${name}" exists in the system`, async () => {
+    const wpTable = workPackagesPage.workPackageTable();
+    await wpTable.waitForTableToLoad();
+    const exists = await wpTable.isWorkPackageVisible(name);
+    expect(exists).toBeTruthy();
+  });
+});
+
+```
 * **Import Page Objects**: When page objects are required, import them only from the 'internals.ts' file.
 * **Defining variables in a test**: *Always* define variables with the specific type of the page object. If needed, import the type from the `internals.ts` file and use it to define the variable.
 Don't use generic types like `any` or `unknown` for page objects, as this can lead to type errors and make the code less readable.
