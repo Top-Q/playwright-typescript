@@ -6,9 +6,9 @@ dotenv.config();
 const PROJECT_ID = Number(process.env.OPENPROJECT_PROJECT_ID!); // e.g. 1
 // test.describe.configure({ mode: "serial" });
 test.describe('WorkPackages API (infrastructure)', () => {
-    test('list work packages (global) returns 200', async ({ svc }) => {
+    test('list work packages (global) returns 200', async ({ opclient: client }) => {
         await test.step('When requesting a list of work packages (pageSize=5)', async () => {
-            const res = await svc.listWorkPackages({ pageSize: 5 });
+            const res = await client.project(PROJECT_ID).workPackages().get({ pageSize: 5 });
             expect(res.status()).toBe(200);
             const body = (await res.json()) as Record<string, unknown>;
             // basic shape check
@@ -16,16 +16,16 @@ test.describe('WorkPackages API (infrastructure)', () => {
         });
     });
 
-    test('list work package schemas accepts filters and returns 200', async ({ svc }) => {
+    test('list work package schemas accepts filters and returns 200', async ({ opclient: client }) => {
         await test.step('When requesting work package schemas with empty filters', async () => {
-            const res = await svc.listWorkPackageSchemas([]);
+            const res = await client.workPackages().schemas();
             expect(res.status()).toBe(200);
             const body = (await res.json()) as Record<string, unknown>;
             expect(Object.keys(body).length).toBeGreaterThanOrEqual(0);
         });
     });
 
-    test('create and delete a project-scoped work package', async ({ svc }) => {
+    test('create and delete a project-scoped work package', async ({ opclient: client }) => {
         const payload = {
             subject: 'E2E API Test Work Package',
             description: { raw: 'Created by automated API test' },
@@ -34,7 +34,7 @@ test.describe('WorkPackages API (infrastructure)', () => {
         let createdId: number | undefined;
 
         await test.step('When creating a project-scoped work package', async () => {
-            const createRes = await svc.createProjectWorkPackage(PROJECT_ID, payload);
+            const createRes = await client.project(PROJECT_ID).workPackages().post(payload);
             expect(createRes.status()).toBe(201);
 
             type CreateResp = { id?: number; _links?: { self?: { href?: string } } };
@@ -52,21 +52,21 @@ test.describe('WorkPackages API (infrastructure)', () => {
 
         await test.step('Cleanup: delete the created work package', async () => {
             expect(createdId).toBeDefined();
-            const deleteRes = await svc.deleteWorkPackage(createdId as number);
+            const deleteRes = await client.workPackage(createdId as number).delete();
             expect([200, 204]).toContain(deleteRes.status());
         });
     });
 
-    test('list work packages of a project returns 200', async ({ svc }) => {
+    test('list work packages of a project returns 200', async ({ opclient: client }) => {
         await test.step('When requesting work packages for a project', async () => {
-            const res = await svc.listProjectWorkPackages(PROJECT_ID, { pageSize: 5 });
+            const res = await client.project(PROJECT_ID).workPackages().get({ pageSize: 5 });
             expect(res.status()).toBe(200);
             const body = (await res.json()) as Record<string, unknown>;
             expect(Object.keys(body).length).toBeGreaterThanOrEqual(0);
         });
     });
 
-    test('create, update, get and delete a project-scoped work package', async ({ svc }) => {
+    test('create, update, get and delete a project-scoped work package', async ({ opclient: client }) => {
         const initialSubject = `API WP ${Date.now()}`;
         const updatedSubject = `${initialSubject} - updated`;
         const payload = {
@@ -77,7 +77,7 @@ test.describe('WorkPackages API (infrastructure)', () => {
         let createdId: number | undefined;
 
         await test.step('When creating a work package to update', async () => {
-            const createRes = await svc.createProjectWorkPackage(PROJECT_ID, payload);
+            const createRes = await client.project(PROJECT_ID).workPackages().post(payload);
             expect(createRes.status()).toBe(201);
             type CreateResp = { id?: number; _links?: { self?: { href?: string } } };
             const createBody = (await createRes.json()) as CreateResp;
@@ -94,7 +94,7 @@ test.describe('WorkPackages API (infrastructure)', () => {
             expect(createdId).toBeDefined();
 
             // Fetch current resource to obtain lockVersion required by OpenProject optimistic locking
-            const currentRes = await svc.getWorkPackage(createdId as number);
+            const currentRes = await client.workPackage(createdId as number).get();
             expect(currentRes.status()).toBe(200);
             const currentBody = (await currentRes.json()) as Record<string, unknown> & { lockVersion?: number; lock_version?: number };
             // prefer camelCase lockVersion, fall back to snake_case lock_version
@@ -109,13 +109,13 @@ test.describe('WorkPackages API (infrastructure)', () => {
             expect(typeof lockVersion === 'number').toBeTruthy();
 
             // include lockVersion when updating to avoid 409
-            const updateRes = await svc.updateWorkPackage(createdId as number, { subject: updatedSubject, lockVersion });
+            const updateRes = await client.workPackage(createdId as number).patch({ subject: updatedSubject, lockVersion });
             expect(updateRes.status()).toBe(200);
         });
 
         await test.step('Then fetching the work package returns the updated subject', async () => {
             expect(createdId).toBeDefined();
-            const getRes = await svc.getWorkPackage(createdId as number);
+            const getRes = await client.workPackage(createdId as number).get();
             expect(getRes.status()).toBe(200);
             const getBody = (await getRes.json()) as { subject?: string } & Record<string, unknown>;
             const subject = getBody.subject;
@@ -126,7 +126,7 @@ test.describe('WorkPackages API (infrastructure)', () => {
 
         await test.step('Cleanup: delete the updated work package', async () => {
             expect(createdId).toBeDefined();
-            const deleteRes = await svc.deleteWorkPackage(createdId as number);
+            const deleteRes = await client.workPackage(createdId as number).delete();
             expect([200, 204]).toContain(deleteRes.status());
         });
     });

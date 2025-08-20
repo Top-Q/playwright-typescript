@@ -1,114 +1,119 @@
-import { APIRequestContext, APIResponse } from '@playwright/test';
+import { APIRequestContext } from '@playwright/test';
 
 /**
- * WorkPackagesService
- * Infrastructure class that wraps OpenProject Work Packages API operations
- * and exposes them to tests. Uses Playwright APIRequestContext for HTTP calls.
+ * OpenProjectClient
+ * Client that exposes a fluent, resource-oriented API for OpenProject resources
+ * (work packages, projects, boards, ...). Uses Playwright APIRequestContext for HTTP calls.
  */
-export default class WorkPackagesService {
-  private request: APIRequestContext;
-  private basePath = '/api/v3';
+export default class OpenProjectClient {
+  constructor(private request: APIRequestContext) {}
 
-  constructor(request: APIRequestContext) {
-    this.request = request;
+  project(projectId: number | string) {
+    return new ProjectResource(this.request, '/api/v3', String(projectId));
   }
 
-  // Helper to build query params for Playwright request methods
-  private buildParams(params?: Record<string, unknown>): Record<string, string> {
-    const out: Record<string, string> = {};
-    if (!params) return out;
-    for (const [k, v] of Object.entries(params)) {
-      if (v === undefined || v === null) continue;
-      if (Array.isArray(v) || (typeof v === 'object' && v !== null)) {
-        out[k] = JSON.stringify(v);
-      } else if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') {
-        out[k] = String(v);
-      } else {
-        // skip unsupported types (symbol, function, bigint); avoid accidental [object Object]
-        continue;
-      }
+  workPackage(id: number | string) {
+    return new WorkPackageResource(this.request, '/api/v3', String(id));
+  }
+
+  workPackages() {
+    return new GlobalWorkPackagesResource(this.request, '/api/v3');
+  }
+}
+
+// Minimal reusable constants and helper for the fluent resources
+const JSON_ACCEPT = { Accept: 'application/hal+json' };
+
+function buildParams(params?: Record<string, unknown>): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (!params) return out;
+  for (const [k, v] of Object.entries(params)) {
+    if (v === undefined || v === null) continue;
+    if (Array.isArray(v) || (typeof v === 'object' && v !== null)) {
+      out[k] = JSON.stringify(v);
+    } else if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') {
+      out[k] = String(v);
+    } else {
+      continue;
     }
-    return out;
+  }
+  return out;
+}
+
+// Resource classes implementing the fluent style API
+class ProjectResource {
+  constructor(private request: APIRequestContext, private basePath: string, private projectId: string) {}
+
+  workPackages() {
+    return new WorkPackagesResource(this.request, this.basePath, this.projectId);
+  }
+}
+
+class WorkPackagesResource {
+  constructor(private request: APIRequestContext, private basePath: string, private projectId: string) {}
+
+  async get(options?: { filters?: unknown; pageSize?: number; offset?: number; sortBy?: unknown }) {
+    const params = buildParams(options as Record<string, unknown> | undefined);
+    return await this.request.get(`${this.basePath}/projects/${this.projectId}/work_packages`, { params, headers: JSON_ACCEPT });
   }
 
-  // List all work packages (global)
-  async listWorkPackages(options?: { filters?: unknown; pageSize?: number; offset?: number; sortBy?: unknown }): Promise<APIResponse> {
-    const params = this.buildParams(options as Record<string, unknown> | undefined);
-    const res = await this.request.get(`${this.basePath}/work_packages`, { params, headers: { Accept: 'application/hal+json' } });
-    return res;
-  }
-
-  // Create a global work package
-  async createWorkPackage(body: Record<string, unknown>): Promise<APIResponse> {
-    const res = await this.request.post(`${this.basePath}/work_packages`, {
+  async post(body: Record<string, unknown>) {
+    return await this.request.post(`${this.basePath}/projects/${this.projectId}/work_packages`, {
       data: body,
-      headers: { 'Content-Type': 'application/json', Accept: 'application/hal+json' },
+      headers: { 'Content-Type': 'application/json', ...JSON_ACCEPT },
     });
-    return res;
   }
 
-  // Get create form (global)
-  async getCreateForm(): Promise<APIResponse> {
-    const res = await this.request.post(`${this.basePath}/work_packages/form`, { headers: { Accept: 'application/hal+json' } });
-    return res;
+  id(wpId: number | string) {
+    return new WorkPackageResource(this.request, this.basePath, String(wpId));
+  }
+}
+
+class WorkPackageResource {
+  constructor(private request: APIRequestContext, private basePath: string, private id: string) {}
+
+  async get() {
+    return await this.request.get(`${this.basePath}/work_packages/${this.id}`, { headers: JSON_ACCEPT });
   }
 
-  // List work package schemas
-  async listWorkPackageSchemas(filters?: unknown): Promise<APIResponse> {
-    const params = this.buildParams({ filters } as Record<string, unknown>);
-    const res = await this.request.get(`${this.basePath}/work_packages/schemas`, { params, headers: { Accept: 'application/hal+json' } });
-    return res;
-  }
-
-  // Work package by id
-  async getWorkPackage(id: number): Promise<APIResponse> {
-    const res = await this.request.get(`${this.basePath}/work_packages/${id}`, { headers: { Accept: 'application/hal+json' } });
-    return res;
-  }
-
-  async updateWorkPackage(id: number, body: Record<string, unknown>): Promise<APIResponse> {
-    const res = await this.request.patch(`${this.basePath}/work_packages/${id}`, {
+  async patch(body: Record<string, unknown>) {
+    return await this.request.patch(`${this.basePath}/work_packages/${this.id}`, {
       data: body,
-      headers: { 'Content-Type': 'application/json', Accept: 'application/hal+json' },
+      headers: { 'Content-Type': 'application/json', ...JSON_ACCEPT },
     });
-    return res;
   }
 
-  async deleteWorkPackage(id: number): Promise<APIResponse> {
-    const res = await this.request.delete(`${this.basePath}/work_packages/${id}`, { headers: { Accept: 'application/hal+json' } });
-    return res;
+  async delete() {
+    return await this.request.delete(`${this.basePath}/work_packages/${this.id}`, { headers: JSON_ACCEPT });
   }
 
-  // Project-scoped operations
-  async listProjectWorkPackages(projectId: number, options?: { filters?: unknown; pageSize?: number; offset?: number; sortBy?: unknown }): Promise<APIResponse> {
-    const params = this.buildParams(options as Record<string, unknown> | undefined);
-    const res = await this.request.get(`${this.basePath}/projects/${projectId}/work_packages`, { params, headers: { Accept: 'application/hal+json' } });
-    return res;
+  async availableProjects() {
+    return await this.request.get(`${this.basePath}/work_packages/${this.id}/available_projects`, { headers: JSON_ACCEPT });
   }
 
-  async createProjectWorkPackage(projectId: number, body: Record<string, unknown>): Promise<APIResponse> {
-    const res = await this.request.post(`${this.basePath}/projects/${projectId}/work_packages`, {
-      data: body,
-      headers: { 'Content-Type': 'application/json', Accept: 'application/hal+json' },
-    });
-    return res;
+  async availableRelationCandidates(options?: { pageSize?: number; filters?: unknown }) {
+    const params = buildParams(options as Record<string, unknown> | undefined);
+    return await this.request.get(`${this.basePath}/work_packages/${this.id}/available_relation_candidates`, { params, headers: JSON_ACCEPT });
+  }
+}
+
+// Global collection resource for work packages (non-project scoped)
+class GlobalWorkPackagesResource {
+  constructor(private request: APIRequestContext, private basePath: string) {}
+
+  async get(options?: { filters?: unknown; pageSize?: number; offset?: number; sortBy?: unknown }) {
+    const params = buildParams(options as Record<string, unknown> | undefined);
+    return await this.request.get(`${this.basePath}/work_packages`, { params, headers: JSON_ACCEPT });
   }
 
-  async getProjectCreateForm(projectId: number): Promise<APIResponse> {
-    const res = await this.request.post(`${this.basePath}/projects/${projectId}/work_packages/form`, { headers: { Accept: 'application/hal+json' } });
-    return res;
-  }
+  async schemas(filters?: unknown) {
+    // If filters is omitted or an empty array, don't send the `filters` query param.
+    // Sending `filters=[]` causes the OpenProject API to return HTTP 500 in some versions.
+    if (filters === undefined || (Array.isArray(filters) && filters.length === 0)) {
+      return await this.request.get(`${this.basePath}/work_packages/schemas`, { headers: JSON_ACCEPT });
+    }
 
-  // Availability helpers
-  async availableProjectsForWorkPackage(id: number): Promise<APIResponse> {
-    const res = await this.request.get(`${this.basePath}/work_packages/${id}/available_projects`, { headers: { Accept: 'application/hal+json' } });
-    return res;
+    const params = buildParams({ filters } as Record<string, unknown>);
+    return await this.request.get(`${this.basePath}/work_packages/schemas`, { params, headers: JSON_ACCEPT });
   }
-
-  async availableRelationCandidates(id: number, options?: { pageSize?: number; filters?: unknown }): Promise<APIResponse> {
-    const params = this.buildParams(options as Record<string, unknown> | undefined);
-    const res = await this.request.get(`${this.basePath}/work_packages/${id}/available_relation_candidates`, { params, headers: { Accept: 'application/hal+json' } });
-    return res;
-  }
-
 }
