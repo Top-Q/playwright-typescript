@@ -71,13 +71,16 @@ export class WorkPackageDeletionConfirmationDialogComp extends BaseComponent<Wor
      * - `confirmDeletion()`
      */
     async clickOnConfirmButton(): Promise<void> {
-        await this.rootComponent.getByRole("button", { name: "Confirm" }).click();
+        const queryPromise = this.page.waitForResponse("**/queries/**");
         // There is a bug here. When deleting a work package in the filter 
         // page the message is "Successful creation" instead of "Successfully deleted work packages"
+
         const SuccessfullyDelete: Locator = this.page.getByRole('alert').getByText('Successfully deleted work packages.');
         const SuccessfulCreation: Locator = this.page.getByRole('alert').getByText('Successful creation');
-        const compbinedLocator = SuccessfullyDelete.or(SuccessfulCreation);
-        await compbinedLocator.waitFor({ state: 'visible', timeout: 5000 });
+        const combinedSuccessfulMessageLocators = SuccessfullyDelete.or(SuccessfulCreation);
+        await this.rootComponent.getByRole("button", { name: "Confirm" }).click();
+        await combinedSuccessfulMessageLocators.waitFor({ state: 'visible', timeout: 5000 });
+        await queryPromise;
     }
 }
 
@@ -156,13 +159,28 @@ export class WorkpackageTable extends BaseComponent<WorkpackageTable> {
     }
 
     /**
-     * Waits for the work package table to load.
-     * This is typically can be used before performing actions that depend on the table being fully loaded.
+     * Waits for the work package table to load.    
      */
     async waitForLoad(): Promise<WorkpackageTable> {
         await this.rootComponent.first().waitFor();        
         return this;
     }
+
+    // /**
+    //  * ## Description
+    //  * Refreshes the work package table by reloading the page and waiting for the table to load.
+    //  * 
+    //  * ## Usage
+    //  * ```ts
+    //  * await workpackageTable.refreshTableAndWaitForLoad();
+    //  * const exists = await workpackageTable.isWorkPackageBySubjectExists(wpName);
+    //  * ```
+    //  */
+    // async refreshTableAndWaitForLoad(): Promise<void> {
+    //     const queryPromise = this.page.waitForResponse("**/queries/**");
+    //     await this.page.reload();
+    //     await queryPromise;
+    // }
 
     /**
      * Checks if a work package with the given name is visible in the table.

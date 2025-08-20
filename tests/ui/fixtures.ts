@@ -1,5 +1,5 @@
 import { test as base } from '@playwright/test';
-import { OverviewPage, IntroPage, HomePage} from '../internals';
+import { OverviewPage, IntroPage, HomePage} from '../../internals';
 
 export const test = base.extend<{
     readyOverviewPage: OverviewPage;

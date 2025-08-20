@@ -22,16 +22,22 @@ Common business workflows include:
 
 * **Read Class and Method Comments**: Always read the class and method comments in the page objects to understand their purpose and usage.
 
+## Project File Structure
+- **Page Objects**: Located in `/src/po/openproject/`
+  - **General**: Common components like overview, main menu, project selection.
+  - **Work Packages**: Specific components for work package management.
+  - **Boards**: Components for board management.
+- **Tests**: Located in `/tests/ui/`
+  - **UI Tests**: Playwright tests for UI interactions.
+  - **API Tests**: API tests for backend interactions.
+
+## Naming Conventions
+- **Page Objects Classes**: Use `PascalCase` (e.g., `WorkPackagesPage`)
+- **Page Object Files**: use `camelCase` structured as `<page-object-name>.ts` (e.g., `workPackagePage.ts`)
+- **Components Classes**: Use `PascalCase` (e.g., `MainMenuComp`)
+- **Test Files**: Use `kebab-case` structured as `<feature>.spec.ts` (e.g., `work-packages-crud.spec.ts`)
 
 ## References
-
-- **Open Project Page Objects**: `/src/po/openproject/`
-- **Open Project General Page Objects**: `/src/po/openproject/general/`
-- **Open Project Work Packages Page Objects**: `/src/po/openproject/workpackage/
-- **Open Project Boards Page Objects**: `/src/po/openproject/board/`
-- **UI Tests**: `/tests/ui/`
-- **Test Fixtures**: `readyOverviewPage` in test setup
-- **Playwright MCP**: for DOM inspection and selector validation during triage
 - **Chat Modes**:
   - *Implement Page Objects* — build/maintain POMs via Playwright/MCP.
   - *Write Tests* — generate tests from business specs using POMs.

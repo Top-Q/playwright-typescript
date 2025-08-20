@@ -14,7 +14,7 @@ Use the `copilot-instructions.md` file as a reference for writing test cases. Fo
 - **Importing Page Objects**: Import Page Objects from the `../internals`
 - **Page Object Insantiation**: Except the first page object instantiation, do not use `new` keyword to instantiate Page Objects. Use the methods provided by the previous page object to get the next page object.
 * **Gherkin Steps**: Create one test.step per Gherkin sentence and use the sentence exactly (or a very close, readable phrasing) as the step description.
-- **Test Tags**: Use the `tags` field to categorize the test. Use tags like `ui`, `api`, `regression`, `performance`, etc. to indicate the type of test.
+- **Test Tags**: Use the `tag` field to categorize the test. Use tags like `ui`, `api`, `regression`, `performance`, etc. to indicate the type of test.
 
 For example:
 ```ts

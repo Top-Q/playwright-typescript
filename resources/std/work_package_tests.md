@@ -44,9 +44,8 @@ Background:
   And the user is on the Work packages page
 
 Scenario: Delete work package (task)
-  When the user deletes the work package named "<name>"
-  And the user filter for work package with name "<name>"
-  Then the work package named "<name>" does not exist in the system
+  When the user deletes the work package named "<name>"  
+  Then the work package named "<name>" does not exist in the work packages table
 
 
 ---

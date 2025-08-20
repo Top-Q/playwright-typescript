@@ -1,0 +1,244 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "OpenProject API V3 - Work Packages (subset)",
+    "version": "3",
+    "description": "Filtered OpenAPI spec containing only operations related to Work Packages."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/",
+      "description": "This server"
+    }
+  ],
+  "paths": {
+    "/api/v3/work_packages": {
+      "get": {
+        "summary": "Get work packages",
+        "description": "Returns a collection of work packages. Accepts filters, sortBy and paging parameters.",
+        "tags": ["Work Packages"],
+        "parameters": [
+          {
+            "name": "filters",
+            "in": "query",
+            "description": "JSON specifying filter conditions. If no filter is to be applied, send an empty array (`[]`).",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Number of elements to display per page.",
+            "schema": { "type": "integer" }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Page number inside the requested collection.",
+            "schema": { "type": "integer", "default": 1 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/hal+json": {
+                "schema": { "$ref": "#/components/schemas/Work_Package_Collection" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create work package",
+        "description": "Create a new work package. The request body must contain the required properties as defined by the work package schema/form.",
+        "tags": ["Work Packages"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/hal+json": {
+                "schema": { "$ref": "#/components/schemas/Work_PackageModel" }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/api/v3/work_packages/form": {
+      "post": {
+        "summary": "Work Package Create Form",
+        "description": "Return the form/schema for creating work packages.",
+        "tags": ["Work Packages"],
+        "responses": {
+          "200": { "description": "OK" }
+        }
+      }
+    },
+
+    "/api/v3/work_packages/schemas": {
+      "get": {
+        "summary": "List work package schemas",
+        "description": "Returns available work package schema definitions. Requires `filters` parameter to limit the result.",
+        "tags": ["Work Packages"],
+        "parameters": [
+          {
+            "name": "filters",
+            "in": "query",
+            "description": "JSON specifying filter conditions. Schema id has the form `project_id-work_package_type_id`.",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/hal+json": {
+                "schema": { "$ref": "#/components/schemas/Work_Package_Schemas" }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/api/v3/work_packages/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "Work package id"
+        }
+      ],
+      "get": {
+        "summary": "View work package",
+        "tags": ["Work Packages"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/hal+json": {
+                "schema": { "$ref": "#/components/schemas/Work_PackageModel" }
+              }
+            }
+          },
+          "404": { "description": "Not Found" }
+        }
+      },
+      "patch": {
+        "summary": "Update work package",
+        "tags": ["Work Packages"],
+        "requestBody": { "content": { "application/json": { "schema": { "type": "object" } } } },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/hal+json": { "schema": { "$ref": "#/components/schemas/Work_PackageModel" } }
+            }
+          },
+          "422": { "description": "Validation error" }
+        }
+      },
+      "delete": {
+        "summary": "Delete work package(s)",
+        "description": "Bulk deletion may be available via bulk endpoints; individual deletion semantics depend on server configuration.",
+        "tags": ["Work Packages"],
+        "responses": { "204": { "description": "Deleted" } }
+      }
+    },
+
+    "/api/v3/projects/{id}/work_packages": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "integer" },
+          "description": "Project id"
+        }
+      ],
+      "get": {
+        "summary": "Get work packages of project",
+        "description": "Returns the collection of work packages that are related to the given project.",
+        "tags": ["Work Packages"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/hal+json": { "schema": { "$ref": "#/components/schemas/Work_Package_Collection" } }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create work package in project",
+        "description": "Create a work package scoped to the project. Use the project's form/schema to discover required fields.",
+        "tags": ["Work Packages"],
+        "requestBody": { "content": { "application/json": { "schema": { "type": "object" } } } },
+        "responses": {
+          "201": { "description": "Created", "content": { "application/hal+json": { "schema": { "$ref": "#/components/schemas/Work_PackageModel" } } } }
+        }
+      }
+    },
+
+    "/api/v3/projects/{id}/work_packages/form": {
+      "post": {
+        "summary": "Project-scoped Work Package Create Form",
+        "description": "Return the form/schema for creating a work package inside a specific project.",
+        "tags": ["Work Packages"],
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+
+    "/api/v3/work_packages/{id}/available_projects": {
+      "get": {
+        "summary": "Available projects for work package",
+        "description": "Gets a list of projects that are available as targets to which the work package can be moved.",
+        "tags": ["Work Packages"],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "OK", "content": { "application/hal+json": { "schema": { "$ref": "#/components/schemas/Available_projects_for_work_packageModel" } } } }
+        }
+      }
+    },
+
+    "/api/v3/work_packages/{id}/available_relation_candidates": {
+      "get": {
+        "summary": "Available relation candidates",
+        "description": "List candidates to relate the given work package to.",
+        "tags": ["Work Packages"],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "OK" } }
+      }
+    }
+
+  },
+
+  "components": {
+    "schemas": {
+      "Work_PackageModel": {
+        "type": "object",
+        "description": "Work package resource (schema omitted in this subset)."
+      },
+      "Work_Package_Collection": {
+        "type": "object",
+        "description": "Collection of work packages (schema omitted in this subset)."
+      },
+      "Work_Package_Schemas": { "type": "object", "description": "Work package schema collection." },
+      "Available_projects_for_work_packageModel": { "type": "object", "description": "Available projects for a work package." }
+    }
+  }
+}
