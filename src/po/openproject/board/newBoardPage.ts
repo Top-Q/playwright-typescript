@@ -1,4 +1,4 @@
-import { BaseComponent, BasePage, BoardsPage } from '../../../internals';
+import { BaseComponent, BasePage, BoardsPage } from '../../../../internals';
 import { Locator, Page } from '@playwright/test';
 
 /**
@@ -48,7 +48,7 @@ export class ListComp extends BaseComponent {
  * * There is no need to save the board after filling the name, as it is automatically saved.
  * * Use the `clickBoardsLink` method to navigate back to the boards list page.
  */
-export class NewBoardPage extends BasePage {
+export class NewBoardPage extends BasePage<NewBoardPage> {
 
     private readonly boardNameTextbox: Locator;    
     private readonly addListToBoardLink: Locator;
@@ -62,6 +62,11 @@ export class NewBoardPage extends BasePage {
             .describe('Textbox for entering the board name');
         this.boardsLink = page.getByRole('link', { name: 'Boards' })
             .describe('Link to navigate back to the boards list page');
+    }
+
+    async waitForLoad(): Promise<NewBoardPage> {
+        await this.addListToBoardLink.waitFor();
+        return this;
     }
 
     /**

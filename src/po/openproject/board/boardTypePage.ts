@@ -1,4 +1,4 @@
-import { BasePage, NewBoardPage } from '../../../internals';
+import { BasePage, NewBoardPage } from '../../../../internals';
 import { Locator, Page } from '@playwright/test';
 
 /**
@@ -6,7 +6,7 @@ import { Locator, Page } from '@playwright/test';
  * This class represents the board type selection page in the OpenProject application.
  * Users can choose the type of board they want to create.
  */
-export class BoardTypePage extends BasePage {
+export class BoardTypePage extends BasePage<BoardTypePage> {
 
     private readonly basicBoardButton: Locator;
 
@@ -14,6 +14,11 @@ export class BoardTypePage extends BasePage {
         super(page);
         this.basicBoardButton = page.getByRole('button', { name: 'Basic Start from scratch with a blank board' })
             .describe('Button to select the Basic board type');
+    }
+
+    async waitForLoad(): Promise<BoardTypePage> {
+        await this.basicBoardButton.waitFor();
+        return this;
     }
 
    /**

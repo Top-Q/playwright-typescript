@@ -1,4 +1,4 @@
-import {BasePage, ProjectSelectionComponent} from '../../../internals';
+import {BasePage, ProjectSelectionComponent} from '../../../../internals';
 import { Locator, Page } from '@playwright/test';
 
 /**
@@ -7,7 +7,7 @@ import { Locator, Page } from '@playwright/test';
  * existing PROJECT and also, allows the user to select a project by 
  * clicking on the `Select a project` link.
  */
-export class HomePage extends BasePage {
+export class HomePage extends BasePage<HomePage> {
 
     private readonly selectAProjectLink: Locator;
 
@@ -16,6 +16,11 @@ export class HomePage extends BasePage {
         this.selectAProjectLink = this.page.getByRole('link', { name: 'Select a project' });
     }
 
+    async waitForLoad(): Promise<HomePage> {
+        await this.selectAProjectLink.waitFor();
+        return this;
+    }   
+
     /**
      * Clicks on the 'Select a project' link and returns a ProjectSelectionComponent.
      * 
@@ -23,6 +28,6 @@ export class HomePage extends BasePage {
      */
     async clickSelectAProjectLink(): Promise<ProjectSelectionComponent> {
         await this.selectAProjectLink.click();
-        return new ProjectSelectionComponent(this.page);
+        return await new ProjectSelectionComponent(this.page).waitForLoad();
     }
 }

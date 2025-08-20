@@ -1,11 +1,11 @@
 import { Locator, Page } from '@playwright/test';
-import { BaseComponent, BoardsPage, WorkPackagesPage } from '../../../internals';
+import { BaseComponent, BoardsPage, WorkPackagesPage } from '../../../../internals';
 
 /**
  * Represents the main menu component in OpenProject on the left of the page.
  * Allows navigation to different sections like Work Packages and Boards.
  */
-export class MainMenuComp extends BaseComponent {
+export class MainMenuComp extends BaseComponent<MainMenuComp> {
 
     readonly workPackagesLink: Locator;
 
@@ -18,6 +18,11 @@ export class MainMenuComp extends BaseComponent {
         
     }
 
+    async waitForLoad(): Promise<MainMenuComp> {
+        await this.workPackagesLink.waitFor();  
+        return this;
+    }
+
     /**
      * Click on the 'Work packages' menu item and returns a WorkPackagesPage.
      * It will also change the menu to the work packages menu.
@@ -25,7 +30,7 @@ export class MainMenuComp extends BaseComponent {
      */
     async clickWorkPackagesLink(): Promise<WorkPackagesPage> {
         await this.workPackagesLink.click();
-        return new WorkPackagesPage(this.page);
+        return await new WorkPackagesPage(this.page).waitForLoad();
     }
 
     /**

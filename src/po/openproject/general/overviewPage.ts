@@ -1,4 +1,4 @@
-import { BasePage } from '../../../internals';
+import { BasePage } from '../../../../internals';
 import { Locator, Page } from '@playwright/test';
 import { MainMenuComp } from './mainMenuComp';
 
@@ -7,7 +7,7 @@ import { MainMenuComp } from './mainMenuComp';
  * This class represents the overview page in the OpenProject application.
  * It provides access to the main menu and filtering options.
  */
-export class OverviewPage extends BasePage {
+export class OverviewPage extends BasePage<OverviewPage> {
 
     readonly menuSidebarContainer: Locator;
     readonly activateFilterButton: Locator;
@@ -23,6 +23,11 @@ export class OverviewPage extends BasePage {
             .describe('Textbox to filter by text');
     }
 
+    async waitForLoad(): Promise<OverviewPage> {
+        await this.menuSidebarContainer.first().waitFor();
+        return this;
+    }
+
     /**
      * Returns an instance of the MainMenuComp class.
      */
@@ -31,7 +36,11 @@ export class OverviewPage extends BasePage {
     }
 
     /**
+     * ## Description
      * Clicks the activate filter button.
+     * 
+     * ## Behavior
+     * If the filter is already active, it will be deactivated.
      */
     async clickActivateFilterButton(): Promise<void> {
         await this.activateFilterButton.click();
@@ -42,7 +51,9 @@ export class OverviewPage extends BasePage {
      * @param text - The text to filter by.
      */
     async fillFilterByText(text: string): Promise<void> {
+        const queryPromise = this.page.waitForResponse("**/queries/**");
         await this.filterByTextTextBox.fill(text);
+        await queryPromise;
     }
 
 }

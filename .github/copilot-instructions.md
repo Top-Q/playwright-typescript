@@ -25,7 +25,11 @@ Common business workflows include:
 
 ## References
 
-- **Page Object Examples**: `/src/po/`
+- **Open Project Page Objects**: `/src/po/openproject/`
+- **Open Project General Page Objects**: `/src/po/openproject/general/`
+- **Open Project Work Packages Page Objects**: `/src/po/openproject/workpackage/
+- **Open Project Boards Page Objects**: `/src/po/openproject/board/`
+- **UI Tests**: `/tests/ui/`
 - **Test Fixtures**: `readyOverviewPage` in test setup
 - **Playwright MCP**: for DOM inspection and selector validation during triage
 - **Chat Modes**:

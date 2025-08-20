@@ -1,4 +1,4 @@
-import { BaseComponent, BasePage, BoardTypePage } from '../../../internals';
+import { BaseComponent, BasePage, BoardTypePage } from '../../../../internals';
 import { Locator, Page } from '@playwright/test';
 
 /**
@@ -60,13 +60,18 @@ export class BoardTableRowComp extends BaseComponent {
  * This class represents a table component that displays a list of boards in the OpenProject application.
  * It provides methods to interact with the rows of the table.
  */
-export class BoardTableComp extends BaseComponent {
+export class BoardTableComp extends BaseComponent<BoardTableComp> {
 
     readonly nameColumnHeader: Locator
 
     constructor(protected readonly page: Page, protected readonly rootLocator: Locator) {
         super(page, rootLocator);
         this.nameColumnHeader = this.rootComponent.getByText('Name', { exact: true });
+    }
+
+    async waitForLoad(): Promise<BoardTableComp> {
+        await this.nameColumnHeader.waitFor();
+        return this;
     }
 
     /**
@@ -182,7 +187,7 @@ export class BoardTableComp extends BaseComponent {
  * This class represents the boards list page in the OpenProject application.
  * Users can view, create, and delete boards from this page.
  */
-export class BoardsPage extends BasePage {
+export class BoardsPage extends BasePage<BoardsPage> {
 
     readonly createNewBoardButton: Locator;
     readonly boardNamesTds: Locator;
@@ -199,6 +204,11 @@ export class BoardsPage extends BasePage {
             .describe('Delete buttons for boards');
         this.boardTableRoot = page.locator('table.generic-table')
             .describe('Root locator for the board table');
+    }
+
+    async waitForLoad(): Promise<BoardsPage> {
+        await this.createNewBoardButton.waitFor();
+        return this;
     }
 
     /**

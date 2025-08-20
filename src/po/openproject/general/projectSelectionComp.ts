@@ -1,16 +1,21 @@
-import { BasePage, OverviewPage } from '../../../internals';
+import { BasePage, OverviewPage } from '../../../../internals';
 import { Locator, Page } from '@playwright/test';
 
 /**
  * A dialog component with dropdown for project selection.
  */
-export class ProjectSelectionComponent extends BasePage {
+export class ProjectSelectionComponent extends BasePage<ProjectSelectionComponent> {
 
     readonly projectsListContainer: Locator;
 
     constructor(public readonly page: Page) {
         super(page);
         this.projectsListContainer = this.page.locator('#project_autocompletion_wrapper');
+    }
+
+    async waitForLoad(): Promise<ProjectSelectionComponent> {
+        await this.projectsListContainer.first().waitFor();
+        return this;
     }
 
     /**
@@ -20,6 +25,6 @@ export class ProjectSelectionComponent extends BasePage {
      */
     async clickProjectByName(projectName: string): Promise<OverviewPage> {
         await this.projectsListContainer.getByText(projectName).click();
-        return new OverviewPage(this.page);
+        return new OverviewPage(this.page).waitForLoad();
     }
 }

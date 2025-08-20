@@ -1,4 +1,4 @@
-import { BasePage } from '../../../internals';
+import { BasePage } from '../../../../internals';
 import { Locator, Page } from '@playwright/test';
 import { HomePage } from './homePage';
 
@@ -7,7 +7,7 @@ import { HomePage } from './homePage';
  * This page represents the introduction screen of the OpenProject application, 
  * where users can log in to the application.
  */
-export class IntroPage extends BasePage {
+export class IntroPage extends BasePage<IntroPage> {
 
     private readonly signInLink: Locator;
     private readonly userNameTextBox: Locator;
@@ -22,6 +22,11 @@ export class IntroPage extends BasePage {
         this.passwordTextBox = this.page.getByLabel('Password', { exact: true }).describe('Password input field');
         this.signInButton = this.page.getByRole('button', { name: 'Sign in' }).describe('Sign in button');
         
+    }
+
+    async waitForLoad(): Promise<IntroPage> {
+        await this.signInLink.waitFor();
+        return this;
     }
 
     /**
@@ -52,7 +57,7 @@ export class IntroPage extends BasePage {
      */
     async clickOnSignInButton(): Promise<HomePage> {
         await this.signInButton.click();
-        return new HomePage(this.page);
+        return await new HomePage(this.page).waitForLoad();
     }
 
 }

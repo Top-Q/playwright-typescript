@@ -1,4 +1,4 @@
-import { BasePage } from '../../../internals';
+import { BasePage } from '../../../../internals';
 import { Locator, Page } from '@playwright/test';
 /**
  * # Base Workpackage Page Class
@@ -6,7 +6,7 @@ import { Locator, Page } from '@playwright/test';
  * The workpackage types include Milestone, Phase, and Task.
  * Do not use this class directly; instead, use the specific classes for each workpackage type.
  */
-export abstract class NewWorkpackagePage extends BasePage {
+export abstract class NewWorkpackagePage extends BasePage<NewWorkpackagePage> {
     readonly subjectTextBox: Locator;
     readonly descriptionTextBox: Locator;
     readonly saveButton: Locator;
@@ -18,6 +18,7 @@ export abstract class NewWorkpackagePage extends BasePage {
         this.saveButton = this.page.getByRole('button', { name: 'Save' });
     }
 
+    
     async fillSubject(subject: string): Promise<void> {
         await this.subjectTextBox.fill(subject);
     }
