@@ -99,8 +99,10 @@ test.describe('WorkPackages API (infrastructure)', () => {
             const currentBody = (await currentRes.json()) as Record<string, unknown> & { lockVersion?: number; lock_version?: number };
             // prefer camelCase lockVersion, fall back to snake_case lock_version
             let lockVersion: number | undefined;
+            // eslint-disable-next-line playwright/no-conditional-in-test
             if (typeof currentBody.lockVersion === 'number') {
                 lockVersion = currentBody.lockVersion;
+            // eslint-disable-next-line playwright/no-conditional-in-test
             } else if (typeof currentBody.lock_version === 'number') {
                 lockVersion = currentBody.lock_version;
             }
@@ -122,11 +124,11 @@ test.describe('WorkPackages API (infrastructure)', () => {
             expect(String(subject)).toContain('updated');
         });
 
-        // await test.step('Cleanup: delete the updated work package', async () => {
-        //     expect(createdId).toBeDefined();
-        //     const deleteRes = await svc.deleteWorkPackage(createdId as number);
-        //     expect([200, 204]).toContain(deleteRes.status());
-        // });
+        await test.step('Cleanup: delete the updated work package', async () => {
+            expect(createdId).toBeDefined();
+            const deleteRes = await svc.deleteWorkPackage(createdId as number);
+            expect([200, 204]).toContain(deleteRes.status());
+        });
     });
 });
 
