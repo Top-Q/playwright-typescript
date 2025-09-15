@@ -36,18 +36,20 @@
 		],
 		"description": "Playwright Page Object class template"
 	},
-	"element-description": {
-		"prefix": "element-desc",
+	"method-description": {
+		"prefix": "method-desc",
 		"body": [
 			"/**",
 			" *",
-			" * ## Navigation",
-			" * - ${1:Usage context}",
+			" * ## Method Aliases",
+			" * - ${1:Aliases}",
 			" *",
 			" * ## Example Usage",
-			" * ```typescript",
+			" * ```ts",
 			" * ",
 			" * ```",
+			" * ## Expected Result",
+			" * - ${2:Result}",
 			" */"
 		],
 		"description": "JSDoc element description for Playwright page object locator"

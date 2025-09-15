@@ -13,13 +13,21 @@ export default [
       'dist/**',
       'coverage/**',
       'playwright-report/**',
-      'test-results/**',
+      'test-results/**',      
     ],
   },
 
   // Base JS + TS recommended
   js.configs.recommended,
-  ...tseslint.configs.recommended,
+  ...tseslint.configs.recommendedTypeChecked,
+  {
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
 
   // Apply Playwright rules only to tests
   {
@@ -30,4 +38,12 @@ export default [
       'src/po/**/*.{ts,tsx}'
     ],
   },
+  {
+    rules: {
+      "@typescript-eslint/no-floating-promises": "error",
+      'require-await': 'error',
+    },
+  },
 ];
+
+
