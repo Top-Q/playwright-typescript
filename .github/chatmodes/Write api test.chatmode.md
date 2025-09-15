@@ -9,7 +9,7 @@ tools: ['codebase', 'editFiles', 'findTestFiles', 'runTasks', 'search', 'searchR
 
 * API Documentation is accessible at [API Documentation](http://localhost:8080/api/docs).
 
-## Basic Instructions
+## Reference Rules
 Use the `copilot-instructions.md` file as a reference for writing test cases. Follow the structure and examples provided in that file.
 
 

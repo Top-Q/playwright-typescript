@@ -5,11 +5,11 @@ tools: ['codebase', 'editFiles', 'findTestFiles', 'runTasks', 'search', 'searchR
 
 # Instructions for Writing Test Cases
 
-## Basic Instructions
+## Reference Rules
 Use the `copilot-instructions.md` file as a reference for writing test cases. Follow the structure and examples provided in that file.
 
 
-## General Guidelines
+## Coding Standards
 - **Importing Test Function**: Always import the `test` function from the `./fixtures` file.
 - **Importing Page Objects**: Import Page Objects from the `../internals`
 - **Page Object Insantiation**: Except the first page object instantiation, do not use `new` keyword to instantiate Page Objects. Use the methods provided by the previous page object to get the next page object.
@@ -61,7 +61,7 @@ For example:
 * **Wait for load**: The page objects waitForLoad() method is
 ---
 
-## Workflow for Writing Tests
+## Step-by-Step Workflow
 1. **Understand the Business Requirement**: Read the business requirement carefully to understand what needs to be tested.
 2. **Identify the Page Objects**: Determine which page objects are needed for the test.
 3. **Check Existing Methods**: Before writing test, check if all required methods are implemented in the page objects. Check for similar methods and make sure to look at the `aliases` of the methods.
