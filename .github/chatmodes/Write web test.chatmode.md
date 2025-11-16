@@ -58,7 +58,8 @@ For example:
 ```
 
 * **Missing Methods**: If you are asked to write a test that requires a method not present in the page object, first, check yourself again and make sure that there is not existing way to achive the task. In case you still think that the method is missing, do not implement it directly. Instead, write a comment in the test indicating the missing methods.
-* **Wait for load**: The page objects waitForLoad() method is
+
+* **Test Isolation**: Tests must be runnable in isolation and not depend on side effects from other tests. Never assume test execution order. Tests should pass when run individually or as part of the whole suite, including in parallel.
 ---
 
 ## Step-by-Step Workflow
