@@ -51,7 +51,9 @@ export class OverviewPage extends BasePage<OverviewPage> {
      * @param text - The text to filter by.
      */
     async fillFilterByText(text: string): Promise<void> {
-        const queryPromise = this.page.waitForResponse("**/queries/**");
+        // Clear existing text. This is useful when re-applying the same filter.
+        await this.filterByTextTextBox.fill(""); 
+        const queryPromise = this.page.waitForResponse("**/queries/**");        
         await this.filterByTextTextBox.fill(text);
         await queryPromise;
     }
