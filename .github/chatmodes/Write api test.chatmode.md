@@ -1,6 +1,6 @@
 ---
 description: 'Write tests'
-tools: ['codebase', 'editFiles', 'findTestFiles', 'runTasks', 'search', 'searchResults', 'context7']
+tools: ['edit/createFile', 'edit/createDirectory', 'edit/editFiles', 'search', 'runTasks', 'problems', 'todos']
 ---
 
 # Instructions for Writing Test Cases

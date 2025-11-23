@@ -37,18 +37,57 @@ export class OverviewPage extends BasePage<OverviewPage> {
 
     /**
      * ## Description
-     * Clicks the activate filter button.
+     * Checks if the filter is currently active. 
+     * If active, there is no need to click the activate filter button again by clicking on the `clickActivateFilterButton`. 
+     * Clickin on the button when the filter is already active will deactivate it.
+     * 
+     * @returns true if the filter is active, false otherwise.
+     */
+    async isFilterActive(): Promise<boolean> {
+        return await this.activateFilterButton.isVisible();        
+    }
+
+    /**
+     * ## Description
+     * Clicks the activate filter button. Use the `isFilterActive` method to check if the filter is already active.
+     * If the filter is not active, this method will activate it, otherwise it will deactivate it.
+     *
      * 
      * ## Behavior
      * If the filter is already active, it will be deactivated.
+     * 
+     * ## Usage
+     * 
+     * ```typescript
+     * if (!(await overviewPage.isFilterActive())) {
+     *     await overviewPage.clickActivateFilterButton();
+     * }
+     * ```
      */
     async clickActivateFilterButton(): Promise<void> {
         await this.activateFilterButton.click();
     }
 
     /**
+     * ## Description
+     * 
      * Fills the filter by text textbox with the provided text.
+     * This will not work if the `clickActivateFilterButton` has not been clicked first.
      * @param text - The text to filter by.
+     * 
+     * ## Behavior
+     * Filling the textbox will trigger a query to the server to filter the work packages.
+     * This will populate the work packages table with the filtered results.
+     * 
+     * ## Usage
+     * ```typescript
+     * if (!(await overviewPage.isFilterActive())) {
+     *     await overviewPage.clickActivateFilterButton();
+     * }
+     * await overviewPage.fillFilterByText('My Work Package');
+     * const table = await workPackagesPage.workPackageTable();
+     * const exists = await table.isWorkPackageBySubjectExists(wpName);
+     * 
      */
     async fillFilterByText(text: string): Promise<void> {
         // Clear existing text. This is useful when re-applying the same filter.

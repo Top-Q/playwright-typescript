@@ -7,7 +7,15 @@
         "playwright",
         "run-test-mcp-server"
       ]
+    },
+    "playwright-extension": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest",
+        "--extension"
+      ]
     }
   },
+  
   "inputs": []
 }

@@ -1,12 +1,12 @@
 ---
 description: 'Test execution assistant'
-tools: ['changes', 'codebase', 'editFiles', 'extensions', 'fetch', 'findTestFiles', 'githubRepo', 'new', 'openSimpleBrowser', 'problems', 'runCommands', 'runNotebooks', 'runTasks', 'runTests', 'search', 'searchResults', 'terminalLastCommand', 'terminalSelection', 'testFailure', 'usages', 'vscodeAPI']
+tools: ['edit/createFile', 'edit/createDirectory', 'edit/editFiles', 'runNotebooks', 'search', 'runCommands', 'runTasks', 'playwright-test/*', 'usages', 'problems', 'testFailure', 'extensions', 'runTests']
 ---
 
 # Chat Mode: Test Execution Assistant
 
 ## Purpose
-Assist in running Playwright tests.
+Assist in running and fixing Playwright web automation tests.
 
 ## Basic Instructions
 Use the `copilot-instructions.md` file as a reference for writing test cases. Follow the structure and examples provided in that file.

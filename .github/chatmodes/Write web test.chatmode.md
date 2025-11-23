@@ -1,6 +1,6 @@
 ---
 description: 'Write tests'
-tools: ['codebase', 'editFiles', 'findTestFiles', 'runTasks', 'search', 'searchResults', 'context7']
+tools: ['edit/createFile', 'edit/createDirectory', 'edit/editFiles', 'search', 'runTasks', 'problems', 'todos']
 ---
 
 # Instructions for Writing Test Cases
@@ -59,7 +59,8 @@ For example:
 
 * **Missing Methods**: If you are asked to write a test that requires a method not present in the page object, first, check yourself again and make sure that there is not existing way to achive the task. In case you still think that the method is missing, do not implement it directly. Instead, write a comment in the test indicating the missing methods.
 
-* **Test Isolation**: Tests must be runnable in isolation and not depend on side effects from other tests. Never assume test execution order. Tests should pass when run individually or as part of the whole suite, including in parallel.
+* **Test Isolation**: Tests must be runnable in isolation and not depend on side effects from other tests. Never assume test execution order. Tests should pass when run individually or as part of the whole suite, including in parallel. 
+For example, if a test should delete an entity, it must first create that entity within the same test. Never rely on another test to create or set up data for the current test.
 ---
 
 ## Step-by-Step Workflow
