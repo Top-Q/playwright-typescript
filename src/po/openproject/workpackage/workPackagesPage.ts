@@ -8,15 +8,15 @@ import { Locator, Page } from '@playwright/test';
  */
 export class TaskTypeMenu extends BaseComponent<TaskTypeMenu> {
 
-    readonly taskLink: Locator;
-    readonly milestoneLink: Locator;
-    readonly phaseLink: Locator;
+    readonly taskMenuItem: Locator;
+    readonly milestoneMenuItem: Locator;
+    readonly phaseMenuItem: Locator;
 
     constructor(readonly page: Page) {
-        super(page, page.locator("ul.dropdown-menu[role='menu']"));
-        this.taskLink = this.rootComponent.getByRole("link", { name: "Task" });
-        this.milestoneLink = this.rootComponent.getByRole("link", { name: "Milestone" });
-        this.phaseLink = this.rootComponent.getByRole("link", { name: "Phase" });
+        super(page, page.locator(".dropdown-relative").describe('Task Type Menu'));
+        this.taskMenuItem = this.rootComponent.getByRole("menuitem", { name: "Task" , exact: true}).describe('Task Menu Item');
+        this.milestoneMenuItem = this.rootComponent.getByRole("menuitem", { name: "Milestone" }).describe('Milestone Menu Item');
+        this.phaseMenuItem = this.rootComponent.getByRole("menuitem", { name: "Phase" }).describe('Phase Menu Item');
     }
 
     async waitForLoad(): Promise<TaskTypeMenu> {
@@ -25,29 +25,29 @@ export class TaskTypeMenu extends BaseComponent<TaskTypeMenu> {
     }
 
     /**
-     * Clicks the task link in the task type menu and returns a NewTaskPage instance.
+     * Clicks the task menu item in the task type menu and returns a NewTaskPage instance.
      * @returns NewTaskPage
      */
-    async clickTaskLink(): Promise<NewTaskPage> {
-        await this.taskLink.click();
+    async clickTaskMenuItem(): Promise<NewTaskPage> {
+        await this.taskMenuItem.click();
         return new NewTaskPage(this.page);
     }
 
     /**
-     * Clicks the milestone link in the task type menu and returns a NewMilestonePage instance.
+     * Clicks the milestone menu item in the task type menu and returns a NewMilestonePage instance.
      * @returns NewMilestonePage
      */
-    async clickMilestoneLink(): Promise<NewMilestonePage> {
-        await this.milestoneLink.click();
+    async clickMilestoneMenuItem(): Promise<NewMilestonePage> {
+        await this.milestoneMenuItem.click();
         return new NewMilestonePage(this.page);
     }
 
     /**
-     * Clicks the phase link in the task type menu and returns a NewPhasePage instance.
+     * Clicks the phase menu item in the task type menu and returns a NewPhasePage instance.
      * @returns NewPhasePage
      */
-    async clickPhaseLink(): Promise<NewPhasePage> {
-        await this.phaseLink.click();
+    async clickPhaseMenuItem(): Promise<NewPhasePage> {
+        await this.phaseMenuItem.click();
         return new NewPhasePage(this.page);
     }
 }

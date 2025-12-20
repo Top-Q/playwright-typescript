@@ -1,4 +1,4 @@
-import {BasePage, ProjectSelectionComponent} from '../../../../internals';
+import {BasePage, ProjectSelectionDropdown} from '../../../../internals';
 import { Locator, Page } from '@playwright/test';
 
 /**
@@ -9,15 +9,15 @@ import { Locator, Page } from '@playwright/test';
  */
 export class HomePage extends BasePage<HomePage> {
 
-    private readonly selectAProjectLink: Locator;
+    private readonly allProjectsButton: Locator;
 
     constructor(public readonly page: Page) {
         super(page);
-        this.selectAProjectLink = this.page.getByRole('link', { name: 'Select a project' });
+        this.allProjectsButton = this.page.getByRole('button', { name: 'All projects' }).describe('All projects button');
     }
 
     async waitForLoad(): Promise<HomePage> {
-        await this.selectAProjectLink.waitFor();
+        await this.allProjectsButton.waitFor();
         return this;
     }   
 
@@ -26,8 +26,8 @@ export class HomePage extends BasePage<HomePage> {
      * 
      * @returns ProjectSelectionComponent to select a project
      */
-    async clickSelectAProjectLink(): Promise<ProjectSelectionComponent> {
-        await this.selectAProjectLink.click();
-        return await new ProjectSelectionComponent(this.page).waitForLoad();
+    async clickAllProjectsButton(): Promise<ProjectSelectionDropdown> {
+        await this.allProjectsButton.click();
+        return await new ProjectSelectionDropdown(this.page).waitForLoad();
     }
 }

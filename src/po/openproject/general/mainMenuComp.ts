@@ -13,8 +13,8 @@ export class MainMenuComp extends BaseComponent<MainMenuComp> {
  
     constructor(page: Page) {
         super(page, page.locator('.main-menu'));
-        this.workPackagesLink = this.rootComponent.getByRole('link', { name: 'Work packages' });
-        this.boardsLink = this.rootComponent.getByRole('link', { name: 'Boards' });
+        this.workPackagesLink = this.rootComponent.getByRole('link', { name: 'Work packages' }).describe('Work Packages Link in Main Menu');
+        this.boardsLink = this.rootComponent.getByRole('link', { name: 'Boards' }).describe('Boards Link in Main Menu');
         
     }
 

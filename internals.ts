@@ -8,7 +8,7 @@ export * from './src/po/openproject/basePage'
 export * from './src/po/openproject/baseComponent'
 
 // Open Project - General
-export * from './src/po/openproject/general/introPage'
+export * from './src/po/openproject/general/loginPage'
 export * from './src/po/openproject/general/homePage'
 export * from './src/po/openproject/general/projectSelectionComp'
 export * from "./src/po/openproject/general/mainMenuComp"

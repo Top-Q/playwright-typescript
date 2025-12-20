@@ -1,6 +1,6 @@
 ---
 description: 'Write tests'
-tools: ['edit/createFile', 'edit/createDirectory', 'edit/editFiles', 'search', 'runTasks', 'problems', 'todos']
+tools: ['edit/createFile', 'edit/createDirectory', 'edit/editFiles', 'search', 'runTasks', 'problems', 'fetch', 'todos']
 ---
 
 # Instructions for Writing Test Cases

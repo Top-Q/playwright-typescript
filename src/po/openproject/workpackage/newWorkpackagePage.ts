@@ -13,9 +13,9 @@ export abstract class NewWorkpackagePage extends BasePage<NewWorkpackagePage> {
 
     constructor(page: Page) {
         super(page);
-        this.subjectTextBox = this.page.getByRole('textbox', { name: 'Subject' });
-        this.descriptionTextBox = this.page.getByRole('textbox', { name: 'Rich Text Editor, main' });
-        this.saveButton = this.page.getByRole('button', { name: 'Save' });
+        this.subjectTextBox = this.page.getByRole('textbox', { name: 'Subject' }).describe('Subject Textbox');
+        this.descriptionTextBox = this.page.locator('.document-editor__editable').describe('Description Textbox');
+        this.saveButton = this.page.getByRole('button', { name: 'Save' }).describe('Save Button');
     }
 
     
