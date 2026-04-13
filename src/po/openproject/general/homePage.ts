@@ -17,6 +17,7 @@ export class HomePage extends BasePage<HomePage> {
     }
 
     async waitForLoad(): Promise<HomePage> {
+        await super.waitForLoad();
         await this.allProjectsButton.waitFor();
         return this;
     }   
