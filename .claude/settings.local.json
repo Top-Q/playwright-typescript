@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(netstat:*)",
+      "Bash(npx tsx:*)",
+      "Bash(npx playwright --version)",
+      "Read(//c/Users/itaiag/Downloads/claude_skills_for_playwright/compare-html-reports/**)",
+      "Read(//c/Users/itaiag/Downloads/claude_skills_for_playwright/compare-trace-reports/**)",
+      "Read(//c/Users/itaiag/Downloads/claude_skills_for_playwright/debug-flaky-test/**)",
+      "Bash(mkdir -p \"C:/Users/itaiag/git/node/playwright-typescript/.claude/skills/compare-trace-reports\")",
+      "Bash(cp \"C:/Users/itaiag/Downloads/claude_skills_for_playwright/compare-trace-reports/compare-trace-reports.py\" \"C:/Users/itaiag/git/node/playwright-typescript/.claude/skills/compare-trace-reports/compare-trace-reports.py\")",
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "Bash(pwsh -File /tmp/test-hook.ps1)"
+    ]
+  }
+}
