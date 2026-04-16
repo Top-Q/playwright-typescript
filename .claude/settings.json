@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx playwright test*)",
+      "Bash(npx eslint*)",
+      "Bash(npx prettier*)",
+      "Bash(python*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "powershell",
+            "command": "$raw = [Console]::In.ReadToEnd(); $p = ($raw | ConvertFrom-Json).tool_input.file_path; if ($p -match '\\.(ts|js|mjs|cjs)$') { npx eslint --fix \"$p\" 2>&1 | Out-Null; npx prettier --write \"$p\" 2>&1 | Out-Null }",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
