@@ -6,12 +6,14 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "types": ["node"]
   },
   "include": [
     "src/**/*",
     "tests/**/*",
     "tests-examples/**/*",
+    "scripts/**/*",
     "eslint.config.mjs",
     "internals.ts",
     "playwright.config.ts"

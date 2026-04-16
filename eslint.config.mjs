@@ -33,11 +33,17 @@ export default [
   {
     ...playwright.configs['flat/recommended'],
     files: [
-      'tests/**/*.{ts,tsx}', 
-      '**/*.{test,spec}.{ts,tsx}', 
-      'src/po/**/*.{ts,tsx}'
+      'tests/**/*.{ts,tsx}',
+      '**/*.{test,spec}.{ts,tsx}',
+      'src/po/**/*.{ts,tsx}',
     ],
   },
+
+  // Scripts (Node.js utilities) — no Playwright rules
+  {
+    files: ['scripts/**/*.{ts,tsx}'],
+  },
+
   {
     rules: {
       "@typescript-eslint/no-floating-promises": "error",

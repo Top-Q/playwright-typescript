@@ -11,7 +11,9 @@
       "Bash(cp \"C:/Users/itaiag/Downloads/claude_skills_for_playwright/compare-trace-reports/compare-trace-reports.py\" \"C:/Users/itaiag/git/node/playwright-typescript/.claude/skills/compare-trace-reports/compare-trace-reports.py\")",
       "Skill(update-config)",
       "Skill(update-config:*)",
-      "Bash(pwsh -File /tmp/test-hook.ps1)"
+      "Bash(pwsh -File /tmp/test-hook.ps1)",
+      "Bash(gh pr create --title 'Add Claude Code plugin infrastructure \\(MCP, skills, CLAUDE.md\\)' --body ':*)",
+      "Bash(gh auth:*)"
     ]
   }
 }
