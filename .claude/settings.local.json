@@ -15,5 +15,9 @@
       "Bash(gh pr create --title 'Add Claude Code plugin infrastructure \\(MCP, skills, CLAUDE.md\\)' --body ':*)",
       "Bash(gh auth:*)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "topq-playwright-plugin"
+  ],
+  "enableAllProjectMcpServers": true
 }
