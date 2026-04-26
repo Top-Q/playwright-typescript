@@ -7,8 +7,9 @@ import { expect } from '@playwright/test';
 
 test(
     'Log time on a work package and verify it appears in the cost report',
-    { tag: ['@ui', '@timeandcosts', '@regression'], timeout: 60_000 },
+    { tag: ['@ui', '@timeandcosts', '@regression'] },
     async ({ readyOverviewPage, page }) => {
+        test.setTimeout(60_000);
         const hours = '3';
         const activity = 'Development';
         const comment = `Auto time entry ${Date.now()}`;
