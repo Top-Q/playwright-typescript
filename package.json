@@ -7,7 +7,11 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md,yml,yaml}\"",
-    "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md,yml,yaml}\""
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md,yml,yaml}\"",
+    "dump-dom": "npx tsx scripts/dump-dom.ts",
+    "dump-dom:help": "npx tsx scripts/dump-dom.ts --help",
+    "dump-dom:dom": "npx tsx scripts/dump-dom.ts --dom",
+    "dump-dom:aria": "npx tsx scripts/dump-dom.ts --aria"
   },
   "repository": {
     "type": "git",

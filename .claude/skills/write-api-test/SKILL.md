@@ -64,6 +64,10 @@ Configuration is loaded from `.env`:
 - `OPENPROJECT_API_KEY` — Authentication token
 - `OPENPROJECT_PROJECT_ID` — Default project ID
 
+## Linting
+
+After generating the test file, always run `npx eslint <file>` and fix all reported errors before finishing.
+
 ## Cleanup
 
 Always clean up created resources. Delete entities in a final step or use fixture teardown:

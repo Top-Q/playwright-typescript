@@ -60,8 +60,8 @@ export class NewBoardPage extends BasePage<NewBoardPage> {
             .describe('Link to add a new list to the board');
         this.boardNameTextbox = page.getByPlaceholder("Name of this view").first()
             .describe('Textbox for entering the board name');
-        this.boardsLink = page.getByRole('link', { name: 'Boards' })
-            .describe('Link to navigate back to the boards list page');
+        this.boardsLink = page.locator('#content-body').getByRole('link', { name: 'Boards' })
+            .describe('Breadcrumb link to navigate back to the boards list page');
     }
 
     async waitForLoad(): Promise<NewBoardPage> {
@@ -130,7 +130,7 @@ export class NewBoardPage extends BasePage<NewBoardPage> {
      */
     async clickBoardsLink(): Promise<BoardsPage> {
         await this.boardsLink.click();
-        return new BoardsPage(this.page);
+        return await new BoardsPage(this.page).waitForLoad();
     }
 
 }
