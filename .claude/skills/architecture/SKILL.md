@@ -82,3 +82,9 @@ Methods that cause navigation return an instance of the destination page (fluent
 ### 10. Every page/component implements `waitForLoad()`
 
 Override `waitForLoad()` to wait for a key element that confirms the page/component is ready.
+
+### 11. Module Scaffolding
+
+When creating page objects for an entirely new module, follow the module scaffold checklist.
+
+See: [references/module-scaffold.md](references/module-scaffold.md)

@@ -50,7 +50,7 @@ Tests simulate an **admin** user logged into the **Demo Project**.
 1. All page objects extend `BasePage<T>` with own type as generic parameter
 2. All components extend `BaseComponent<T>`, scoped to `rootComponent` locator
 3. Assertions belong in tests only — page objects never import `expect`
-4. All imports go through `internals.ts` — every new PO/component must be exported there
+4. All PO/component imports go through `internals.ts` — every new PO/component must be exported there. Standalone utilities (e.g. `dumpDom`) are imported directly from their source file to avoid barrel re-export type resolution issues in the IDE.
 5. Use Playwright fixtures for test setup (not `beforeEach`)
 6. Use `test.step()` with Given/When/Then BDD structure
 7. Locators use `.describe()` for trace clarity
@@ -66,10 +66,48 @@ Tests simulate an **admin** user logged into the **Demo Project**.
 - ESLint v9 + Prettier enforced
 - No floating promises (`@typescript-eslint/no-floating-promises: error`)
 - All async functions must use `await`
+- **After generating or modifying any code, always run `npx eslint <file>` and fix all errors before finishing**
 
 ## Test Isolation
 
 Tests must be runnable in isolation and not depend on side effects from other tests. Never assume test execution order. If a test deletes an entity, it must first create that entity within the same test.
+
+## Debugging Utilities
+
+### `dumpDom(page, options?)`
+
+Import from `internals.ts`. Captures three artifacts to `test-results/debug-dumps/<timestamp>-<label>/`:
+
+| File | Use for |
+|------|---------|
+| `aria.yml` | Writing `getByRole()` locators and `toMatchAriaSnapshot()` assertions |
+| `content.html` | Finding IDs, classes, and data attributes |
+| `screenshot.png` | Visual confirmation of page state |
+
+**Parameters:**
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `label` | `'dump'` | Folder name suffix |
+| `sleepMs` | `0` | Wait before capturing (ms) |
+| `waitForNetworkIdle` | `false` | Wait for network idle before capturing |
+| `outputDir` | `'test-results/debug-dumps'` | Output folder |
+
+**Usage:** Drop anywhere in a test or page object — the test **resumes automatically**.
+
+```typescript
+// Minimal — snapshot current state
+await dumpDom(page);
+
+// After an action — wait for dynamic content to settle
+await someButton.click();
+await dumpDom(page, { waitForNetworkIdle: true, label: 'after-click' });
+
+// With a short animation delay
+await dumpDom(page, { sleepMs: 500, label: 'modal-open' });
+```
+
+Remove `dumpDom` calls after investigation is complete.
 
 ## Skills & Commands
 

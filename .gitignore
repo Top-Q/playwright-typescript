@@ -146,3 +146,6 @@ vite.config.ts.timestamp-*
 
 # dump-dom snapshots (generated artifacts, not source)
 dom-snapshots/
+
+# Playwright cli
+.playwright-cli/

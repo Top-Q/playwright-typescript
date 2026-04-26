@@ -13,11 +13,25 @@
       "Skill(update-config:*)",
       "Bash(pwsh -File /tmp/test-hook.ps1)",
       "Bash(gh pr create --title 'Add Claude Code plugin infrastructure \\(MCP, skills, CLAUDE.md\\)' --body ':*)",
-      "Bash(gh auth:*)"
+      "Bash(gh auth:*)",
+      "Bash(npx tsc:*)",
+      "Skill(playwright-cli)",
+      "Bash(playwright-cli open:*)",
+      "Bash(playwright-cli goto:*)",
+      "Bash(playwright-cli fill:*)",
+      "Bash(playwright-cli click:*)",
+      "Bash(playwright-cli snapshot:*)",
+      "Bash(playwright-cli eval \"el => \\({ tag: el.tagName, title: el.title, class: el.className, id: el.id, href: el.href, ''aria-label'': el.getAttribute\\(''aria-label''\\), ''data-testid'': el.getAttribute\\(''data-testid''\\), parent: el.parentElement?.className }\\)\" e61)",
+      "Bash(playwright-cli eval:*)",
+      "Bash(playwright-cli hover:*)",
+      "mcp__claude_ai_Google_Drive__search_files",
+      "Bash(playwright-cli:*)",
+      "WebFetch(domain:openclaw.ai)",
+      "Bash(npx playwright-cli:*)"
     ]
   },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "topq-playwright-plugin"
-  ],
-  "enableAllProjectMcpServers": true
+  ]
 }

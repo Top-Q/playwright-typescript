@@ -25,7 +25,7 @@ export class BoardTableRowComp extends BaseComponent {
         this.name = this.rootComponent.getByRole('cell').nth(0).describe('Name of the board');
         this.boardType = this.rootComponent.getByRole('cell').nth(1).describe('Type of the board');
         this.createdOn = this.rootComponent.getByRole('cell').nth(2).describe('Creation date of the board');
-        this.deleteButton = this.rootComponent.getByRole('button', { name: 'Delete' }).describe('Delete button for the board');
+        this.deleteButton = this.rootComponent.locator('[title="Delete"]').describe('Delete link for the board');
     }
 
     /**
@@ -45,12 +45,18 @@ export class BoardTableRowComp extends BaseComponent {
      * 
      */
     async clickDeleteButtonAndAcceptDeletion(): Promise<void> {
+        const boardsPageUrl = this.page.url();
         this.page.once('dialog', async dialog => {
             await dialog.accept();
         });
+        // Wait for the DELETE request to complete before navigating away.
+        // Turbo follows the 302 redirect as DELETE → 404, so we navigate back manually.
+        const deleteResponse = this.page.waitForResponse(
+            response => response.request().method() === 'DELETE' && response.status() === 302
+        );
         await this.deleteButton.click();
-        await this.page.getByRole('alert').getByText('Successful deletion.').waitFor();
-        
+        await deleteResponse;
+        await this.page.goto(boardsPageUrl);
     }
 
 }
@@ -113,11 +119,16 @@ export class BoardTableComp extends BaseComponent<BoardTableComp> {
      */
     async getNumberOfRows(): Promise<number> {
         await this.page.waitForLoadState('domcontentloaded');
+        // When all boards are deleted, the table disappears entirely.
+        const tableCount = await this.rootLocator.count();
+        if (tableCount === 0) {
+            return 0;
+        }
         await this.nameColumnHeader.waitFor();
         const numOfRows: number = await this.rootLocator.locator('tbody tr').count();
         if (numOfRows === 1) {
             if (await this.rootLocator.getByText('No visible results to display.').count() > 0) {
-                // If there is only one row and it says "No visible results to display", then   
+                // If there is only one row and it says "No visible results to display", then
                 // there are no boards in the table.
                 return 0;
             }
@@ -196,7 +207,7 @@ export class BoardsPage extends BasePage<BoardsPage> {
 
     constructor(public readonly page: Page) {
         super(page);
-        this.createNewBoardButton = page.locator('.toolbar-items [title="Create new board"]')
+        this.createNewBoardButton = page.locator('#add-board-button[aria-label="Create new board"]')
             .describe('Button to create a new board');
         this.boardNamesTds = page.locator('table.generic-table td.name > a')
             .describe('List of board names');
@@ -236,7 +247,7 @@ export class BoardsPage extends BasePage<BoardsPage> {
      */
     async clickCreateBoardButton(): Promise<BoardTypePage> {
         await this.createNewBoardButton.click();
-        return new BoardTypePage(this.page);
+        return await new BoardTypePage(this.page).waitForLoad();
     }
 
 

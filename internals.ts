@@ -23,6 +23,13 @@ export * from './src/po/openproject/board/boardsPage'
 export * from './src/po/openproject/board/boardTypePage'
 export * from './src/po/openproject/board/newBoardPage'
 
+// Open Project - Work Package Detail
+export * from './src/po/openproject/workpackage/workPackageDetailPage'
+
+// Open Project - Time and Costs
+export * from './src/po/openproject/timeandcosts/logTimeDialogComp'
+export * from './src/po/openproject/timeandcosts/costReportsPage'
+
 // Saucelabs (demo) - All Page objects
 export * from './src/po/saucelabs/loginPage'
 export * from './src/po/saucelabs/productsPage'
