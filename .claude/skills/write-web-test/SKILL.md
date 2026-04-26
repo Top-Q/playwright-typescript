@@ -81,7 +81,7 @@ If a page or component has no PO at all but the module is known:
 ### Tier 3: Entirely unknown module
 
 If the module has never been automated and you have no knowledge of its pages:
-1. Invoke the **investigate-module** skill first to explore the module and produce a report
+1. Invoke the **investigate-module** skill first — it will use source code (preferred) or live browser investigation to produce a report
 2. Follow the **architecture skill's module-scaffold checklist** to create all POs
 3. Then return here to write the test
 

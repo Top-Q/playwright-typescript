@@ -8,7 +8,45 @@ allowed-tools:
 
 # Investigate Module
 
-Use this skill when you encounter a **new OpenProject module** that has no existing page objects. The goal is to explore the module in a live browser and produce a structured report that drives PO creation.
+Use this skill when you encounter a **new OpenProject module** that has no existing page objects. The goal is to produce a structured report that drives PO creation.
+
+## Source Code First (Preferred Approach)
+
+If the OpenProject source code is available locally at the **same version** as the running application, prefer reading the source over live browser investigation. Source code provides locators, URL patterns, and component hierarchy directly — eliminating most DOM discovery iterations.
+
+### How to check source availability and version match
+
+1. Ask if the source is available and where (e.g. `C:\Users\...\git\ruby\openproject`)
+2. Verify the source branch matches the deployed version:
+   - Check the Docker tag: `cat <docker-dir>/.env | grep TAG` (e.g. `TAG=16-slim`)
+   - Check the source branch: `git -C <source-path> branch --show-current` (e.g. `stable/16`)
+   - They must match (e.g. both `16`) — if they don't, fall back to live browser investigation
+
+### Source code investigation workflow
+
+Look in the module directory (usually `modules/<module-name>/`):
+
+| What to find | Where to look |
+|---|---|
+| URL patterns | `modules/<module>/config/routes.rb` |
+| Page structure + locators | `modules/<module>/app/components/**/*.html.erb` |
+| Button labels, menu items | `modules/<module>/config/locales/en.yml` (i18n keys) |
+| Dialog IDs | Component templates — search for `id:` in `.html.erb` files |
+| Test selectors | Search for `data-test-selector` or `test-selector` in templates |
+| Component hierarchy | `modules/<module>/app/components/` directory tree |
+
+Use a sub-agent (Explore type) to scan the module directory and extract all of the above in one pass.
+
+### Handling i18n keys
+
+Button labels and menu items are often i18n keys like `t("meeting.types.one_time")`. Always resolve them against the locale file to get the actual English string used as the accessible name.
+
+### Verifying locators against runtime
+
+Even with source code, verify ambiguous locators against the live DOM using `error-context.md` from a failed test run (cheaper than `dumpDom`). The most common mismatches are:
+- `data-test-selector` attributes present in source but not rendered in the deployed build
+- i18n keys resolving to different text than expected
+- Heading levels (`h1` vs `h2`) set by Primer layout components
 
 ## Prerequisites
 
@@ -16,7 +54,9 @@ Use this skill when you encounter a **new OpenProject module** that has no exist
 - The module may need to be enabled in Project Settings > Modules
 - Chrome is available for browser automation (or use the playwright-cli skill)
 
-## Investigation Workflow
+## Live Browser Investigation Workflow (Fallback)
+
+Use this when source code is unavailable or versions don't match.
 
 ### 1. Open the browser and log in
 

@@ -11,6 +11,8 @@ Run the **investigate-module** skill first to produce a structured investigation
 - DOM quirks to account for
 - The main menu link selector
 
+The investigate-module skill will use **source code** (preferred) if available at the matching version, or **live browser investigation** otherwise. Source code investigation produces more accurate locators upfront and requires fewer debug iterations.
+
 ## Directory Structure
 
 ```
@@ -82,10 +84,34 @@ Add exports for all new POs and components, grouped under a comment header:
 
 ```typescript
 // <Module Name>
-export { <Page1> } from './src/po/openproject/<module>/<page1>Page';
-export { <Page2> } from './src/po/openproject/<module>/<page2>Page';
-export { <Component>Comp } from './src/po/openproject/<module>/<component>Comp';
+export * from './src/po/openproject/<module>/<page1>Page';
+export * from './src/po/openproject/<module>/<page2>Page';
+export * from './src/po/openproject/<module>/<component>Comp';
 ```
+
+### 5b. Fix circular dependency in new module PO files
+
+Because `MainMenuComp` imports the new module's landing page directly (step 4), and `MainMenuComp` is exported via `internals.ts`, any new module PO that imports from `internals.ts` creates a circular chain:
+
+```
+internals → mainMenuComp → <newPage> → internals
+```
+
+This causes the TypeScript language server to report **"Unsafe assignment of an error typed value"** in tests.
+
+**Fix:** In all new module PO files, import `BasePage` and `BaseComponent` directly from their source files — **not** from `internals.ts`:
+
+```typescript
+// DO THIS in new module PO files:
+import { BasePage } from '../basePage';
+import { BaseComponent } from '../baseComponent';
+
+// NOT THIS:
+import { BasePage } from '../../../../internals';
+import { BaseComponent } from '../../../../internals';
+```
+
+This applies to every `.ts` file under `src/po/openproject/<module>/`.
 
 ### 6. Create the test directory and fixtures
 

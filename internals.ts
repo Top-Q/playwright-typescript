@@ -30,6 +30,13 @@ export * from './src/po/openproject/workpackage/workPackageDetailPage'
 export * from './src/po/openproject/timeandcosts/logTimeDialogComp'
 export * from './src/po/openproject/timeandcosts/costReportsPage'
 
+// Open Project - Meetings
+export * from './src/po/openproject/meeting/meetingsPage'
+export * from './src/po/openproject/meeting/meetingShowPage'
+export * from './src/po/openproject/meeting/meetingFormDialogComp'
+export * from './src/po/openproject/meeting/agendaItemsComp'
+export * from './src/po/openproject/meeting/meetingSidePanelComp'
+
 // Saucelabs (demo) - All Page objects
 export * from './src/po/saucelabs/loginPage'
 export * from './src/po/saucelabs/productsPage'

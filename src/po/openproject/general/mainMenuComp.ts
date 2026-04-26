@@ -1,6 +1,7 @@
 import { Locator, Page } from '@playwright/test';
 import { BaseComponent, BoardsPage, WorkPackagesPage } from '../../../../internals';
 import { CostReportsPage } from '../timeandcosts/costReportsPage';
+import { MeetingsPage } from '../meeting/meetingsPage';
 
 /**
  * Represents the main menu component in OpenProject on the left of the page.
@@ -14,11 +15,14 @@ export class MainMenuComp extends BaseComponent<MainMenuComp> {
 
     readonly timeAndCostsLink: Locator;
 
+    readonly meetingsLink: Locator;
+
     constructor(page: Page) {
         super(page, page.locator('.main-menu'));
         this.workPackagesLink = this.rootComponent.getByRole('link', { name: 'Work packages' }).describe('Work Packages Link in Main Menu');
         this.boardsLink = this.rootComponent.getByRole('link', { name: 'Boards' }).describe('Boards Link in Main Menu');
         this.timeAndCostsLink = this.rootComponent.getByRole('link', { name: 'Time and costs' }).describe('Time and Costs Link in Main Menu');
+        this.meetingsLink = this.rootComponent.getByRole('link', { name: 'Meetings' }).describe('Meetings Link in Main Menu');
     }
 
     async waitForLoad(): Promise<MainMenuComp> {
@@ -54,5 +58,14 @@ export class MainMenuComp extends BaseComponent<MainMenuComp> {
     async clickTimeAndCostsLink(): Promise<CostReportsPage> {
         await this.timeAndCostsLink.click();
         return await new CostReportsPage(this.page).waitForLoad();
+    }
+
+    /**
+     * Click on the 'Meetings' menu item and returns a MeetingsPage.
+     * @returns MeetingsPage
+     */
+    async clickMeetingsLink(): Promise<MeetingsPage> {
+        await this.meetingsLink.click();
+        return await new MeetingsPage(this.page).waitForLoad();
     }
 }
