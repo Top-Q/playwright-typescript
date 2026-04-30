@@ -27,7 +27,16 @@
       "mcp__claude_ai_Google_Drive__search_files",
       "Bash(playwright-cli:*)",
       "WebFetch(domain:openclaw.ai)",
-      "Bash(npx playwright-cli:*)"
+      "Bash(npx playwright-cli:*)",
+      "Bash(curl:*)",
+      "WebSearch",
+      "Bash(.venv/Scripts/pip install:*)",
+      "Bash(.venv/Scripts/python -m pytest tests/ -v --ignore=tests/integration)",
+      "Bash(.venv/Scripts/python:*)",
+      "Bash(.venv/Scripts/pipeline:*)",
+      "Bash(PYTHONIOENCODING=utf-8 .venv/Scripts/pipeline:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

@@ -37,6 +37,11 @@ export * from './src/po/openproject/meeting/meetingFormDialogComp'
 export * from './src/po/openproject/meeting/agendaItemsComp'
 export * from './src/po/openproject/meeting/meetingSidePanelComp'
 
+// Open Project - Members
+export * from './src/po/openproject/members/membersPage'
+export * from './src/po/openproject/members/memberTableComp'
+export * from './src/po/openproject/members/memberTableRowComp'
+
 // Saucelabs (demo) - All Page objects
 export * from './src/po/saucelabs/loginPage'
 export * from './src/po/saucelabs/productsPage'
