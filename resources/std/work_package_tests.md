@@ -2,7 +2,7 @@
 id: WP-Create-Task
 suite: Work Packages
 feature: Work packages CRUD
-component: work-packages
+component: workpackage
 priority: P2
 tags: [ui,task,regression]
 variables:
@@ -28,7 +28,7 @@ Scenario: Create work package (task)
 id: WP-Delete-Task
 suite: Work Packages
 feature: Work packages CRUD
-component: work-packages
+component: workpackage
 priority: P2
 tags: [ui,task,regression]
 variables:
@@ -52,7 +52,7 @@ Scenario: Delete work package (task)
 id: WP-Create-Phase
 suite: Work Packages
 feature: Work packages CRUD
-component: work-packages
+component: workpackage
 priority: P2
 tags: [ui,phase,regression]
 variables:
@@ -76,7 +76,7 @@ Scenario: Create work package (phase)
 id: WP-Delete-Phase
 suite: Work Packages
 feature: Work packages CRUD
-component: work-packages
+component: workpackage
 priority: P2
 tags: [ui,phase,regression]
 variables:
