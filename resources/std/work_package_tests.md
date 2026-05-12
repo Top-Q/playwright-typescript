@@ -14,6 +14,7 @@ variables:
 
 Background:
   Given the user is authenticated as "default"
+  And the user selects the "Demo project"
   And the user is on the Work packages page
 
 Scenario: Create work package (task)
@@ -41,6 +42,7 @@ setup:
 
 Background:
   Given the user is authenticated as "default"
+  And the user selects the "Demo project"
   And the user is on the Work packages page
 
 Scenario: Delete work package (task)
@@ -63,6 +65,7 @@ variables:
 
 Background:
   Given the user is authenticated as "default"
+  And the user selects the "Demo project"
   And the user is on the Work packages page
 
 Scenario: Create work package (phase)
@@ -88,6 +91,7 @@ setup:
 
 Background:
   Given the user is authenticated as "default"
+  And the user selects the "Demo project"
   And the user is on the Work packages page
 
 Scenario: Delete work package (task)
