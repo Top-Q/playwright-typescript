@@ -18,12 +18,14 @@ Background:
   And the user is on the Work packages page
 
 Scenario: Create work package (task)
-  When the user creates a new work package of type "<workPackageType>"
+  When the user clicks on the create button
+  And the user selects "<workPackageType>"  
   And the user sets the work package name to "<name>"
   And the user sets the work package description to "<description>"
-  And the user saves the work package
-  And the user get back to the work packages page
-  And the user filter for work package with name "<name>"
+  And the user saves the work package  
+  And the user get back to the work packages pages
+  And the user clicks on the 'Activate filter' button
+  And the user fills the 'filter by text' textbox with name "<name>"  
   Then the work package named "<name>" exists in the work packages table
 
 ---
