@@ -22,6 +22,7 @@ Scenario: Create work package (task)
   And the user sets the work package name to "<name>"
   And the user sets the work package description to "<description>"
   And the user saves the work package
+  And the user get back to the work packages page
   And the user filter for work package with name "<name>"
   Then the work package named "<name>" exists in the work packages table
 
