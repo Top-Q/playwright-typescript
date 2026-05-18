@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "topq-playwright-plugin": {
-      "command": "node",
-      "args": ["C:/Users/itaiag/git/node/topq-playwright-plugin/dist/index.js"]
-    }
-  }
-}
