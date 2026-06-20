@@ -1,4 +1,4 @@
 import { test } from './ui/fixtures';
 
-test('seed', { tag: ['@ui', '@task', '@regression'] }, async ({ readyOverviewPage }) => {
+test('seed', { tag: ['@ui', '@task', '@regression'] }, async () => {
 })

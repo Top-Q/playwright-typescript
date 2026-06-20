@@ -70,24 +70,22 @@ export class OverviewPage extends BasePage<OverviewPage> {
 
     /**
      * ## Description
-     * 
+     *
      * Fills the filter by text textbox with the provided text.
      * This will not work if the `clickActivateFilterButton` has not been clicked first.
      * @param text - The text to filter by.
-     * 
+     *
      * ## Behavior
-     * Filling the textbox will trigger a query to the server to filter the work packages.
-     * This will populate the work packages table with the filtered results.
-     * 
+     * Filling the textbox will trigger a query to the server to filter the results.
+     * This will populate the results table with the filtered results.
+     *
      * ## Usage
      * ```typescript
      * if (!(await overviewPage.isFilterActive())) {
      *     await overviewPage.clickActivateFilterButton();
      * }
-     * await overviewPage.fillFilterByText('My Work Package');
-     * const table = await workPackagesPage.workPackageTable();
-     * const exists = await table.isWorkPackageBySubjectExists(wpName);
-     * 
+     * await overviewPage.fillFilterByText('My Search Term');
+     *
      */
     async fillFilterByText(text: string): Promise<void> {
         // Clear existing text. This is useful when re-applying the same filter.

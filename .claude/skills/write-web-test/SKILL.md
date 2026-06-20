@@ -9,9 +9,13 @@ Use this skill when creating new UI/web test cases from business requirements or
 
 ## Imports
 
-- Import `test` from `./fixtures` (relative to the test file) — **never** from `@playwright/test`
+Tests live in `tests/ui/<module>/<name>.spec.ts`, so from a test file:
+
+- Import `test` from `../fixtures` — **never** from `@playwright/test`
 - Import `expect` from `@playwright/test`
-- Import page objects only from `../internals` (or the appropriate relative path to `internals.ts`)
+- Import page objects only from `../../../internals` (the barrel at the project root)
+
+If your test file sits at a different depth, adjust the relative path to `fixtures.ts` and `internals.ts` accordingly.
 
 ## Test Structure
 

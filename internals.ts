@@ -36,7 +36,10 @@ export * from './src/po/openproject/members/memberTableRowComp';
 
 // Open Project - Work Packages
 export * from './src/po/openproject/workpackage/workPackagesPage';
-export * from './src/po/openproject/workpackage/workPackageDetailPage';
+export * from './src/po/openproject/workpackage/workPackageTypeMenuComp';
+export * from './src/po/openproject/workpackage/newWorkPackagePage';
+export * from './src/po/openproject/workpackage/workPackageDetailsPage';
+export * from './src/po/openproject/workpackage/deleteWorkPackageDialogComp';
 
 // Saucelabs (demo) - All Page objects
 export * from './src/po/saucelabs/loginPage';
