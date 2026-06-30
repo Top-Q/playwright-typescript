@@ -48,7 +48,9 @@
       "Bash(playwright-cli click:*)",
       "Bash(playwright-cli show:*)",
       "Bash(playwright-cli snapshot:*)",
-      "mcp__plugin_playwright_playwright__browser_type"
+      "mcp__plugin_playwright_playwright__browser_type",
+      "WebFetch(domain:github.com)",
+      "PowerShell(skill-validator *)"
     ]
   }
 }
