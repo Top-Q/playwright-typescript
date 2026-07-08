@@ -50,7 +50,9 @@
       "Bash(playwright-cli snapshot:*)",
       "mcp__plugin_playwright_playwright__browser_type",
       "WebFetch(domain:github.com)",
-      "PowerShell(skill-validator *)"
+      "PowerShell(skill-validator *)",
+      "Bash(pandoc --version)",
+      "Bash(pip install *)"
     ]
   }
 }
