@@ -1,0 +1,13 @@
+id: NFR-REL-001
+type: non_functional_requirement
+category: Reliability
+source:
+  document: openproject-demo-requirements.docx
+  section: '8'
+text: Concurrent edits to the same Work Package by two users shall be detected (optimistic locking) and
+  the second submitter shall be prompted to reconcile rather than silently overwrite.
+related_frs:
+- FR-WP-006
+test_cases: []
+notes: ID invented for tracking purposes; source doc's NFR table (Section 8) has no native IDs. related_frs
+  is inferred, not stated in source.

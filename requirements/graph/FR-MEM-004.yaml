@@ -1,0 +1,40 @@
+id: FR-MEM-004
+type: functional_requirement
+module: members-roles
+source:
+  document: openproject-demo-requirements.docx
+  section: '7.3'
+text: The system shall allow editing a Member's assigned Role(s) in place from the Members list without
+  requiring removal/re-invite.
+stories:
+- US-MEM-03
+business_rules:
+- BR-MEM-02
+permission_rows:
+- Assign/Change Roles
+data_fields:
+- Role.name
+test_cases:
+- id: TC-MEM-004-01
+  type: positive
+  title: Edit a Member's Role in place
+  preconditions:
+  - A Member currently holds Role 'Viewer'
+  - Logged in as a Project Manager
+  steps:
+  - From the Members list, edit the Member's Role to 'Team Member'
+  expected_result: Role updates in place without requiring the Member to be removed and re-invited.
+- id: TC-MEM-004-02
+  type: positive
+  title: Role change takes effect immediately, mid-session (BR-MEM-02)
+  preconditions:
+  - The affected Member has an active browser session open
+  - Their Role is changed from 'Viewer' to 'Team Member'
+  steps:
+  - With the Member's session still open, have them attempt to create a Work Package (previously disallowed
+    as Viewer)
+  expected_result: On their next action/reload, the Member can now create a Work Package, reflecting the
+    updated permission immediately.
+  refs:
+    business_rules:
+    - BR-MEM-02

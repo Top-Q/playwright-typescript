@@ -1,0 +1,47 @@
+id: FR-WP-009
+type: functional_requirement
+module: work-packages
+source:
+  document: openproject-demo-requirements.docx
+  section: '5.3'
+text: The system shall log all field changes, status transitions, and comments in a chronological Activity
+  tab on the Work Package detail view.
+stories:
+- US-WP-09
+business_rules: []
+permission_rows:
+- View Project/WP/Boards
+data_fields: []
+test_cases:
+- id: TC-WP-009-01
+  type: positive
+  title: Field change is recorded in the Activity tab
+  preconditions:
+  - A Work Package exists
+  - Logged in as a user with edit permission
+  steps:
+  - Change the Work Package's Priority field
+  - Save
+  - Open the Activity tab
+  expected_result: An entry appears showing the old and new Priority values, the acting user, and a timestamp.
+- id: TC-WP-009-02
+  type: positive
+  title: Comment is recorded chronologically in the Activity tab
+  preconditions:
+  - A Work Package exists
+  steps:
+  - Add a comment via the Work Package detail view
+  - Open the Activity tab
+  expected_result: The comment appears in chronological order alongside any other activity entries.
+- id: TC-WP-009-03
+  type: positive
+  title: Status transition is recorded in the Activity tab
+  preconditions:
+  - A Work Package exists in Status 'New'
+  steps:
+  - Transition Status to 'In Progress'
+  - Open the Activity tab
+  expected_result: A status-change entry is recorded showing 'New' -> 'In Progress' with user and timestamp.
+  refs:
+    nfr:
+    - NFR-AUDIT-001

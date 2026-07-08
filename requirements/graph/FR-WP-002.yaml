@@ -1,0 +1,58 @@
+id: FR-WP-002
+type: functional_requirement
+module: work-packages
+source:
+  document: openproject-demo-requirements.docx
+  section: '5.3'
+text: The system shall constrain the Subject field to a maximum of 255 characters and reject empty/whitespace-only
+  values.
+stories:
+- US-WP-01
+business_rules: []
+permission_rows:
+- Create Work Package
+data_fields:
+- WorkPackage.subject
+test_cases:
+- id: TC-WP-002-01
+  type: boundary-positive
+  title: Subject at exactly 255 characters is accepted
+  preconditions:
+  - Logged in as a Project Member
+  steps:
+  - Open 'Create new Work Package'
+  - Enter a Subject string of exactly 255 characters
+  - Click Save
+  expected_result: Work Package is created successfully with the full 255-character Subject persisted
+    and displayed.
+- id: TC-WP-002-02
+  type: boundary-negative
+  title: Subject exceeding 255 characters is rejected
+  preconditions:
+  - Logged in as a Project Member
+  steps:
+  - Open 'Create new Work Package'
+  - Enter a Subject string of 256 characters
+  - Click Save
+  expected_result: Save is blocked with a validation error indicating the 255-character limit; no Work
+    Package is created.
+- id: TC-WP-002-03
+  type: negative
+  title: Empty Subject is rejected
+  preconditions:
+  - Logged in as a Project Member
+  steps:
+  - Open 'Create new Work Package'
+  - Leave Subject empty
+  - Click Save
+  expected_result: A required-field validation error is shown; no Work Package is created.
+- id: TC-WP-002-04
+  type: negative
+  title: Whitespace-only Subject is rejected
+  preconditions:
+  - Logged in as a Project Member
+  steps:
+  - Open 'Create new Work Package'
+  - Enter only spaces (e.g. '   ') into Subject
+  - Click Save
+  expected_result: A validation error equivalent to an empty Subject is shown; no Work Package is created.

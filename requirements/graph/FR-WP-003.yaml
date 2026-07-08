@@ -1,0 +1,34 @@
+id: FR-WP-003
+type: functional_requirement
+module: work-packages
+source:
+  document: openproject-demo-requirements.docx
+  section: '5.3'
+text: The system shall default a new Work Package's Status to the workflow's initial status (e.g., 'New')
+  and Priority to 'Normal'.
+stories:
+- US-WP-01
+- US-WP-04
+business_rules: []
+permission_rows:
+- Create Work Package
+data_fields:
+- WorkPackage.status
+- WorkPackage.priority
+test_cases:
+- id: TC-WP-003-01
+  type: positive
+  title: New Work Package defaults to Status='New' and Priority='Normal'
+  preconditions:
+  - Logged in as a Project Member
+  - Project uses the default (unmodified) workflow/Type seed data (per global constraint)
+  steps:
+  - Create a new Work Package of Type 'Task', supplying only Subject
+  - Save
+  - Open the Work Package detail view
+  expected_result: Status field reads 'New' and Priority field reads 'Normal' without the user having
+    set either explicitly.
+  refs:
+    constraints:
+    - Default workflow, Type, and Role configurations are unmodified from the environment's initial seed
+      data unless a test explicitly changes them.

@@ -1,0 +1,69 @@
+id: FR-BRD-003
+type: functional_requirement
+module: boards
+source:
+  document: openproject-demo-requirements.docx
+  section: '6.3'
+text: For a Basic board, the system shall allow manually creating, renaming, reordering, and deleting
+  columns ('lists'), independent of any Work Package attribute.
+stories:
+- US-BRD-04
+business_rules:
+- BR-BRD-01
+permission_rows:
+- Create/Delete Board
+data_fields:
+- BoardList.name
+- BoardList.position
+test_cases:
+- id: TC-BRD-003-01
+  type: positive
+  title: Create a new list on a Basic Board
+  preconditions:
+  - A Basic Board exists
+  - Logged in as a user with 'manage boards' permission
+  steps:
+  - Add a new list/column to the Board
+  expected_result: New list appears on the Board.
+- id: TC-BRD-003-02
+  type: positive
+  title: Rename an existing list
+  preconditions:
+  - A Basic Board has a list named 'To Do'
+  steps:
+  - Rename the list to 'Backlog'
+  expected_result: List name updates and persists after reload.
+- id: TC-BRD-003-03
+  type: positive
+  title: Reorder lists via drag-and-drop
+  preconditions:
+  - A Basic Board has at least three lists
+  steps:
+  - Drag a list to a new position among its siblings
+  expected_result: New list order persists after page reload.
+- id: TC-BRD-003-04
+  type: negative
+  title: Cannot delete the last column mapped to a required Status (BR-BRD-01)
+  preconditions:
+  - An Action board has exactly one column mapped to a Status that is required (e.g., the workflow's initial
+    or terminal status)
+  steps:
+  - Attempt to delete that column
+  expected_result: Deletion is blocked with an explanatory error.
+  refs:
+    business_rules:
+    - BR-BRD-01
+- id: TC-BRD-003-05
+  type: edge
+  title: Deleting a non-essential list — card-handling behavior needs clarification
+  preconditions:
+  - A Basic Board list contains one or more cards
+  steps:
+  - Delete that list
+  expected_result: Doc does not specify whether cards in a deleted list are removed from the Board (but
+    the underlying Work Packages persist per BR-BRD-02) or require relocation first. Flag to stakeholder
+    to confirm expected behavior before finalizing this test's pass criteria.
+  refs:
+    business_rules:
+    - BR-BRD-02
+    notes: ambiguity — no explicit rule for deleting a list containing cards

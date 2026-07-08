@@ -1,0 +1,36 @@
+id: FR-MEM-008
+type: functional_requirement
+module: members-roles
+source:
+  document: openproject-demo-requirements.docx
+  section: '7.3'
+text: The system shall enforce that permission checks are evaluated as the union of all Roles a Member
+  holds within a given Project.
+stories:
+- US-MEM-02
+- US-MEM-03
+business_rules: []
+permission_rows: []
+data_fields: []
+test_cases:
+- id: TC-MEM-008-01
+  type: positive
+  title: Permissions are the union of all Roles a Member holds
+  preconditions:
+  - A Member holds two Roles, each granting a distinct permission not shared by the other
+  steps:
+  - Have the Member perform an action requiring the first Role's permission, then an action requiring
+    the second Role's permission
+  expected_result: Both actions succeed, demonstrating union rather than intersection semantics.
+- id: TC-MEM-008-02
+  type: edge
+  title: Removing one Role retains permissions from the remaining Role
+  preconditions:
+  - A Member holds two Roles, A and B
+  steps:
+  - Remove Role A from the Member, leaving only Role B
+  - Attempt an action requiring only Role B's permission
+  - Attempt an action requiring only Role A's (now-removed) permission
+  expected_result: The Role-B-only action succeeds; the Role-A-only action is now blocked.
+notes: Not tied to a single story or RBAC row in the source doc; underpins any scenario involving a Member
+  with multiple concurrent Roles.

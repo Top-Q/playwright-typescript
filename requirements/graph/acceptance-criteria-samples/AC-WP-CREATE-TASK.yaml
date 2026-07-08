@@ -1,0 +1,22 @@
+id: AC-WP-CREATE-TASK
+type: acceptance_criteria_sample
+module: work-packages
+title: Create Task Work Package
+source:
+  document: openproject-demo-requirements.docx
+  section: '5.6'
+exemplifies:
+- FR-WP-001
+- FR-WP-002
+- FR-WP-003
+- FR-WP-004
+criteria:
+- Given I am on the Work Packages list of the Demo Project, when I click 'Create new Work Package' and
+  select Type 'Task', then a creation form/panel opens with Subject required.
+- Given a valid Subject, when I click Save, then the Work Package is created with Status='New', appears
+  in the list, and its detail view shows an auto-generated ID.
+- Given an empty Subject, when I click Save, then a validation error is shown and no Work Package is created.
+- Given a Task in 'New' status, when I change Status to 'Closed' directly (skipping 'In Progress'), then
+  the system either allows it if the workflow permits or shows only valid transitions in the dropdown.
+notes: Use as style/format reference for generated test cases; these are already human-approved, do not
+  regenerate them from scratch.

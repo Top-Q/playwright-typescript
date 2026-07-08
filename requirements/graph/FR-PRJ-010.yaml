@@ -1,0 +1,43 @@
+id: FR-PRJ-010
+type: functional_requirement
+module: projects
+source:
+  document: openproject-demo-requirements.docx
+  section: '4.3'
+text: The system shall display a Project Overview page summarizing recent activity, member count, and
+  open Work Package counts by status.
+stories:
+- US-PRJ-05
+business_rules: []
+permission_rows:
+- View Project/WP/Boards
+data_fields: []
+test_cases:
+- id: TC-PRJ-010-01
+  type: positive
+  title: Project Overview shows accurate member count
+  preconditions:
+  - Project has a known number of active Members
+  steps:
+  - Open the Project Overview page
+  expected_result: Displayed member count matches the actual count on the Members list.
+- id: TC-PRJ-010-02
+  type: positive
+  title: Project Overview shows open Work Package counts by status
+  preconditions:
+  - Project has Work Packages in multiple distinct statuses
+  steps:
+  - Open the Project Overview page
+  - Compare displayed status breakdown to the Work Packages list filtered by each status
+  expected_result: Overview's per-status counts match the actual filtered counts in the Work Packages
+    list.
+- id: TC-PRJ-010-03
+  type: positive
+  title: Project Overview surfaces recent activity
+  preconditions:
+  - A recent change (e.g., a Work Package edit) was made in the Project
+  steps:
+  - Open the Project Overview page
+  expected_result: The recent change appears in the activity summary section.
+notes: Overview content is tangential to US-PRJ-05's 'browse and filter' framing; link is inferred, not
+  explicit in the source doc.

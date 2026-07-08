@@ -1,0 +1,54 @@
+id: FR-PRJ-005
+type: functional_requirement
+module: projects
+source:
+  document: openproject-demo-requirements.docx
+  section: '4.3'
+text: The system shall allow a Project to be nested under a Parent Project, forming a hierarchy visible
+  in the project selection tree.
+stories:
+- US-PRJ-03
+business_rules: []
+permission_rows:
+- Create/Edit/Archive Project
+data_fields:
+- Project.parent_id
+test_cases:
+- id: TC-PRJ-005-01
+  type: positive
+  title: Sub-project appears nested in the project selection tree
+  preconditions:
+  - A parent Project exists
+  - Logged in as Admin
+  steps:
+  - Create a new Project and set its Parent Project to the existing Project
+  - Open the project selector
+  expected_result: The new Project appears nested beneath its Parent in the hierarchy tree.
+  refs:
+    data_fields:
+    - Project.parent_id
+- id: TC-PRJ-005-02
+  type: edge
+  title: Circular parent hierarchy — behavior not specified, needs clarification
+  preconditions:
+  - Project A has Project B as a sub-project
+  steps:
+  - Attempt to set Project A's Parent to Project B (its own child)
+  expected_result: 'Doc does not explicitly state whether circular Project hierarchies are rejected (unlike
+    WP parent/child relations, which explicitly reject circularity per FR-WP-008). Flag to stakeholder:
+    confirm whether the same circular-rejection rule should apply to Project hierarchy before asserting
+    a pass/fail expectation here.'
+  refs:
+    notes: ambiguity — no explicit business rule found for circular Project hierarchy
+- id: TC-PRJ-005-03
+  type: permission
+  title: Team Member cannot create a sub-project
+  preconditions:
+  - Logged in as a Team Member (non-manager)
+  steps:
+  - Attempt to create a Project with an existing Project set as Parent
+  expected_result: Action is blocked in UI and API (HTTP 403), consistent with general Project-creation
+    permission.
+  refs:
+    permission_rows:
+    - Create/Edit/Archive Project

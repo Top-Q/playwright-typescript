@@ -1,0 +1,12 @@
+id: NFR-ACC-001
+type: non_functional_requirement
+category: Accessibility
+source:
+  document: openproject-demo-requirements.docx
+  section: '8'
+text: Interactive elements shall expose accessible roles/names (ARIA) sufficient for screen-reader navigation
+  and for getByRole()-based test automation.
+related_frs: []
+test_cases: []
+notes: ID invented for tracking purposes; source doc's NFR table (Section 8) has no native IDs. related_frs
+  is inferred, not stated in source.

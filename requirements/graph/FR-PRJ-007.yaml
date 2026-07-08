@@ -1,0 +1,44 @@
+id: FR-PRJ-007
+type: functional_requirement
+module: projects
+source:
+  document: openproject-demo-requirements.docx
+  section: '4.3'
+text: The system shall allow re-activation (unarchiving) of an archived Project by a user with Administrator
+  permission.
+stories:
+- US-PRJ-04
+business_rules: []
+permission_rows:
+- Create/Edit/Archive Project
+data_fields:
+- Project.archived
+test_cases:
+- id: TC-PRJ-007-01
+  type: positive
+  title: Administrator can unarchive a Project
+  preconditions:
+  - An archived Project exists
+  - Logged in as Administrator
+  steps:
+  - Locate the archived Project
+  - Trigger re-activation/unarchive
+  expected_result: Project becomes active again and reappears in the default Projects list.
+- id: TC-PRJ-007-02
+  type: permission/ambiguous
+  title: Project Manager attempts to unarchive their own Project — RBAC conflict, needs stakeholder sign-off
+  preconditions:
+  - An archived Project exists
+  - Logged in as a Project Manager (not Administrator) on that Project
+  steps:
+  - Attempt to re-activate/unarchive the Project via UI and API
+  expected_result: 'Per FR-PRJ-007''s literal text, this should be blocked (Administrator-only). NOTE:
+    this conflicts with the RBAC matrix''s ''Create/Edit/Archive Project'' row, which grants Project Manager
+    ''Yes (own project)'' with no stated exception for unarchiving specifically. Do not finalize this
+    test''s expected result until a stakeholder confirms whether PM-unarchive is intentionally disallowed.'
+  refs:
+    notes: See FR-PRJ-007.yaml top-level notes field for the same flagged ambiguity.
+notes: 'Ambiguity flagged for clarification: this FR restricts unarchiving to Administrator only, but
+  the RBAC matrix''s ''Create/Edit/Archive Project'' row grants Project Manager ''Yes (own project)''
+  with no unarchive exception noted. Confirm with stakeholder whether PM can unarchive their own project
+  or Admin-only is intentional before generating permission test cases.'

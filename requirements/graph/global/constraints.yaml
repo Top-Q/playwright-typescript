@@ -1,0 +1,19 @@
+id: CONSTRAINTS
+type: constraints
+source:
+  document: openproject-demo-requirements.docx
+  section: '10'
+notes: Global preconditions/test-environment assumptions; apply to every generated test case's setup/precondition,
+  not tied to a specific FR.
+items:
+- The Demo Project and a seeded Admin account already exist in the QA environment prior to test execution.
+- Default workflow, Type, and Role configurations are unmodified from the environment's initial seed data
+  unless a test explicitly changes them.
+- Network connectivity between the test runner and both UI (8090) and API (8080) endpoints is available
+  and stable.
+- Time-sensitive fields (dates) are asserted relative to the test execution date, not hard-coded absolute
+  dates, to keep tests deterministic across runs.
+- Email delivery (for Member invites) is out of scope for UI/API test verification; invite state is verified
+  via UI/API status only, not actual email receipt.
+- This document does not define non-English localization requirements; all requirements assume an English-language
+  UI.

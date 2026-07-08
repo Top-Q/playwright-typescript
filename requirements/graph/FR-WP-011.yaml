@@ -1,0 +1,31 @@
+id: FR-WP-011
+type: functional_requirement
+module: work-packages
+source:
+  document: openproject-demo-requirements.docx
+  section: '5.3'
+text: The system shall support sorting the Work Package list by any visible column, ascending or descending.
+stories:
+- US-WP-07
+business_rules: []
+permission_rows:
+- View Project/WP/Boards
+data_fields: []
+test_cases:
+- id: TC-WP-011-01
+  type: positive
+  title: Sort Work Package list by Due Date ascending
+  preconditions:
+  - Multiple Work Packages exist with distinct Due Dates
+  steps:
+  - Open the Work Packages list
+  - Click the Due Date column header to sort ascending
+  expected_result: Work Packages are ordered from earliest to latest Due Date.
+- id: TC-WP-011-02
+  type: positive
+  title: Toggling sort direction reverses order
+  preconditions:
+  - List is currently sorted ascending by Due Date (from TC-WP-011-01)
+  steps:
+  - Click the Due Date column header again
+  expected_result: Sort order reverses to descending (latest to earliest).

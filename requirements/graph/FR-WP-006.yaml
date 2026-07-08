@@ -1,0 +1,64 @@
+id: FR-WP-006
+type: functional_requirement
+module: work-packages
+source:
+  document: openproject-demo-requirements.docx
+  section: '5.3'
+text: The system shall support assigning a Work Package to any current Member of the Project (single Assignee),
+  and optionally additional Watchers.
+stories:
+- US-WP-03
+business_rules:
+- BR-WP-03
+permission_rows:
+- Edit any Work Package
+data_fields:
+- WorkPackage.assignee_id
+test_cases:
+- id: TC-WP-006-01
+  type: positive
+  title: Assign Work Package to a current Project Member
+  preconditions:
+  - A Work Package exists
+  - Target user is an active Member of the Project
+  steps:
+  - Open the Work Package
+  - Set Assignee to the target Member
+  - Save
+  expected_result: Assignee field updates and the Work Package appears in that Member's assigned-items
+    view.
+- id: TC-WP-006-02
+  type: positive
+  title: Add additional Watchers without changing Assignee
+  preconditions:
+  - A Work Package exists with an existing Assignee
+  steps:
+  - Open the Work Package
+  - Add one or more Members as Watchers
+  - Save
+  expected_result: Watcher list updates to include the added Members; Assignee is unchanged.
+- id: TC-WP-006-03
+  type: negative
+  title: Cannot assign to a user who is not a Project Member
+  preconditions:
+  - A user exists in the system but has no Membership on this Project
+  steps:
+  - Open the Work Package
+  - Attempt to search for/select the non-member user as Assignee
+  expected_result: The non-member user does not appear as a selectable option (or the assignment is rejected
+    server-side).
+- id: TC-WP-006-04
+  type: permission
+  title: Non-Assignee/Author Member without edit permission cannot reassign (BR-WP-03)
+  preconditions:
+  - A Work Package is assigned to User A
+  - Logged in as User B, a Team Member who is neither Assignee, Author, nor holds 'edit work packages'
+    permission
+  steps:
+  - Open the Work Package as User B
+  - Attempt to change the Assignee field
+  expected_result: The Assignee field is read-only for User B, or the change is rejected with a permission
+    error.
+  refs:
+    business_rules:
+    - BR-WP-03

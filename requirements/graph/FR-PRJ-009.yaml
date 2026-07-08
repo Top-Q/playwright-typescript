@@ -1,0 +1,47 @@
+id: FR-PRJ-009
+type: functional_requirement
+module: projects
+source:
+  document: openproject-demo-requirements.docx
+  section: '4.3'
+text: The system shall provide a Project selection/switcher control accessible from any page, listing
+  projects the current user is a member of, with a search/filter input.
+stories:
+- US-PRJ-05
+business_rules: []
+permission_rows:
+- View Project/WP/Boards
+data_fields:
+- Project.name
+test_cases:
+- id: TC-PRJ-009-01
+  type: positive
+  title: Project switcher lists only Projects the user is a member of
+  preconditions:
+  - User is a Member of Projects A and B but not Project C
+  steps:
+  - Open the Project switcher from any page
+  expected_result: Projects A and B are listed; Project C is not.
+- id: TC-PRJ-009-02
+  type: positive
+  title: Project switcher search/filter narrows the list
+  preconditions:
+  - User is a member of multiple Projects
+  steps:
+  - Open the switcher
+  - Type a partial Project name into the search input
+  expected_result: Only Projects matching the search term remain listed.
+- id: TC-PRJ-009-03
+  type: permission
+  title: User with no memberships cannot discover private Projects (RBAC-02)
+  preconditions:
+  - User has zero Project memberships and no Administrator flag
+  - At least one private Project exists that the user is not a member of
+  steps:
+  - Open the Project switcher
+  - Attempt to search for the private Project's name or navigate to its URL/identifier directly
+  expected_result: The private Project does not appear in the switcher and is not accessible/discoverable
+    via direct navigation.
+  refs:
+    business_rules:
+    - RBAC-02

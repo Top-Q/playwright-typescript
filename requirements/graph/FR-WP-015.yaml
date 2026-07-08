@@ -1,0 +1,46 @@
+id: FR-WP-015
+type: functional_requirement
+module: work-packages
+source:
+  document: openproject-demo-requirements.docx
+  section: '5.3'
+text: The system shall persist and display the percentage-complete value in the range 0-100 for applicable
+  Work Package types.
+stories:
+- US-WP-04
+business_rules: []
+permission_rows:
+- Edit any Work Package
+data_fields:
+- WorkPackage.percent_done
+test_cases:
+- id: TC-WP-015-01
+  type: positive
+  title: Set percent-complete to a mid-range value
+  preconditions:
+  - A Work Package of a type supporting percent-complete exists
+  steps:
+  - Set percent-complete to 50
+  - Save
+  expected_result: Value persists and displays as 50%.
+- id: TC-WP-015-02
+  type: boundary-positive
+  title: Percent-complete accepts both 0 and 100
+  preconditions:
+  - Same as above
+  steps:
+  - Set percent-complete to 0, save, verify
+  - Set percent-complete to 100, save, verify
+  expected_result: Both boundary values are accepted and persisted correctly.
+- id: TC-WP-015-03
+  type: boundary-negative
+  title: Percent-complete rejects out-of-range values
+  preconditions:
+  - Same as above
+  steps:
+  - Attempt to set percent-complete to -1
+  - Attempt to set percent-complete to 101
+  expected_result: Both attempts are rejected with a validation error; the field retains its previous
+    valid value.
+notes: No explicit story mentions percent-complete; linked to US-WP-04 (scheduling/progress visibility)
+  by inference.

@@ -1,0 +1,49 @@
+id: FR-WP-005
+type: functional_requirement
+module: work-packages
+source:
+  document: openproject-demo-requirements.docx
+  section: '5.3'
+text: The system shall validate that Due Date is not earlier than Start Date, displaying a validation
+  error otherwise.
+stories:
+- US-WP-04
+business_rules: []
+permission_rows:
+- Edit any Work Package
+data_fields:
+- WorkPackage.start_date
+- WorkPackage.due_date
+test_cases:
+- id: TC-WP-005-01
+  type: positive
+  title: Due Date on or after Start Date is accepted
+  preconditions:
+  - Logged in as a Project Member with edit permission on the target Work Package
+  steps:
+  - Open a Work Package
+  - Set Start Date to a given date
+  - Set Due Date to a later date
+  - Save
+  expected_result: Both dates persist without validation error.
+- id: TC-WP-005-02
+  type: negative
+  title: Due Date earlier than Start Date is rejected
+  preconditions:
+  - Logged in as a Project Member with edit permission
+  steps:
+  - Open a Work Package
+  - Set Start Date to a given date
+  - Set Due Date to an earlier date
+  - Save
+  expected_result: A validation error is shown; the dates are not persisted.
+- id: TC-WP-005-03
+  type: boundary-positive
+  title: Start Date equal to Due Date is accepted
+  preconditions:
+  - Logged in as a Project Member with edit permission
+  steps:
+  - Open a Work Package
+  - Set Start Date and Due Date to the same date
+  - Save
+  expected_result: Save succeeds, representing a single-day task.

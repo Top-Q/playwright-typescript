@@ -1,0 +1,61 @@
+id: FR-PRJ-004
+type: functional_requirement
+module: projects
+source:
+  document: openproject-demo-requirements.docx
+  section: '4.3'
+text: The system shall support an optional Project Description (rich text) and Project Status (On Track
+  / At Risk / Off Track / Not Started / Finished).
+stories:
+- US-PRJ-02
+business_rules: []
+permission_rows:
+- Create/Edit/Archive Project
+data_fields:
+- Project.description
+- Project.status
+test_cases:
+- id: TC-PRJ-004-01
+  type: positive
+  title: Rich-text Description persists with formatting
+  preconditions:
+  - Logged in as a Project Manager on an existing Project
+  steps:
+  - Edit the Project's Description field
+  - Apply rich-text formatting (bold, bullet list)
+  - Save
+  expected_result: Description persists and renders the applied formatting on reload.
+  refs:
+    data_fields:
+    - Project.description
+- id: TC-PRJ-004-02
+  type: positive
+  title: Project Status can be set to each allowed value
+  preconditions:
+  - Logged in as a Project Manager on an existing Project
+  steps:
+  - 'Set Project Status to each of: On Track, At Risk, Off Track, Not Started, Finished, saving after
+    each'
+  expected_result: Each value is accepted and persists correctly.
+  refs:
+    data_fields:
+    - Project.status
+- id: TC-PRJ-004-03
+  type: negative
+  title: Unsupported Status value is rejected via API
+  preconditions:
+  - Logged in as a Project Manager
+  steps:
+  - Send an API request to set Project Status to a value outside the defined enum
+  expected_result: Request is rejected with a validation error; Status is unchanged.
+- id: TC-PRJ-004-04
+  type: permission
+  title: Team Member cannot edit Project Description/Status
+  preconditions:
+  - Logged in as a Team Member (non-manager) on the Project
+  steps:
+  - Attempt to edit Project Description or Status via UI and API
+  expected_result: Edit controls are not available in the UI; API request is rejected with HTTP 403.
+  refs:
+    permission_rows:
+    - Create/Edit/Archive Project

@@ -1,0 +1,23 @@
+id: AC-BRD-CREATE-MOVE
+type: acceptance_criteria_sample
+module: boards
+title: Create Board and Move Card
+source:
+  document: openproject-demo-requirements.docx
+  section: '6.5'
+exemplifies:
+- FR-BRD-001
+- FR-BRD-005
+- FR-BRD-002
+- FR-BRD-007
+criteria:
+- Given I am a Project Manager on the Boards overview, when I click 'Create Board', enter a unique Title,
+  select 'Basic' type, and click Create, then a new Board opens with a default list.
+- Given a Board with at least two lists, when I drag a card from List A to List B, then the card appears
+  in List B and the change persists after page reload.
+- Given an Action board backed by Status, when I drag a card to the 'Closed' column, then the underlying
+  Work Package's Status updates to 'Closed'.
+- Given a Board I no longer need, when I delete it and confirm, then it disappears from the Boards overview
+  and its Work Packages remain accessible from the Work Packages module.
+notes: Use as style/format reference for generated test cases; these are already human-approved, do not
+  regenerate them from scratch.

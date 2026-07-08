@@ -1,0 +1,61 @@
+id: FR-PRJ-006
+type: functional_requirement
+module: projects
+source:
+  document: openproject-demo-requirements.docx
+  section: '4.3'
+text: The system shall allow archiving of a Project, which hides it from default project lists and prevents
+  new Work Packages from being created within it, while preserving all existing data.
+stories:
+- US-PRJ-04
+business_rules:
+- BR-PRJ-03
+permission_rows:
+- Create/Edit/Archive Project
+data_fields:
+- Project.archived
+test_cases:
+- id: TC-PRJ-006-01
+  type: positive
+  title: Archiving hides Project from default list
+  preconditions:
+  - An active Project exists
+  - Logged in as a Project Manager on that Project
+  steps:
+  - Archive the Project
+  - Return to the default Projects list
+  - Explicitly filter to show archived Projects
+  expected_result: Project no longer appears in the default list, but is visible when explicitly filtering
+    for archived Projects.
+  refs:
+    data_fields:
+    - Project.archived
+- id: TC-PRJ-006-02
+  type: negative
+  title: Cannot create new Work Package in an archived Project
+  preconditions:
+  - Project is archived
+  steps:
+  - Attempt to create a new Work Package within the archived Project
+  expected_result: Creation is blocked with an explanatory message.
+- id: TC-PRJ-006-03
+  type: positive
+  title: Archiving a sub-project does not archive parent or siblings (BR-PRJ-03)
+  preconditions:
+  - Parent Project has two sub-projects, A and B
+  steps:
+  - Archive sub-project A
+  expected_result: Parent Project and sub-project B remain active/unarchived.
+  refs:
+    business_rules:
+    - BR-PRJ-03
+- id: TC-PRJ-006-04
+  type: positive
+  title: Existing data is preserved after archiving
+  preconditions:
+  - Project has existing Work Packages, Boards, and Members before archiving
+  steps:
+  - Archive the Project
+  - Un-filter/access the archived Project directly
+  - Inspect its Work Packages, Boards, and Members
+  expected_result: All previously existing Work Packages, Boards, and Members remain intact and viewable.

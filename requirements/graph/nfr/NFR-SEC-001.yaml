@@ -1,0 +1,15 @@
+id: NFR-SEC-001
+type: non_functional_requirement
+category: Security
+source:
+  document: openproject-demo-requirements.docx
+  section: '8'
+text: All module actions shall be authorized server-side regardless of UI state; client-side hiding of
+  controls is not a substitute for permission checks.
+related_frs:
+- FR-WP-004
+- FR-BRD-008
+- FR-MEM-008
+test_cases: []
+notes: ID invented for tracking purposes; source doc's NFR table (Section 8) has no native IDs. related_frs
+  is inferred, not stated in source.

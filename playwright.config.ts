@@ -33,8 +33,8 @@ export default defineConfig({
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on',
     video: 'on',
-    
-    
+    /* Maximum time an action (e.g. click, fill) can wait for an element before failing. */
+    actionTimeout: 5000,
   },
 
   /* Configure projects for major browsers */

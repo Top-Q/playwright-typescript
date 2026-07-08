@@ -1,0 +1,52 @@
+id: FR-WP-008
+type: functional_requirement
+module: work-packages
+source:
+  document: openproject-demo-requirements.docx
+  section: '5.3'
+text: 'The system shall support relation types: ''relates to'', ''blocks'', ''blocked by'', ''duplicates'',
+  ''duplicated by'', ''parent/child''; circular parent/child relations shall be rejected.'
+stories:
+- US-WP-06
+business_rules:
+- BR-WP-01
+permission_rows:
+- Edit any Work Package
+data_fields:
+- Relation.relation_type
+test_cases:
+- id: TC-WP-008-01
+  type: positive
+  title: Create a 'blocks' relation between two Work Packages
+  preconditions:
+  - Two Work Packages (A and B) exist in the same or different Projects the user can access
+  steps:
+  - Open Work Package A
+  - Add a relation of type 'blocks' targeting Work Package B
+  expected_result: Work Package A displays 'blocks' -> B, and Work Package B's detail view displays 'blocked
+    by' -> A.
+- id: TC-WP-008-02
+  type: positive
+  title: Create a parent/child relation
+  preconditions:
+  - Two Work Packages (Parent and Child) exist
+  steps:
+  - Set Work Package Child's parent to Work Package Parent
+  expected_result: Child appears nested under Parent in the Work Package hierarchy view.
+- id: TC-WP-008-03
+  type: negative
+  title: Direct circular parent/child relation is rejected
+  preconditions:
+  - Work Package A is already the parent of Work Package B
+  steps:
+  - Attempt to set Work Package A's parent to Work Package B
+  expected_result: The system rejects the change with an error indicating a circular relation; the original
+    hierarchy is unchanged.
+- id: TC-WP-008-04
+  type: negative
+  title: Indirect (transitive) circular parent/child relation is rejected
+  preconditions:
+  - Work Package A is parent of B, and B is parent of C
+  steps:
+  - Attempt to set Work Package A's parent to Work Package C
+  expected_result: The system rejects the change, detecting the circular chain A->B->C->A.

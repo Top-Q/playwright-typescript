@@ -1,0 +1,65 @@
+id: FR-WP-012
+type: functional_requirement
+module: work-packages
+source:
+  document: openproject-demo-requirements.docx
+  section: '5.3'
+text: The system shall support bulk selection of Work Packages in list view for bulk status change, bulk
+  assignee change, or bulk deletion, subject to per-item permission checks.
+stories:
+- US-WP-08
+business_rules: []
+permission_rows:
+- Edit any Work Package
+- Delete Work Package
+data_fields: []
+test_cases:
+- id: TC-WP-012-01
+  type: positive
+  title: Bulk status change across multiple selected Work Packages
+  preconditions:
+  - Multiple Work Packages exist in Status 'New', user has edit permission on all of them
+  steps:
+  - Select multiple Work Packages in list view
+  - Choose bulk 'Change Status' to 'In Progress'
+  - Confirm
+  expected_result: All selected Work Packages update to Status 'In Progress'.
+- id: TC-WP-012-02
+  type: positive
+  title: Bulk assignee change across multiple selected Work Packages
+  preconditions:
+  - Multiple Work Packages exist, user has edit permission on all
+  steps:
+  - Select multiple Work Packages
+  - Choose bulk 'Change Assignee' to a given Member
+  - Confirm
+  expected_result: All selected Work Packages' Assignee field updates to the chosen Member.
+- id: TC-WP-012-03
+  type: permission
+  title: Bulk action is applied per-item permission check
+  preconditions:
+  - A bulk selection includes one Work Package the current user lacks edit permission for (e.g. not Assignee/Author/no
+    edit permission), and others they can edit
+  steps:
+  - Select the mixed set of Work Packages
+  - Trigger a bulk Status change
+  - Confirm
+  expected_result: Permitted Work Packages update successfully; the unauthorized item is skipped/reported
+    as failed rather than silently updated or blocking the whole batch.
+  refs:
+    business_rules:
+    - BR-WP-03
+- id: TC-WP-012-04
+  type: negative
+  title: Bulk delete respects BR/FR-WP-013 child-Work-Package protection
+  preconditions:
+  - Bulk selection includes a Work Package with open (non-closed) child Work Packages
+  steps:
+  - Select the Work Packages including the one with open children
+  - Trigger bulk Delete
+  - Confirm without cascade option
+  expected_result: The item with open children is not deleted (or the whole operation prompts for cascade
+    confirmation); items without blocking children are deleted normally.
+  refs:
+    business_rules:
+    - BR-WP-04

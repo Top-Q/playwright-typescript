@@ -1,0 +1,49 @@
+id: FR-BRD-002
+type: functional_requirement
+module: boards
+source:
+  document: openproject-demo-requirements.docx
+  section: '6.3'
+text: For an Action board backed by Status, the system shall auto-generate one column per Status defined
+  in the relevant workflow, and moving a card between columns shall update the Work Package's Status accordingly.
+stories:
+- US-BRD-03
+business_rules: []
+permission_rows:
+- Move cards on Board (drag-and-drop)
+data_fields:
+- BoardList.backing_attribute (status/version/none)
+test_cases:
+- id: TC-BRD-002-01
+  type: positive
+  title: Action Board generates one column per workflow Status
+  preconditions:
+  - An Action board backed by Status is created for a Project using the default workflow
+  steps:
+  - Open the Action board
+  expected_result: Number and names of columns match the Status values defined in the active workflow.
+- id: TC-BRD-002-02
+  type: positive
+  title: Dragging a card to 'Closed' column updates underlying WP Status
+  preconditions:
+  - An Action board exists with a card representing a Work Package in Status 'In Progress'
+  steps:
+  - Drag the card into the 'Closed' column
+  expected_result: The underlying Work Package's Status updates to 'Closed'.
+- id: TC-BRD-002-03
+  type: edge
+  title: Dragging a card to a column disallowed by the WP's workflow — cross-module conflict needs clarification
+  preconditions:
+  - A Work Package's Type/Role combination does not permit a direct transition to a given Status (per
+    FR-WP-004)
+  - An Action board column exists for that Status
+  steps:
+  - Attempt to drag the card into the disallowed column
+  expected_result: 'Doc does not explicitly state whether Board drag-and-drop is exempt from or subject
+    to the same workflow restrictions as the WP detail view''s Status selector. Flag to stakeholder: confirm
+    whether the move should be blocked/reverted or whether Boards bypass workflow restrictions before
+    finalizing expected result.'
+  refs:
+    business_rules:
+    - BR-WP-01
+    notes: cross-module ambiguity between FR-BRD-002 and FR-WP-004

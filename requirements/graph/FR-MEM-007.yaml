@@ -1,0 +1,55 @@
+id: FR-MEM-007
+type: functional_requirement
+module: members-roles
+source:
+  document: openproject-demo-requirements.docx
+  section: '7.3'
+text: The system shall allow an Administrator to define new global Roles with a name and a checklist of
+  granular permissions (e.g., view work packages, edit work packages, manage boards, manage members).
+stories:
+- US-MEM-06
+business_rules: []
+permission_rows: []
+data_fields:
+- Role.name
+- Role.permissions (list)
+- Role.is_global_template (bool)
+test_cases:
+- id: TC-MEM-007-01
+  type: positive
+  title: Administrator creates a new global Role
+  preconditions:
+  - Logged in as Administrator
+  steps:
+  - Navigate to global Role management
+  - Create a new Role with a name and a subset of permissions
+  - Save
+  expected_result: Role is saved and available for assignment across projects.
+  refs:
+    data_fields:
+    - Role.name
+    - Role.permissions (list)
+- id: TC-MEM-007-02
+  type: permission
+  title: Non-Administrator cannot create/edit global Roles
+  preconditions:
+  - Logged in as a Project Manager (non-Administrator)
+  steps:
+  - Attempt to access global Role management via UI and API
+  expected_result: Access is blocked/hidden in the UI; API request is rejected with HTTP 403.
+  refs:
+    notes: Global Role management has no row in the project-scoped RBAC matrix; enforced as Administrator-only
+      per Section 2.3, consistent with the note on FR-MEM-007.yaml.
+- id: TC-MEM-007-03
+  type: positive
+  title: Editing a global Role's permissions propagates to Members holding it (FR-MEM-008)
+  preconditions:
+  - A global Role is held by an existing Member
+  - Administrator edits the Role to add a new permission
+  steps:
+  - Have the Member perform an action newly granted by the updated Role
+  expected_result: The Member can perform the newly granted action, reflecting the union-of-roles evaluation.
+  refs:
+    business_rules: []
+notes: Global Role-template management is not represented as a row in the project-scoped RBAC matrix (Section
+  3); it is implicitly Administrator-only per Section 2.3's user-class description.

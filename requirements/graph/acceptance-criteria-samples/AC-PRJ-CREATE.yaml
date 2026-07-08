@@ -1,0 +1,22 @@
+id: AC-PRJ-CREATE
+type: acceptance_criteria_sample
+module: projects
+title: Create Project
+source:
+  document: openproject-demo-requirements.docx
+  section: '4.5'
+exemplifies:
+- FR-PRJ-001
+- FR-PRJ-002
+- FR-PRJ-003
+criteria:
+- Given I am logged in as Admin, when I navigate to 'New Project' and enter a unique Name, then the system
+  auto-fills a valid Identifier and the Create button becomes enabled.
+- Given valid Name/Identifier, when I click Create, then I am redirected to the new Project's Overview
+  page and the project appears in the project switcher.
+- Given an Identifier that already exists, when I attempt to save, then an inline error 'Identifier has
+  already been taken' is shown and no project is created.
+- Given an empty Name field, when I attempt to save, then the Create button remains disabled or a required-field
+  validation error is shown.
+notes: Use as style/format reference for generated test cases; these are already human-approved, do not
+  regenerate them from scratch.

@@ -1,0 +1,46 @@
+id: FR-BRD-005
+type: functional_requirement
+module: boards
+source:
+  document: openproject-demo-requirements.docx
+  section: '6.3'
+text: The system shall support drag-and-drop reordering of cards within a list and moving cards across
+  lists, persisting the new position/attribute immediately.
+stories:
+- US-BRD-03
+business_rules: []
+permission_rows:
+- Move cards on Board (drag-and-drop)
+data_fields:
+- BoardList.position
+test_cases:
+- id: TC-BRD-005-01
+  type: positive
+  title: Reorder a card within the same list
+  preconditions:
+  - A Board list has at least two cards
+  steps:
+  - Drag a card to a new position within the same list
+  expected_result: New position persists after page reload.
+- id: TC-BRD-005-02
+  type: positive
+  title: Move a card from one list to another
+  preconditions:
+  - A Board has at least two lists
+  steps:
+  - Drag a card from List A to List B
+  expected_result: Card appears in List B; change persists after page reload.
+- id: TC-BRD-005-03
+  type: performance
+  title: Drag-and-drop reflects optimistically within 300ms and persists within 2s
+  preconditions:
+  - A Board with at least two lists is open
+  steps:
+  - Drag a card to a new list
+  - Measure time to visual update
+  - Measure time to server-confirmed persistence
+  expected_result: UI reflects the new state within 300ms (optimistic update); the change is confirmed
+    persisted server-side within 2 seconds.
+  refs:
+    nfr:
+    - NFR-PERF-002

@@ -1,0 +1,16 @@
+id: NFR-USE-002
+type: non_functional_requirement
+category: Usability
+source:
+  document: openproject-demo-requirements.docx
+  section: '8'
+text: Destructive actions (Delete Project, Delete Work Package, Delete Board, Remove Member) shall require
+  an explicit confirmation step.
+related_frs:
+- FR-PRJ-008
+- FR-WP-013
+- FR-BRD-007
+- FR-MEM-005
+test_cases: []
+notes: ID invented for tracking purposes; source doc's NFR table (Section 8) has no native IDs. related_frs
+  is inferred, not stated in source.

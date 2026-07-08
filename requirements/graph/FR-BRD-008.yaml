@@ -1,0 +1,56 @@
+id: FR-BRD-008
+type: functional_requirement
+module: boards
+source:
+  document: openproject-demo-requirements.docx
+  section: '6.3'
+text: The system shall restrict Board create/delete/list-management actions to users holding 'manage boards'
+  permission; card movement (drag-and-drop) shall be permitted to any member who could otherwise edit
+  the underlying Work Package.
+stories:
+- US-BRD-01
+- US-BRD-04
+- US-BRD-05
+- US-BRD-03
+business_rules: []
+permission_rows:
+- Create/Delete Board
+- Move cards on Board (drag-and-drop)
+data_fields: []
+test_cases:
+- id: TC-BRD-008-01
+  type: permission
+  title: User without 'manage boards' permission cannot create/delete/manage Board lists
+  preconditions:
+  - Logged in as a Team Member without 'manage boards' permission
+  steps:
+  - Attempt to create a Board, delete a Board, and rename a list, via UI and API
+  expected_result: All three actions are blocked/hidden in the UI and rejected with HTTP 403 via the API.
+  refs:
+    permission_rows:
+    - Create/Delete Board
+- id: TC-BRD-008-02
+  type: permission
+  title: User without 'manage boards' but with WP edit permission can still move cards
+  preconditions:
+  - Logged in as a Team Member without 'manage boards' permission, who is the Assignee of the Work Package
+    behind a given card
+  steps:
+  - Drag that card to a different list
+  expected_result: The move succeeds despite the user lacking Board management permission.
+  refs:
+    permission_rows:
+    - Move cards on Board (drag-and-drop)
+- id: TC-BRD-008-03
+  type: permission
+  title: Viewer without WP edit permission cannot move cards
+  preconditions:
+  - Logged in as a Viewer with no edit permission on the underlying Work Package
+  steps:
+  - Attempt to drag a card to a different list
+  expected_result: The drag action is blocked or reverted; the card remains in its original list.
+  refs:
+    permission_rows:
+    - Move cards on Board (drag-and-drop)
+notes: Cross-cutting permission rule spanning multiple stories (create/manage vs. card-move), not tied
+  to a single one in the source doc.

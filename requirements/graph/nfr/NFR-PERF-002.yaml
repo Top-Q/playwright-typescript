@@ -1,0 +1,14 @@
+id: NFR-PERF-002
+type: non_functional_requirement
+category: Performance
+source:
+  document: openproject-demo-requirements.docx
+  section: '8'
+text: Board drag-and-drop actions shall reflect the new state in the UI within 300ms (optimistic update)
+  and persist to the server within 2 seconds.
+related_frs:
+- FR-BRD-005
+- FR-BRD-002
+test_cases: []
+notes: ID invented for tracking purposes; source doc's NFR table (Section 8) has no native IDs. related_frs
+  is inferred, not stated in source.

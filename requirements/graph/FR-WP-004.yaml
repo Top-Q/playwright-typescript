@@ -1,0 +1,97 @@
+id: FR-WP-004
+type: functional_requirement
+module: work-packages
+source:
+  document: openproject-demo-requirements.docx
+  section: '5.3'
+text: The system shall only permit Status transitions defined in the active workflow for the Work Package's
+  Type and the current user's Role; disallowed transitions shall not appear in the Status selector.
+stories:
+- US-WP-02
+business_rules:
+- BR-WP-01
+permission_rows:
+- Change Work Package status/workflow
+data_fields:
+- WorkPackage.status
+test_cases:
+- id: TC-WP-004-01
+  type: positive
+  title: Valid Status transition (New to In Progress) succeeds
+  preconditions:
+  - A Task-type Work Package exists in Status 'New'
+  - Logged in as its Assignee (Team Member)
+  steps:
+  - Open the Work Package detail view
+  - Open the Status selector
+  - Select 'In Progress'
+  - Save
+  expected_result: Status updates to 'In Progress' and the transition is recorded in the Activity tab
+    (see FR-WP-009).
+- id: TC-WP-004-02
+  type: negative/ambiguous
+  title: Direct New to Closed transition — workflow-dependent, doc is ambiguous
+  preconditions:
+  - A Task-type Work Package exists in Status 'New'
+  - Logged in as its Assignee
+  steps:
+  - Open the Status selector on the Work Package
+  - Look for 'Closed' as an option
+  - If present, select it and Save
+  expected_result: 'Per the representative workflow (Sec 5.4), ''Closed'' is not a direct target from
+    ''New''; the selector should only list ''In Progress'' or ''Rejected''. NOTE: source doc''s own acceptance
+    criteria (Sec 5.6) is ambiguous here (''either allows it if the workflow permits or shows only valid
+    transitions'') — flag to stakeholder to confirm expected behavior before finalizing this test''s pass
+    criteria.'
+  refs:
+    business_rules: []
+    notes: ambiguity carried over from AC-WP-CREATE-TASK sample
+- id: TC-WP-004-03
+  type: negative
+  title: Cannot close a Work Package with open blocking child Work Packages (BR-WP-01)
+  preconditions:
+  - A parent Work Package has at least one child Work Package that is not Closed and is flagged as blocking
+  - Logged in as a user without Manage-level override permission
+  steps:
+  - Open the parent Work Package
+  - Attempt to transition its Status to 'Closed'
+  expected_result: Transition is blocked with an explanatory error referencing the open blocking child;
+    parent Status remains unchanged.
+  refs:
+    business_rules:
+    - BR-WP-01
+- id: TC-WP-004-04
+  type: positive
+  title: Manage-permission user can override BR-WP-01 block
+  preconditions:
+  - Same setup as TC-WP-004-03
+  - Logged in as a Project Manager (Manage permission)
+  steps:
+  - Open the parent Work Package
+  - Attempt to transition Status to 'Closed'
+  - Confirm override if prompted
+  expected_result: Transition succeeds for the Manage-permission user where it was blocked for a standard
+    Member.
+  refs:
+    business_rules:
+    - BR-WP-01
+    permission_rows:
+    - Change Work Package status/workflow
+- id: TC-WP-004-05
+  type: permission
+  title: Viewer cannot change Work Package status
+  preconditions:
+  - A Work Package exists in Status 'New'
+  - Logged in as a user with Viewer role only
+  steps:
+  - Open the Work Package detail view
+  - Look for a Status selector / edit control
+  expected_result: Status is displayed as read-only text; no interactive selector is shown, and an API
+    attempt to change status returns HTTP 403.
+  refs:
+    permission_rows:
+    - Change Work Package status/workflow
+    nfr:
+    - NFR-SEC-001
+notes: Also underpins the RBAC row 'Change Work Package status/workflow' (Sec 3) — relevant to Viewer/Member
+  permission test cases beyond just US-WP-02.

@@ -1,0 +1,76 @@
+id: DATA-MODEL
+type: data_model
+source:
+  document: openproject-demo-requirements.docx
+  section: '9'
+entities:
+- entity: Project
+  key_attributes:
+  - id
+  - name
+  - identifier (unique)
+  - description
+  - status
+  - parent_id
+  - archived (bool)
+  relationships: has many Work Packages, Boards, Members; belongs to optional parent Project
+- entity: WorkPackage
+  key_attributes:
+  - id
+  - subject
+  - type
+  - status
+  - priority
+  - assignee_id
+  - author_id
+  - start_date
+  - due_date
+  - percent_done
+  - description
+  relationships: belongs to Project; has many Attachments, Comments, Relations; optional parent WorkPackage
+- entity: Board
+  key_attributes:
+  - id
+  - title
+  - board_type (basic/action)
+  - project_id
+  relationships: belongs to Project; has many BoardLists
+- entity: BoardList
+  key_attributes:
+  - id
+  - board_id
+  - name
+  - position
+  - backing_attribute (status/version/none)
+  relationships: belongs to Board; has many Cards (mapped Work Packages)
+- entity: Member
+  key_attributes:
+  - id
+  - user_id
+  - project_id
+  - status (active/invited)
+  - created_at
+  relationships: belongs to Project and User; has many Roles (via join)
+- entity: Role
+  key_attributes:
+  - id
+  - name
+  - permissions (list)
+  - is_global_template (bool)
+  relationships: assigned to many Members
+- entity: Attachment
+  key_attributes:
+  - id
+  - work_package_id
+  - filename
+  - size
+  - uploaded_by
+  - uploaded_at
+  relationships: belongs to WorkPackage
+- entity: Relation
+  key_attributes:
+  - id
+  - from_wp_id
+  - to_wp_id
+  - relation_type
+  relationships: links two WorkPackages

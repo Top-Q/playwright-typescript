@@ -1,0 +1,39 @@
+id: GLOSSARY
+type: glossary
+source:
+  document: openproject-demo-requirements.docx
+  section: 1.4, 12
+terms:
+- term: WP
+  definition: Work Package — the atomic unit of trackable work (task, milestone, bug, feature, phase,
+    etc.)
+- term: Demo Project
+  definition: The seeded sample project used for QA/automation exercises
+- term: Board
+  definition: A Kanban-style visual arrangement of work packages into columns/lists
+- term: Role
+  definition: A named set of permissions assignable to a member within a project
+- term: Member
+  definition: A user (or group) associated with a project via one or more roles
+- term: CRUD
+  definition: Create, Read, Update, Delete
+- term: SRS
+  definition: Software Requirements Specification (this document)
+- term: Action Board
+  definition: A Board type whose columns are automatically derived from a Work Package attribute (typically
+    Status or Version).
+- term: Basic Board
+  definition: A Board type with freely user-defined, manually managed columns.
+- term: Card
+  definition: The visual representation of a single Work Package on a Board.
+- term: Identifier
+  definition: A unique, URL-safe slug identifying a Project, set at creation and immutable thereafter.
+- term: Permission
+  definition: A single granted capability (e.g., 'edit work packages') that composes a Role.
+- term: Relation
+  definition: A typed link between two Work Packages describing their dependency (blocks, relates to,
+    etc.).
+- term: Watcher
+  definition: A user who receives notifications about a Work Package without being its Assignee.
+- term: Workflow
+  definition: The set of allowed Status transitions for a given Work Package Type and Role.

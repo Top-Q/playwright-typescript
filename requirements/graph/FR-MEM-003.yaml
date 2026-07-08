@@ -1,0 +1,42 @@
+id: FR-MEM-003
+type: functional_requirement
+module: members-roles
+source:
+  document: openproject-demo-requirements.docx
+  section: '7.3'
+text: 'The system shall display the Members list with columns: Name, Email, Role(s), Status (Active/Invited),
+  and Date Added, sortable and searchable.'
+stories:
+- US-MEM-05
+business_rules: []
+permission_rows:
+- View Project/WP/Boards
+data_fields:
+- Member.status (active/invited)
+- Member.created_at
+test_cases:
+- id: TC-MEM-003-01
+  type: positive
+  title: Members list displays all required columns
+  preconditions:
+  - Project has at least one active and one invited Member
+  steps:
+  - Open the Members page
+  expected_result: List shows Name, Email, Role(s), Status, and Date Added for every Member, with correct
+    values.
+- id: TC-MEM-003-02
+  type: positive
+  title: Sort Members list by Date Added
+  preconditions:
+  - Members were added on different dates
+  steps:
+  - Click the Date Added column header to sort ascending, then descending
+  expected_result: Members are ordered chronologically and the order reverses on toggling.
+- id: TC-MEM-003-03
+  type: positive
+  title: Search Members list by name substring
+  preconditions:
+  - Multiple Members exist with distinct names
+  steps:
+  - Enter a partial name into the Members search field
+  expected_result: Only Members whose name matches the substring are shown.

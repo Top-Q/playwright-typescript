@@ -1,0 +1,61 @@
+id: FR-PRJ-008
+type: functional_requirement
+module: projects
+source:
+  document: openproject-demo-requirements.docx
+  section: '4.3'
+text: The system shall allow permanent deletion of a Project by an Administrator only, after an explicit
+  confirmation step (type-to-confirm project name).
+stories:
+- US-PRJ-06
+business_rules:
+- BR-PRJ-02
+permission_rows:
+- Delete Project
+data_fields:
+- Project.identifier
+test_cases:
+- id: TC-PRJ-008-01
+  type: positive
+  title: Administrator permanently deletes a Project via type-to-confirm
+  preconditions:
+  - A Project exists
+  - Logged in as Administrator
+  steps:
+  - Trigger Project deletion
+  - Type the exact Project name into the confirmation field
+  - Confirm
+  expected_result: Project is permanently deleted.
+- id: TC-PRJ-008-02
+  type: negative
+  title: Incorrect confirmation text blocks deletion
+  preconditions:
+  - Same as above
+  steps:
+  - Trigger Project deletion
+  - Type a name that does not exactly match the Project name
+  - Attempt to confirm
+  expected_result: Deletion is blocked; the Project is not deleted.
+- id: TC-PRJ-008-03
+  type: permission
+  title: Project Manager cannot permanently delete a Project
+  preconditions:
+  - Logged in as a Project Manager (non-Administrator)
+  steps:
+  - Attempt to trigger Project deletion via UI and API
+  expected_result: Delete control is not available in the UI; API request is rejected with HTTP 403.
+  refs:
+    permission_rows:
+    - Delete Project
+- id: TC-PRJ-008-04
+  type: positive
+  title: Deleting a Project cascades to its Work Packages, Boards, and Members (BR-PRJ-02)
+  preconditions:
+  - Project has existing Work Packages, Boards, and Member associations
+  steps:
+  - Administrator deletes the Project with confirmation
+  expected_result: All of the Project's Work Packages, Boards, and Member associations are also deleted;
+    the action is irreversible.
+  refs:
+    business_rules:
+    - BR-PRJ-02

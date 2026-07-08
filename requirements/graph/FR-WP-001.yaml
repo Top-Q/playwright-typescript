@@ -1,0 +1,62 @@
+id: FR-WP-001
+type: functional_requirement
+module: work-packages
+source:
+  document: openproject-demo-requirements.docx
+  section: '5.3'
+text: The system shall require Type and Subject (title) fields when creating a Work Package; all other
+  fields are optional at creation unless configured as required by an Administrator.
+stories:
+- US-WP-01
+business_rules: []
+permission_rows:
+- Create Work Package
+data_fields:
+- WorkPackage.subject
+- WorkPackage.type
+test_cases:
+- id: TC-WP-001-01
+  type: positive
+  title: Create Work Package with only required fields
+  preconditions:
+  - Logged in as a Project Member with 'Create Work Package' permission
+  - Demo Project exists
+  steps:
+  - Open Work Packages list
+  - Click 'Create new Work Package'
+  - Select Type 'Task'
+  - Enter Subject only, leave all other fields blank
+  - Click Save
+  expected_result: Work Package is created; detail view shows auto-generated ID, Status='New', Priority='Normal'.
+  refs:
+    data_fields:
+    - WorkPackage.subject
+    - WorkPackage.type
+- id: TC-WP-001-02
+  type: negative
+  title: Create Work Package without selecting a Type
+  preconditions:
+  - Logged in as a Project Member
+  steps:
+  - Open 'Create new Work Package' form
+  - Enter a Subject
+  - Leave Type unselected
+  - Click Save
+  expected_result: Save is blocked; a required-field validation error is shown for Type; no Work Package
+    is created.
+- id: TC-WP-001-03
+  type: permission
+  title: Viewer cannot create a Work Package
+  preconditions:
+  - Logged in as a user with Viewer role only
+  steps:
+  - Navigate to the Work Packages list
+  - Look for a 'Create new Work Package' control
+  - Attempt the equivalent create call via the REST API
+  expected_result: The create control is not shown/enabled in the UI; the API call is rejected with HTTP
+    403.
+  refs:
+    permission_rows:
+    - Create Work Package
+    nfr:
+    - NFR-SEC-001

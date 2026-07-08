@@ -1,0 +1,41 @@
+id: FR-WP-014
+type: functional_requirement
+module: work-packages
+source:
+  document: openproject-demo-requirements.docx
+  section: '5.3'
+text: The system shall support a Milestone type Work Package with a single Date field (no duration/Start-Due
+  range).
+stories:
+- US-WP-01
+business_rules:
+- BR-WP-02
+permission_rows:
+- Create Work Package
+data_fields:
+- WorkPackage.type
+- WorkPackage.due_date
+test_cases:
+- id: TC-WP-014-01
+  type: positive
+  title: Milestone-type Work Package shows a single Date field
+  preconditions:
+  - Logged in as a Project Member with create permission
+  steps:
+  - Open 'Create new Work Package'
+  - Select Type 'Milestone'
+  expected_result: The form shows a single Date field; Start Date/Due Date range fields are not present.
+- id: TC-WP-014-02
+  type: edge
+  title: Converting a Task with a date range to Milestone prompts confirmation and collapses dates (BR-WP-02)
+  preconditions:
+  - A Task-type Work Package exists with both Start Date and Due Date set
+  steps:
+  - Open the Work Package
+  - Change Type from 'Task' to 'Milestone'
+  expected_result: A confirmation prompt warns that the date range will be replaced by a single date;
+    upon confirmation, the Work Package retains only one Date field, with the prior range collapsed per
+    BR-WP-02.
+  refs:
+    business_rules:
+    - BR-WP-02

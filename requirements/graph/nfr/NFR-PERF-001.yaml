@@ -1,0 +1,14 @@
+id: NFR-PERF-001
+type: non_functional_requirement
+category: Performance
+source:
+  document: openproject-demo-requirements.docx
+  section: '8'
+text: Work Package list views with up to 1,000 items shall render within 2 seconds under standard QA environment
+  load.
+related_frs:
+- FR-WP-010
+- FR-WP-011
+test_cases: []
+notes: ID invented for tracking purposes; source doc's NFR table (Section 8) has no native IDs. related_frs
+  is inferred, not stated in source.

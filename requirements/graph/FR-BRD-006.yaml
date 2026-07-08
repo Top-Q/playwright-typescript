@@ -1,0 +1,42 @@
+id: FR-BRD-006
+type: functional_requirement
+module: boards
+source:
+  document: openproject-demo-requirements.docx
+  section: '6.3'
+text: The system shall display, on the Boards overview page, all Boards for the current Project with Title,
+  Type, and last-updated timestamp, each linking to its Board detail view.
+stories:
+- US-BRD-06
+business_rules: []
+permission_rows:
+- View Project/WP/Boards
+data_fields:
+- Board.title
+- Board.board_type (basic/action)
+test_cases:
+- id: TC-BRD-006-01
+  type: positive
+  title: Boards overview lists all Boards with correct metadata
+  preconditions:
+  - Project has multiple Boards of different types
+  steps:
+  - Open the Boards overview page
+  expected_result: Each Board is listed with correct Title, Type, and last-updated timestamp.
+- id: TC-BRD-006-02
+  type: positive
+  title: Clicking a Board entry navigates to its detail view
+  preconditions:
+  - Boards overview is open
+  steps:
+  - Click a Board's entry
+  expected_result: User is navigated to that Board's detail view.
+- id: TC-BRD-006-03
+  type: positive
+  title: Last-updated timestamp refreshes after a Board change
+  preconditions:
+  - A Board's current last-updated timestamp is known
+  steps:
+  - Rename one of the Board's lists
+  - Return to the Boards overview
+  expected_result: The Board's last-updated timestamp reflects the recent change.

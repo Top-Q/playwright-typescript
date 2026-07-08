@@ -1,0 +1,57 @@
+id: FR-PRJ-001
+type: functional_requirement
+module: projects
+source:
+  document: openproject-demo-requirements.docx
+  section: '4.3'
+text: The system shall allow users with sufficient permission to create a Project by providing at minimum
+  a Name; an Identifier shall be auto-generated (slug) from the Name and shall be editable before save.
+stories:
+- US-PRJ-01
+business_rules: []
+permission_rows:
+- Create/Edit/Archive Project
+data_fields:
+- Project.name
+- Project.identifier
+test_cases:
+- id: TC-PRJ-001-01
+  type: positive
+  title: Create Project with unique Name auto-generates Identifier
+  preconditions:
+  - Logged in as Admin
+  steps:
+  - Navigate to 'New Project'
+  - Enter a unique Name
+  - Observe the Identifier field
+  expected_result: Identifier is auto-filled as a valid slug derived from the Name; Create button becomes
+    enabled.
+  refs:
+    data_fields:
+    - Project.name
+    - Project.identifier
+- id: TC-PRJ-001-02
+  type: positive
+  title: Auto-generated Identifier is editable before save
+  preconditions:
+  - On the 'New Project' form with a Name entered
+  steps:
+  - Manually edit the auto-generated Identifier to a different valid slug
+  - Click Create
+  expected_result: Project is created using the manually-edited Identifier, not the originally auto-generated
+    one.
+- id: TC-PRJ-001-03
+  type: permission
+  title: Team Member cannot create a Project
+  preconditions:
+  - Logged in as a user with only a Member/Team-Member role, no manage-capable role on any project
+  steps:
+  - Attempt to access 'New Project' in the UI
+  - Attempt the equivalent create call via the REST API
+  expected_result: The create control is not shown/enabled in the UI; the API call is rejected with HTTP
+    403.
+  refs:
+    permission_rows:
+    - Create/Edit/Archive Project
+    nfr:
+    - NFR-SEC-001

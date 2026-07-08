@@ -1,0 +1,43 @@
+id: FR-BRD-007
+type: functional_requirement
+module: boards
+source:
+  document: openproject-demo-requirements.docx
+  section: '6.3'
+text: The system shall allow deleting a Board (with confirmation), which removes the Board and its list
+  configuration but does NOT delete the underlying Work Packages.
+stories:
+- US-BRD-05
+business_rules: []
+permission_rows:
+- Create/Delete Board
+data_fields: []
+test_cases:
+- id: TC-BRD-007-01
+  type: positive
+  title: Delete a Board with confirmation
+  preconditions:
+  - A Board exists
+  - Logged in as a user with 'manage boards' permission
+  steps:
+  - Trigger Board deletion
+  - Confirm
+  expected_result: Board disappears from the Boards overview.
+- id: TC-BRD-007-02
+  type: positive
+  title: Deleting a Board does not delete its Work Packages
+  preconditions:
+  - A Board has cards representing existing Work Packages
+  steps:
+  - Delete the Board and confirm
+  - Open the Work Packages module
+  expected_result: The former Work Packages remain accessible and unchanged in the Work Packages module.
+- id: TC-BRD-007-03
+  type: negative
+  title: Canceling the confirmation dialog does not delete the Board
+  preconditions:
+  - A Board exists
+  steps:
+  - Trigger Board deletion
+  - Cancel the confirmation prompt
+  expected_result: Board remains in the Boards overview, unchanged.

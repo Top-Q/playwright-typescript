@@ -1,0 +1,64 @@
+id: RBAC-MATRIX
+type: rbac_matrix
+source:
+  document: openproject-demo-requirements.docx
+  section: '3'
+business_rules:
+- RBAC-01
+- RBAC-02
+rows:
+- action: Create/Edit/Archive Project
+  admin: 'Yes'
+  project_manager: Yes (own project)
+  member: 'No'
+  viewer: 'No'
+- action: Delete Project
+  admin: 'Yes'
+  project_manager: 'No'
+  member: 'No'
+  viewer: 'No'
+- action: Create Work Package
+  admin: 'Yes'
+  project_manager: 'Yes'
+  member: 'Yes'
+  viewer: 'No'
+- action: Edit any Work Package
+  admin: 'Yes'
+  project_manager: 'Yes'
+  member: Only own/assigned
+  viewer: 'No'
+- action: Delete Work Package
+  admin: 'Yes'
+  project_manager: 'Yes'
+  member: 'No'
+  viewer: 'No'
+- action: Change Work Package status/workflow
+  admin: 'Yes'
+  project_manager: 'Yes'
+  member: Yes (per workflow)
+  viewer: 'No'
+- action: Create/Delete Board
+  admin: 'Yes'
+  project_manager: 'Yes'
+  member: 'No'
+  viewer: 'No'
+- action: Move cards on Board (drag-and-drop)
+  admin: 'Yes'
+  project_manager: 'Yes'
+  member: 'Yes'
+  viewer: 'No'
+- action: Invite/Remove Member
+  admin: 'Yes'
+  project_manager: 'Yes'
+  member: 'No'
+  viewer: 'No'
+- action: Assign/Change Roles
+  admin: 'Yes'
+  project_manager: 'Yes'
+  member: 'No'
+  viewer: 'No'
+- action: View Project/WP/Boards
+  admin: 'Yes'
+  project_manager: 'Yes'
+  member: 'Yes'
+  viewer: 'Yes'

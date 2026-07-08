@@ -1,0 +1,56 @@
+id: FR-BRD-004
+type: functional_requirement
+module: boards
+source:
+  document: openproject-demo-requirements.docx
+  section: '6.3'
+text: The system shall allow adding an existing Work Package to a Board list, or creating a new Work Package
+  directly from a Board list's 'add card' control.
+stories:
+- US-BRD-02
+business_rules:
+- BR-BRD-02
+permission_rows:
+- Move cards on Board (drag-and-drop)
+data_fields: []
+test_cases:
+- id: TC-BRD-004-01
+  type: positive
+  title: Add an existing Work Package to a Board list
+  preconditions:
+  - A Work Package exists that is not yet on any Board
+  - A Board list exists
+  steps:
+  - Use the list's 'add card' control to search for and add the existing Work Package
+  expected_result: The Work Package appears as a card in the list.
+- id: TC-BRD-004-02
+  type: positive
+  title: Create a new Work Package directly from a Board list
+  preconditions:
+  - A Board list exists
+  steps:
+  - Use the list's 'add card' control to create a new Work Package inline
+  expected_result: A new Work Package is created and appears as a card in that list.
+- id: TC-BRD-004-03
+  type: positive
+  title: A Work Package can appear on multiple Boards simultaneously (BR-BRD-02)
+  preconditions:
+  - A Work Package is already a card on Board A
+  steps:
+  - Add the same Work Package as a card to Board B
+  expected_result: The Work Package appears as a card on both Board A and Board B.
+  refs:
+    business_rules:
+    - BR-BRD-02
+- id: TC-BRD-004-04
+  type: positive
+  title: Removing a card from one Board does not delete the Work Package (BR-BRD-02)
+  preconditions:
+  - A Work Package is a card on both Board A and Board B
+  steps:
+  - Remove the card from Board A's list
+  expected_result: Work Package no longer appears on Board A, but remains visible on Board B and in the
+    Work Packages module.
+  refs:
+    business_rules:
+    - BR-BRD-02

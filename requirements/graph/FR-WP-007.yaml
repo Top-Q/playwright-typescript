@@ -1,0 +1,47 @@
+id: FR-WP-007
+type: functional_requirement
+module: work-packages
+source:
+  document: openproject-demo-requirements.docx
+  section: '5.3'
+text: The system shall support file attachments up to a configured maximum size (default 100MB) per file;
+  oversized uploads shall be rejected with a clear error message.
+stories:
+- US-WP-05
+business_rules: []
+permission_rows:
+- Edit any Work Package
+data_fields:
+- Attachment.filename
+- Attachment.size
+test_cases:
+- id: TC-WP-007-01
+  type: positive
+  title: Attach a file under the size limit
+  preconditions:
+  - Logged in as a user with edit permission on the Work Package
+  - A test file under 100MB is available
+  steps:
+  - Open the Work Package
+  - Use the attachment control to upload the file
+  expected_result: File uploads successfully and appears in the Attachments list with correct filename
+    and size.
+- id: TC-WP-007-02
+  type: boundary-negative
+  title: Oversized attachment is rejected
+  preconditions:
+  - Same as above
+  - A test file exceeding 100MB is available
+  steps:
+  - Attempt to upload the oversized file to the Work Package
+  expected_result: Upload is rejected with a clear error message referencing the size limit; no Attachment
+    record is created.
+- id: TC-WP-007-03
+  type: boundary-positive
+  title: File at exactly the configured max size is accepted
+  preconditions:
+  - A test file of exactly 100MB is available
+  steps:
+  - Attempt to upload the file
+  expected_result: 'Upload succeeds. NOTE: confirm with stakeholder whether the limit is inclusive (<=100MB)
+    or exclusive (<100MB) — doc says ''up to'' which implies inclusive; flag if implementation differs.'

@@ -1,0 +1,13 @@
+id: NFR-AUDIT-001
+type: non_functional_requirement
+category: Auditability
+source:
+  document: openproject-demo-requirements.docx
+  section: '8'
+text: All create/update/delete actions on Projects, Work Packages, Boards, and Members shall be recorded
+  in an accessible activity/audit trail.
+related_frs:
+- FR-WP-009
+test_cases: []
+notes: ID invented for tracking purposes; source doc's NFR table (Section 8) has no native IDs. related_frs
+  is inferred, not stated in source.

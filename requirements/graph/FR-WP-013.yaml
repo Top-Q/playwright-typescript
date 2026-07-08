@@ -1,0 +1,47 @@
+id: FR-WP-013
+type: functional_requirement
+module: work-packages
+source:
+  document: openproject-demo-requirements.docx
+  section: '5.3'
+text: The system shall prevent deletion of a Work Package that has open (non-closed) child Work Packages
+  without an explicit cascade confirmation.
+stories:
+- US-WP-08
+business_rules:
+- BR-WP-04
+permission_rows:
+- Delete Work Package
+data_fields:
+- WorkPackage.status
+test_cases:
+- id: TC-WP-013-01
+  type: negative
+  title: Deleting a Work Package with open child Work Packages is blocked without cascade confirmation
+  preconditions:
+  - A Work Package has at least one child Work Package that is not Closed
+  steps:
+  - Attempt to delete the parent Work Package
+  - Do not provide cascade confirmation
+  expected_result: Deletion is blocked; a warning is shown indicating open child Work Packages exist.
+- id: TC-WP-013-02
+  type: positive
+  title: Deleting with explicit cascade confirmation succeeds
+  preconditions:
+  - Same setup as TC-WP-013-01
+  steps:
+  - Attempt to delete the parent Work Package
+  - Explicitly confirm cascade deletion
+  expected_result: Parent Work Package is deleted (soft-deleted per BR-WP-04, recoverable for 7 days);
+    open children are handled per the cascade confirmation semantics.
+  refs:
+    business_rules:
+    - BR-WP-04
+- id: TC-WP-013-03
+  type: positive
+  title: Deleting a Work Package whose children are all Closed requires no cascade confirmation
+  preconditions:
+  - A Work Package's only child Work Packages are all in Status 'Closed'
+  steps:
+  - Delete the parent Work Package
+  expected_result: Deletion proceeds without requiring the cascade confirmation step.

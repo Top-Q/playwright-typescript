@@ -1,0 +1,40 @@
+id: FR-MEM-009
+type: functional_requirement
+module: members-roles
+source:
+  document: openproject-demo-requirements.docx
+  section: '7.3'
+text: The system shall support filtering the Members list by Role and by Status (Active/Invited).
+stories:
+- US-MEM-05
+business_rules: []
+permission_rows:
+- View Project/WP/Boards
+data_fields:
+- Member.status (active/invited)
+test_cases:
+- id: TC-MEM-009-01
+  type: positive
+  title: Filter Members list by Role
+  preconditions:
+  - Members exist with different Roles
+  steps:
+  - Apply a filter for a specific Role
+  expected_result: Only Members holding that Role are shown.
+- id: TC-MEM-009-02
+  type: positive
+  title: Filter Members list by Status
+  preconditions:
+  - Members exist with Status 'Active' and 'Invited'
+  steps:
+  - Apply a filter for Status='Invited'
+  expected_result: Only invited Members are shown.
+- id: TC-MEM-009-03
+  type: positive
+  title: Combined Role and Status filters apply with AND semantics
+  preconditions:
+  - Members exist with varying Role/Status combinations
+  steps:
+  - Apply a Role filter and a Status filter simultaneously
+  expected_result: Only Members matching both the selected Role and Status are shown, consistent with
+    the AND semantics established for Work Package filters (FR-WP-010).

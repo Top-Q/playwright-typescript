@@ -1,0 +1,12 @@
+id: RBAC-BUSINESS-RULES
+type: business_rules
+source:
+  document: openproject-demo-requirements.docx
+  section: '3'
+rules:
+- id: RBAC-01
+  text: Any action not explicitly permitted for a role must be hidden or disabled in the UI, and rejected
+    with HTTP 403 if attempted via the API.
+- id: RBAC-02
+  text: A user with zero project memberships and no admin flag must not be able to view or discover the
+    existence of a private project.

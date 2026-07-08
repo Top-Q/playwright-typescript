@@ -1,0 +1,36 @@
+id: FR-PRJ-003
+type: functional_requirement
+module: projects
+source:
+  document: openproject-demo-requirements.docx
+  section: '4.3'
+text: The system shall reject Project creation if the Name is empty or the Identifier collides with an
+  existing project, and shall display an inline validation error.
+stories:
+- US-PRJ-01
+business_rules: []
+permission_rows:
+- Create/Edit/Archive Project
+data_fields:
+- Project.name
+- Project.identifier
+test_cases:
+- id: TC-PRJ-003-01
+  type: negative
+  title: Empty Name blocks Project creation
+  preconditions:
+  - On the 'New Project' form
+  steps:
+  - Leave the Name field empty
+  - Attempt to click Create
+  expected_result: Create button remains disabled, or a required-field validation error is shown; no Project
+    is created.
+- id: TC-PRJ-003-02
+  type: negative
+  title: Whitespace-only Name is treated as empty
+  preconditions:
+  - On the 'New Project' form
+  steps:
+  - Enter only spaces into the Name field
+  - Attempt to click Create
+  expected_result: Same validation behavior as an empty Name; no Project is created.

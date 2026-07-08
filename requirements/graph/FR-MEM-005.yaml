@@ -1,0 +1,37 @@
+id: FR-MEM-005
+type: functional_requirement
+module: members-roles
+source:
+  document: openproject-demo-requirements.docx
+  section: '7.3'
+text: The system shall allow removing a Member from a Project, revoking their access immediately; any
+  Work Packages previously assigned to them shall remain but display the (now former) member's name with
+  an 'inactive/removed' indicator.
+stories:
+- US-MEM-04
+business_rules: []
+permission_rows:
+- Invite/Remove Member
+data_fields:
+- Member.status (active/invited)
+test_cases:
+- id: TC-MEM-005-01
+  type: positive
+  title: Remove a Member revokes access immediately
+  preconditions:
+  - A Member exists on the Project
+  - Logged in as a Project Manager
+  steps:
+  - Click Remove next to the Member
+  - Confirm
+  expected_result: Member no longer appears in the Members list and immediately loses access to the Project.
+- id: TC-MEM-005-02
+  type: positive
+  title: Removed Member's prior Work Package assignments show an inactive indicator
+  preconditions:
+  - A Work Package is assigned to a Member who is then removed from the Project
+  steps:
+  - Remove the Member
+  - Open the previously assigned Work Package
+  expected_result: The Work Package still displays the former member's name as Assignee, annotated with
+    an 'inactive/removed' indicator, rather than being blanked or reassigned.

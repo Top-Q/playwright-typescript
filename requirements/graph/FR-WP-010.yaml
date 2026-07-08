@@ -1,0 +1,45 @@
+id: FR-WP-010
+type: functional_requirement
+module: work-packages
+source:
+  document: openproject-demo-requirements.docx
+  section: '5.3'
+text: The system shall provide list-view filtering by Status, Type, Assignee, Priority, and free-text
+  search on Subject/Description, combinable with AND semantics.
+stories:
+- US-WP-07
+business_rules: []
+permission_rows:
+- View Project/WP/Boards
+data_fields:
+- WorkPackage.status
+- WorkPackage.type
+- WorkPackage.assignee_id
+- WorkPackage.priority
+test_cases:
+- id: TC-WP-010-01
+  type: positive
+  title: Combined filters apply with AND semantics
+  preconditions:
+  - Work Packages exist with varying Status and Type values
+  steps:
+  - Open the Work Packages list
+  - Apply filter Status='New'
+  - Apply filter Type='Task'
+  expected_result: Only Work Packages that are both Status='New' AND Type='Task' are shown.
+- id: TC-WP-010-02
+  type: positive
+  title: Free-text search matches partial Subject text
+  preconditions:
+  - A Work Package with Subject containing a known substring exists
+  steps:
+  - Enter the substring into the free-text search field
+  expected_result: Work Packages whose Subject or Description contain the substring are shown.
+- id: TC-WP-010-03
+  type: edge
+  title: Filter combination with no matches shows empty state, not an error
+  preconditions:
+  - No Work Package matches a deliberately over-constrained filter combination
+  steps:
+  - Apply a filter combination guaranteed to match zero Work Packages
+  expected_result: The list displays an empty-state message; no error or broken UI is shown.

@@ -1,0 +1,48 @@
+id: FR-PRJ-002
+type: functional_requirement
+module: projects
+source:
+  document: openproject-demo-requirements.docx
+  section: '4.3'
+text: The Project Identifier shall be unique system-wide, URL-safe (lowercase letters, numbers, hyphens),
+  and immutable after creation.
+stories:
+- US-PRJ-01
+business_rules:
+- BR-PRJ-01
+permission_rows: []
+data_fields:
+- Project.identifier
+test_cases:
+- id: TC-PRJ-002-01
+  type: negative
+  title: Duplicate Identifier is rejected
+  preconditions:
+  - A Project with identifier 'demo-project' already exists
+  steps:
+  - Attempt to create a new Project whose auto-generated or manually-entered Identifier is 'demo-project'
+  - Click Create
+  expected_result: Inline error 'Identifier has already been taken' is shown; no Project is created.
+- id: TC-PRJ-002-02
+  type: negative
+  title: Non-URL-safe Identifier is sanitized or rejected
+  preconditions:
+  - On the 'New Project' form
+  steps:
+  - Manually enter an Identifier containing uppercase letters, spaces, or special characters (e.g. 'My
+    Project!')
+  expected_result: The system either auto-sanitizes to a valid lowercase/hyphenated slug or rejects the
+    value with a validation error; no Project is created with an invalid Identifier.
+- id: TC-PRJ-002-03
+  type: negative
+  title: Identifier is immutable after creation (BR-PRJ-01)
+  preconditions:
+  - A Project exists with a saved Identifier
+  steps:
+  - Open the Project's settings/edit page
+  - Attempt to change the Identifier field
+  expected_result: The Identifier field is read-only or the change is rejected; the original Identifier
+    is preserved.
+  refs:
+    business_rules:
+    - BR-PRJ-01

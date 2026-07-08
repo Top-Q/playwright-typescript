@@ -52,7 +52,10 @@
       "WebFetch(domain:github.com)",
       "PowerShell(skill-validator *)",
       "Bash(pandoc --version)",
-      "Bash(pip install *)"
+      "Bash(pip install *)",
+      "Skill(playwright-trace)",
+      "Bash(xargs -I{} ls -la {})",
+      "Bash(sort -k6,7)"
     ]
   }
 }

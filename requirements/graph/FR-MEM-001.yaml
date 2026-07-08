@@ -1,0 +1,60 @@
+id: FR-MEM-001
+type: functional_requirement
+module: members-roles
+source:
+  document: openproject-demo-requirements.docx
+  section: '7.3'
+text: The system shall allow inviting a Member to a Project by selecting an existing user (search by name/email/username)
+  or entering an email address for an external invite.
+stories:
+- US-MEM-01
+business_rules:
+- BR-MEM-01
+permission_rows:
+- Invite/Remove Member
+data_fields:
+- Member.user_id
+- Member.status (active/invited)
+test_cases:
+- id: TC-MEM-001-01
+  type: positive
+  title: Invite an existing user by search
+  preconditions:
+  - Logged in as a Project Manager
+  - Target user already has an account
+  steps:
+  - Open Members page
+  - Click 'Add member'
+  - Search for the existing user by name/email/username
+  - Select a Role
+  - Click Add
+  expected_result: User appears in the Members list with the selected Role and Status 'Active'.
+- id: TC-MEM-001-02
+  type: positive
+  title: Invite a new user by email creates an 'Invited' Member (BR-MEM-01)
+  preconditions:
+  - Logged in as a Project Manager
+  - Target email has no existing account
+  steps:
+  - Click 'Add member'
+  - Enter an external email address
+  - Select a Role
+  - Click Add
+  expected_result: User appears in the Members list with Status 'Invited'; the invited user has no Project
+    access until they complete registration/activation.
+  refs:
+    business_rules:
+    - BR-MEM-01
+- id: TC-MEM-001-03
+  type: negative
+  title: Cannot add a Member without selecting a user or entering an email
+  preconditions:
+  - On the 'Add member' form
+  steps:
+  - Leave both the user search and email fields empty
+  - Attempt to click Add
+  expected_result: Validation error is shown; no Member record is created.
+  refs:
+    data_fields:
+    - Member.user_id
+    - Member.status (active/invited)

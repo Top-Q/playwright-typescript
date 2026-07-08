@@ -1,0 +1,34 @@
+id: FR-MEM-002
+type: functional_requirement
+module: members-roles
+source:
+  document: openproject-demo-requirements.docx
+  section: '7.3'
+text: The system shall require at least one Role to be selected at the time a Member is added; multiple
+  Roles may be assigned simultaneously.
+stories:
+- US-MEM-02
+business_rules: []
+permission_rows:
+- Assign/Change Roles
+data_fields:
+- Role.name
+test_cases:
+- id: TC-MEM-002-01
+  type: negative
+  title: Adding a Member without selecting any Role is rejected
+  preconditions:
+  - On the 'Add member' form with a valid user selected
+  steps:
+  - Leave the Role selection empty
+  - Attempt to click Add
+  expected_result: Validation error is shown; no Member record is created.
+- id: TC-MEM-002-02
+  type: positive
+  title: Multiple Roles can be assigned simultaneously at add-time
+  preconditions:
+  - On the 'Add member' form with a valid user selected
+  steps:
+  - Select two different Roles
+  - Click Add
+  expected_result: Member is added holding both selected Roles simultaneously.

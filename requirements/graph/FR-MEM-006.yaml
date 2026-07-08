@@ -1,0 +1,51 @@
+id: FR-MEM-006
+type: functional_requirement
+module: members-roles
+source:
+  document: openproject-demo-requirements.docx
+  section: '7.3'
+text: The system shall prevent removing the last Member holding a 'manage project' capable Role, to avoid
+  an unmanageable project.
+stories:
+- US-MEM-04
+business_rules:
+- BR-MEM-03
+- BR-PRJ-04
+permission_rows:
+- Invite/Remove Member
+data_fields: []
+test_cases:
+- id: TC-MEM-006-01
+  type: negative
+  title: Cannot remove the last manage-capable Member
+  preconditions:
+  - The Project has exactly one Member holding a manage-capable Role
+  steps:
+  - Attempt to remove that Member
+  - Confirm
+  expected_result: Removal is blocked with an explanatory error; the Member remains on the Project.
+- id: TC-MEM-006-02
+  type: positive
+  title: Removing a manage-capable Member succeeds when another exists
+  preconditions:
+  - The Project has two Members holding manage-capable Roles
+  steps:
+  - Remove one of the two manage-capable Members
+  expected_result: Removal succeeds; the remaining manage-capable Member keeps the Project manageable.
+- id: TC-MEM-006-03
+  type: edge
+  title: Bulk/indirect role edits cannot bypass the last-manager protection (cross-link BR-PRJ-04)
+  preconditions:
+  - The Project has exactly one Member holding a manage-capable Role
+  steps:
+  - Instead of removing the Member, attempt to edit their Role(s) to remove the manage-capable Role entirely
+    (leaving them with only a non-managing Role)
+  expected_result: This action is blocked with the same class of error as direct removal, since it would
+    leave the Project without a manage-capable Member, violating BR-PRJ-04.
+  refs:
+    business_rules:
+    - BR-MEM-03
+    - BR-PRJ-04
+    notes: verifies the protection can't be routed around via role-edit instead of removal
+notes: Also enforces BR-PRJ-04 (Projects module) — cross-module business rule shared between Members and
+  Projects.

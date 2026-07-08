@@ -1,0 +1,65 @@
+id: FR-BRD-001
+type: functional_requirement
+module: boards
+source:
+  document: openproject-demo-requirements.docx
+  section: '6.3'
+text: The system shall allow creating a Board by specifying a Title and a Board Type (Basic or Action
+  board) via a single combined creation form.
+stories:
+- US-BRD-01
+business_rules:
+- BR-BRD-03
+permission_rows:
+- Create/Delete Board
+data_fields:
+- Board.title
+- Board.board_type (basic/action)
+test_cases:
+- id: TC-BRD-001-01
+  type: positive
+  title: Create a Basic Board with unique Title
+  preconditions:
+  - Logged in as a Project Manager
+  steps:
+  - Open Boards overview
+  - Click 'Create Board'
+  - Enter a unique Title
+  - Select Type 'Basic'
+  - Click Create
+  expected_result: A new Board opens with a default list.
+  refs:
+    data_fields:
+    - Board.title
+    - Board.board_type (basic/action)
+- id: TC-BRD-001-02
+  type: positive
+  title: Create an Action Board auto-generates Status-backed columns
+  preconditions:
+  - Logged in as a Project Manager
+  steps:
+  - Create a Board with Type 'Action board'
+  expected_result: Board is created with one column per Status defined in the relevant workflow (cross-ref
+    FR-BRD-002).
+- id: TC-BRD-001-03
+  type: negative
+  title: Duplicate Board Title (case-insensitive) is rejected (BR-BRD-03)
+  preconditions:
+  - A Board titled 'Sprint Board' already exists in the Project
+  steps:
+  - Attempt to create a new Board titled 'sprint board' (different case)
+  expected_result: Creation is rejected with a duplicate-title error.
+  refs:
+    business_rules:
+    - BR-BRD-03
+- id: TC-BRD-001-04
+  type: permission
+  title: Team Member cannot create a Board
+  preconditions:
+  - Logged in as a Team Member (non-manager)
+  steps:
+  - Attempt to access 'Create Board' via UI and API
+  expected_result: Control is not available in the UI; API request is rejected with HTTP 403.
+  refs:
+    permission_rows:
+    - Create/Delete Board
