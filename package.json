@@ -14,7 +14,14 @@
     "dump-dom": "npx tsx scripts/dump-dom.ts",
     "dump-dom:help": "npx tsx scripts/dump-dom.ts --help",
     "dump-dom:dom": "npx tsx scripts/dump-dom.ts --dom",
-    "dump-dom:aria": "npx tsx scripts/dump-dom.ts --aria"
+    "dump-dom:aria": "npx tsx scripts/dump-dom.ts --aria",
+    "gate:lint": "eslint .",
+    "gate:types": "tsc --noEmit",
+    "gate:catalog": "tsx scripts/build-pom-catalog.ts --check",
+    "gate:stubs": "tsx scripts/pipeline/check-stubs.ts",
+    "gate:all": "npm run gate:catalog && npm run gate:types && npm run gate:lint && npm run gate:stubs",
+    "pipeline:init": "tsx scripts/pipeline/run-init.ts",
+    "pipeline:report": "tsx scripts/pipeline/run-report.ts"
   },
   "repository": {
     "type": "git",
@@ -30,6 +37,7 @@
   "devDependencies": {
     "@eslint/js": "^9.33.0",
     "@playwright/test": "^1.56",
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^24.0.10",
     "@typescript-eslint/eslint-plugin": "^8.39.0",
     "@typescript-eslint/parser": "^8.39.0",
@@ -39,6 +47,7 @@
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-playwright": "^2.2.2",
     "globals": "^16.3.0",
+    "js-yaml": "^4.1.0",
     "prettier": "^3.6.2",
     "tsx": "^4.23.1",
     "typescript": "^5.9.2",

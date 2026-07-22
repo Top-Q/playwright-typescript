@@ -153,8 +153,34 @@ async addMember(userNameOrEmail: string, role: string = 'Member'): Promise<void>
 
 `waitForLoad()` and non-public methods are excluded from the catalog automatically — do not tag them for coverage.
 
+## Test-Generation Pipeline
+
+`/gen-test <spec-ref>` generates a complete, passing UI test from a specification by running four specialised subagents with deterministic gates between them. `<spec-ref>` is an FR id (`FR-MEM-001`), a TC id (`TC-MEM-001-02`), or a path to a markdown spec.
+
+| Stage | Agent | Does |
+|-------|-------|------|
+| 1 | `test-creator` | Spec → test file, using **only** the POM catalog. No browser. Gaps become throwing `@stub` methods. |
+| 3 | `po-builder` | Implements the stubs, deriving locators from OpenProject's Rails source and the live DOM. |
+| 6 | `test-healer` | Diagnoses failures from the trace and the live app; minimal fixes only. |
+| 7 | `test-reviewer` | Architecture compliance **and** whether the test actually covers the spec. |
+
+The pipeline works on a `test-gen/<run-id>` branch and never commits, pushes, or deletes it. Run artifacts go to `.pipeline/runs/<run-id>/` (gitignored); the handoff contract is [`.claude/skills/gen-test/references/contract.md`](.claude/skills/gen-test/references/contract.md).
+
+Why the split: one agent doing discovery, browser investigation, PO authoring, and debugging runs out of context and starts inventing locators. Keeping test design (catalog-only) apart from DOM investigation (browser) is the core constraint.
+
+### Gates
+
+| Command | Asserts |
+|---------|---------|
+| `npm run gate:catalog` | POM catalog matches `src/po/` |
+| `npm run gate:types` | `tsc --noEmit` clean |
+| `npm run gate:lint` | `eslint .` has no errors |
+| `npm run gate:stubs` | No `@stub` methods remain (`-- --expect <n>` to require exactly *n*) |
+| `npm run gate:all` | All of the above |
+
 ## Skills & Commands
 
-- **Write web test** skill — generate UI tests from business requirements
+- `/gen-test <spec-ref>` — the full pipeline above; the normal way to create a test
+- **Write web test** skill — single-shot manual test writing, when you don't want the pipeline
 - **Write api test** skill — generate API tests
 - `/heal-test <test name>` — run a test, diagnose failures, apply minimal fixes
