@@ -2,7 +2,7 @@
   "module": "members",
   "file": "members.json",
   "app": "openproject",
-  "generatedAt": "2026-07-22T06:18:01.379Z",
+  "generatedAt": "2026-07-22T16:12:29.017Z",
   "schemaVersion": 2,
   "classes": [
     {
@@ -41,19 +41,6 @@
           "observableState": "The inline add member form is visible, exposing the user search field and role dropdown"
         },
         {
-          "name": "addMember",
-          "signature": "addMember(userNameOrEmail: string, role: string = 'Member'): Promise<void>",
-          "description": "Adds a member to the project by searching for a user name, or inviting by\nemail when no matching user exists. Opens the add member form first if it\nis not already open, so it can be called directly.\n\nWaits for the POST to complete and then reloads the page, so the members\ntable reliably reflects the new member on return.",
-          "aliases": [
-            "addMemberToProject",
-            "inviteUser",
-            "createMember",
-            "addUser"
-          ],
-          "prerequisites": "The Members page is open and the named user (or email) can be granted the role",
-          "observableState": "The member is added and appears as a new row in the members table; the page reloads and shows a success flash"
-        },
-        {
           "name": "isAddMemberFormVisible",
           "signature": "isAddMemberFormVisible(): Promise<boolean>",
           "description": "Checks whether the inline add member form is currently visible.",
@@ -75,6 +62,58 @@
           ],
           "prerequisites": "The Members page is open",
           "observableState": "The add member form is hidden and no member is added"
+        },
+        {
+          "name": "selectMemberToAdd",
+          "signature": "selectMemberToAdd(nameOrEmail: string): Promise<void>",
+          "description": "Selects the principal to add in the inline add member form: types the\ngiven name or email into the user search field and picks the matching\nentry from the autocompleter. When the value is an email address with no\nexisting account, the autocompleter offers an \"invite by email\" entry —\nthis selects that entry, which is what turns the submission into an\nexternal invite.",
+          "aliases": [
+            "enterExternalEmail",
+            "inviteByEmail",
+            "searchForUser",
+            "selectPrincipal"
+          ],
+          "prerequisites": "The inline add member form is open — call {@link openAddMemberForm} first",
+          "observableState": "The chosen user or email is selected in the add form's search field; nothing is persisted until the form is submitted"
+        },
+        {
+          "name": "selectRole",
+          "signature": "selectRole(role: string): Promise<void>",
+          "description": "Selects a role in the inline add member form's role dropdown. This sets\nthe role for the member about to be added; it does not change the role of\nan existing member (use {@link MemberTableRowComp.clickManageRoles} for\nthat).",
+          "aliases": [
+            "chooseRole",
+            "setMemberRole",
+            "pickRole",
+            "selectMemberRole"
+          ],
+          "prerequisites": "The inline add member form is open — call {@link openAddMemberForm} first",
+          "observableState": "The role dropdown shows the given role as selected; nothing is persisted until the form is submitted"
+        },
+        {
+          "name": "submitAddMemberForm",
+          "signature": "submitAddMemberForm(): Promise<MembersPage>",
+          "description": "Clicks \"Add\" to submit the inline add member form, waits for the create\nrequest to complete, and returns the reloaded Members page so the members\ntable reliably reflects the new member.\n\nSubmitting posts the form and the server redirects to the members list\nwith `?status=all`, so this is a full page load rather than a Turbo swap.",
+          "aliases": [
+            "clickAdd",
+            "confirmAddMember",
+            "saveMember",
+            "submitInvite"
+          ],
+          "prerequisites": "A principal and a role have been chosen in the open add member form",
+          "observableState": "The member is created, the add form closes, and a new row appears in the members table"
+        },
+        {
+          "name": "addMember",
+          "signature": "addMember(userNameOrEmail: string, role: string = 'Member'): Promise<void>",
+          "description": "Adds a member end to end: opens the add form if needed, selects the user\nor email, assigns the role, and submits. Use this when a test only needs\na member to exist; drive {@link selectMemberToAdd}, {@link selectRole}\nand {@link submitAddMemberForm} separately when it needs to observe or\nassert on the intermediate form state.",
+          "aliases": [
+            "addMemberToProject",
+            "inviteUser",
+            "createMember",
+            "addUser"
+          ],
+          "prerequisites": "The Members page is open and the named user (or email) can be granted the role",
+          "observableState": "The member is added and appears as a new row in the members table"
         },
         {
           "name": "openFilter",
@@ -278,10 +317,12 @@
         {
           "name": "getStatus",
           "signature": "getStatus(): Promise<string>",
-          "description": "Returns the member's status — typically \"active\", \"locked\", or \"invited\".",
+          "description": "Returns the text of the row's Status cell — \"active\" for a member whose\naccount is usable, \"invited\" while a sent invitation is still pending\nregistration/activation, \"locked\" for a blocked account.\n\nThe rendered casing is not guaranteed, so compare case-insensitively.",
           "aliases": [
             "getMemberStatus",
-            "status"
+            "status",
+            "getInvitationStatus",
+            "getAccountStatus"
           ],
           "prerequisites": "This member row is displayed",
           "observableState": "None — read-only query"
