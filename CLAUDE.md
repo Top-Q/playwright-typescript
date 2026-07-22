@@ -58,6 +58,7 @@ Tests simulate an **admin** user logged into the **Demo Project**.
 9. Prefer `getByRole()` > `getByLabel()` > `getByText()` > `getByTestId()` > CSS
 10. Navigation methods return the destination page object (fluent pattern)
 11. Every page/component implements `waitForLoad()`
+12. Every public page-object method carries `@aliases`, `@prerequisites`, and `@observable-state` JSDoc tags (see [POM Catalog](#pom-catalog)). Regenerate the catalog after adding or changing methods.
 
 ## Coding Standards
 
@@ -108,6 +109,49 @@ await dumpDom(page, { sleepMs: 500, label: 'modal-open' });
 ```
 
 Remove `dumpDom` calls after investigation is complete.
+
+## POM Catalog
+
+A committed, greppable index of every page object and its methods, so agents (and humans) discover what already exists before writing new page objects — avoiding duplicate methods and reinvented locators. **Consult it first when writing a test.**
+
+- **Location:** `pom-catalog/<app>/` — `index.json` (class-level overview) plus one `<module>.json` per module holding the methods.
+- **Read order:** start with `index.json` to find the right class by name or `@aliases`, then open only the relevant `<module>.json` for its method signatures and metadata. The index deliberately carries no method-level data so it stays small as the project grows.
+- **Purpose:** it serves *test writing* (discovery). The catalog contains only public methods and only what you need to pick and call one — it is not a substitute for reading the page-object source when filling in or extending a class.
+
+### Commands
+
+| Command | Does |
+|---------|------|
+| `npm run catalog` | Regenerate the catalog from `src/po/`. Run after adding or changing any page-object method. |
+| `npm run catalog:check` | Fail (exit 1) if the committed catalog is stale — the freshness gate. |
+| `npm run catalog:report` | Print per-module metadata coverage. |
+
+### Method metadata tags
+
+Write these on **every public page-object method**. They are what make the catalog searchable by intent rather than exact name.
+
+| Tag | Answers | Example |
+|-----|---------|---------|
+| `@aliases` | Other names someone might search by (2–4, comma-separated) | `@aliases addMember, inviteUser, createMember` |
+| `@prerequisites` | What must be true before calling — state, not narrative | `@prerequisites The add-member form is open` |
+| `@observable-state` | What a test could assert after calling | `@observable-state A new row appears in the members table` |
+
+Classes additionally take a class-level `@aliases`. The leading comment text becomes the description; standard `@param` / `@returns` / `@deprecated` are recognized. Example:
+
+```typescript
+/**
+ * Adds a member to the project by searching for a user name or email.
+ *
+ * @aliases addMemberToProject, inviteUser, createMember
+ * @prerequisites The Members page is open
+ * @observable-state A new row appears in the members table; a success flash is shown
+ * @param userNameOrEmail - The name or email to search for.
+ * @param role - The role to assign. Defaults to 'Member'.
+ */
+async addMember(userNameOrEmail: string, role: string = 'Member'): Promise<void> { ... }
+```
+
+`waitForLoad()` and non-public methods are excluded from the catalog automatically — do not tag them for coverage.
 
 ## Skills & Commands
 

@@ -6,6 +6,8 @@ import { MemberTableRowComp } from './memberTableRowComp';
  * Represents the members table component on the Members page.
  * Contains rows of members with their name, email, roles, groups, status, etc.
  * The table columns are: Name, Email, Roles, Groups, Shared, Status, Current Rate.
+ *
+ * @aliases MembersTable, MemberList
  */
 export class MemberTableComp extends BaseComponent<MemberTableComp> {
     private readonly nameColumnHeader: Locator;
@@ -25,7 +27,19 @@ export class MemberTableComp extends BaseComponent<MemberTableComp> {
         return this;
     }
 
-    /** Returns the number of member rows in the table. */
+    /**
+     * Returns the number of member rows in the table, or 0 when the table is
+     * absent entirely.
+     *
+     * Unlike the boards table, this does not special-case an empty-state
+     * placeholder row, so verify the members table's empty rendering before
+     * relying on a result of 1.
+     *
+     * @aliases getMemberCount, countMembers, getNumberOfMembers
+     * @prerequisites The Members page is open
+     * @observable-state None — read-only query
+     * @returns The number of member rows currently displayed.
+     */
     async getNumberOfRows(): Promise<number> {
         await this.page.waitForLoadState('domcontentloaded');
         const tableCount = await this.rootLocator.count();
@@ -36,14 +50,31 @@ export class MemberTableComp extends BaseComponent<MemberTableComp> {
         return await this.rootLocator.locator('tbody tr').count();
     }
 
-    /** Gets a member row by its zero-based index. */
+    /**
+     * Gets a member row by its zero-based index.
+     *
+     * @aliases getMemberByIndex, getRowAt
+     * @prerequisites The Members page is open and the table has at least `index + 1` rows
+     * @observable-state None — read-only query
+     * @param index - The index of the row to retrieve.
+     * @returns A `MemberTableRowComp` for the row at that index.
+     */
     async getRowByIndex(index: number): Promise<MemberTableRowComp> {
         await this.nameColumnHeader.waitFor();
         const rowLocator = this.rootLocator.locator('tbody tr').nth(index);
         return new MemberTableRowComp(this.page, rowLocator);
     }
 
-    /** Gets a member row by the member's name. */
+    /**
+     * Gets a member row by the member's name, returning the first match.
+     * Throws if no row matches.
+     *
+     * @aliases findMemberByName, getMemberRow, getRowForMember
+     * @prerequisites The Members page is open and a member with this name is displayed
+     * @observable-state None — read-only query
+     * @param name - The member name to look up.
+     * @returns A `MemberTableRowComp` for the first matching row.
+     */
     async getRowByMemberName(name: string): Promise<MemberTableRowComp> {
         await this.nameColumnHeader.waitFor();
         const rowLocator = this.rootLocator
@@ -55,7 +86,17 @@ export class MemberTableComp extends BaseComponent<MemberTableComp> {
         return new MemberTableRowComp(this.page, rowLocator.first());
     }
 
-    /** Checks if a member with the given name exists in the table. */
+    /**
+     * Checks whether a member with the given name is present in the table.
+     * Matches against the whole row's text, so a name appearing in another
+     * column (an email, for example) also counts as a match.
+     *
+     * @aliases memberExists, isMemberVisible, hasMember
+     * @prerequisites The Members page is open
+     * @observable-state None — read-only query
+     * @param name - The member name to look for.
+     * @returns True if a matching row is displayed, false otherwise.
+     */
     async hasMemberWithName(name: string): Promise<boolean> {
         await this.nameColumnHeader.waitFor();
         const rowLocator = this.rootLocator
@@ -64,7 +105,15 @@ export class MemberTableComp extends BaseComponent<MemberTableComp> {
         return (await rowLocator.count()) > 0;
     }
 
-    /** Returns an array of all member names displayed in the table. */
+    /**
+     * Returns the names of all members currently displayed in the table.
+     * Reflects the active filter and status view, not the full project roster.
+     *
+     * @aliases listMemberNames, getMemberNames, getAllMembers
+     * @prerequisites The Members page is open
+     * @observable-state None — read-only query
+     * @returns The displayed member names, in table order.
+     */
     async getAllMemberNames(): Promise<string[]> {
         await this.nameColumnHeader.waitFor();
         const nameLinks = this.rootLocator.locator('tbody tr td.name a');

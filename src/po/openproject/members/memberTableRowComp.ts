@@ -6,6 +6,8 @@ import { BaseComponent } from '../baseComponent';
  * Each row shows a member's name, email, roles, groups, shared status, status, and current rate.
  * The row has a "..." context menu with "Manage roles" and "Remove member" options.
  * "Manage roles" expands inline with role checkboxes and Change/Cancel buttons.
+ *
+ * @aliases MemberRow, MembersTableRow
  */
 export class MemberTableRowComp extends BaseComponent<MemberTableRowComp> {
     private readonly nameLink: Locator;
@@ -41,29 +43,65 @@ export class MemberTableRowComp extends BaseComponent<MemberTableRowComp> {
         return this;
     }
 
-    /** Returns the member's display name. */
+    /**
+     * Returns the member's display name from the Name column.
+     *
+     * @aliases getMemberName, name
+     * @prerequisites This member row is displayed
+     * @observable-state None — read-only query
+     * @returns The member's display name.
+     */
     async getName(): Promise<string> {
         return await this.nameLink.innerText();
     }
 
-    /** Returns the member's email address. */
+    /**
+     * Returns the member's email address from the Email column.
+     *
+     * @aliases getMemberEmail, email
+     * @prerequisites This member row is displayed and the Email column is populated
+     * @observable-state None — read-only query
+     * @returns The member's email address.
+     */
     async getEmail(): Promise<string> {
         return await this.emailLink.innerText();
     }
 
-    /** Returns the text content of the roles cell. */
+    /**
+     * Returns the raw text of the Roles cell. A member with several roles
+     * yields them as a single string, so assert with `toContain` rather than
+     * exact equality.
+     *
+     * @aliases getRoles, getMemberRoles, rolesText
+     * @prerequisites This member row is displayed
+     * @observable-state None — read-only query
+     * @returns The roles cell's text content.
+     */
     async getRolesText(): Promise<string> {
         return await this.rolesCell.innerText();
     }
 
-    /** Returns the member's status (e.g., "active", "locked", "invited"). */
+    /**
+     * Returns the member's status — typically "active", "locked", or "invited".
+     *
+     * @aliases getMemberStatus, status
+     * @prerequisites This member row is displayed
+     * @observable-state None — read-only query
+     * @returns The status cell's text content.
+     */
     async getStatus(): Promise<string> {
         return await this.statusCell.innerText();
     }
 
     /**
-     * Opens the context menu ("...") and clicks "Manage roles".
-     * This expands the row inline with role checkboxes.
+     * Opens the row's "..." context menu and clicks "Manage roles", then waits
+     * for the inline role editor to appear. This is the gateway to
+     * {@link toggleRole}, {@link isRoleChecked}, {@link clickChangeButton}, and
+     * {@link clickCancelButton} — none of them work until it has been called.
+     *
+     * @aliases openManageRoles, editRoles, clickEditRoles
+     * @prerequisites This member row is displayed
+     * @observable-state The row expands inline showing a role checkbox per project role, plus Change and Cancel buttons
      */
     async clickManageRoles(): Promise<void> {
         await this.contextMenuButton.click();
@@ -76,8 +114,13 @@ export class MemberTableRowComp extends BaseComponent<MemberTableRowComp> {
     }
 
     /**
-     * Toggles a role checkbox in the inline manage roles form.
-     * Must call `clickManageRoles()` first.
+     * Toggles a role checkbox in the inline manage roles editor. This flips the
+     * current state rather than setting it, and the change is not saved until
+     * {@link clickChangeButton} is called.
+     *
+     * @aliases checkRole, toggleRoleCheckbox, selectRole
+     * @prerequisites The inline role editor is open — call {@link clickManageRoles} first
+     * @observable-state The role checkbox flips state; nothing is persisted until Change is clicked
      * @param roleName - The role to toggle (e.g., "Member", "Reader", "Project admin").
      */
     async toggleRole(roleName: string): Promise<void> {
@@ -86,14 +129,29 @@ export class MemberTableRowComp extends BaseComponent<MemberTableRowComp> {
             .click();
     }
 
-    /** Returns whether a role checkbox is checked. Must call `clickManageRoles()` first. */
+    /**
+     * Returns whether a role checkbox is currently checked. Reflects unsaved
+     * editor state, not necessarily what is persisted on the server.
+     *
+     * @aliases hasRole, isRoleSelected, roleIsChecked
+     * @prerequisites The inline role editor is open — call {@link clickManageRoles} first
+     * @observable-state None — read-only query
+     * @param roleName - The role to inspect.
+     * @returns True if that role's checkbox is checked.
+     */
     async isRoleChecked(roleName: string): Promise<boolean> {
         return await this.rootComponent
             .getByRole('checkbox', { name: roleName })
             .isChecked();
     }
 
-    /** Clicks the "Change" button to save role changes. */
+    /**
+     * Clicks "Change" to save pending role edits, then waits for the page load.
+     *
+     * @aliases saveRoles, submitRoleChanges, confirmRoleChange
+     * @prerequisites The inline role editor is open — call {@link clickManageRoles} first
+     * @observable-state The role changes are persisted, the inline editor closes, and the row's Roles cell shows the new roles
+     */
     async clickChangeButton(): Promise<void> {
         await this.rootComponent
             .getByRole('button', { name: 'Change' })
@@ -101,7 +159,13 @@ export class MemberTableRowComp extends BaseComponent<MemberTableRowComp> {
         await this.page.waitForLoadState('load');
     }
 
-    /** Clicks the "Cancel" button to discard role changes. */
+    /**
+     * Clicks "Cancel" to discard pending role edits.
+     *
+     * @aliases discardRoleChanges, cancelRoleEdit, closeRoleEditor
+     * @prerequisites The inline role editor is open — call {@link clickManageRoles} first
+     * @observable-state The inline editor closes and the member's roles are unchanged
+     */
     async clickCancelButton(): Promise<void> {
         await this.rootComponent
             .getByRole('button', { name: 'Cancel' })
@@ -109,9 +173,17 @@ export class MemberTableRowComp extends BaseComponent<MemberTableRowComp> {
     }
 
     /**
-     * Opens the context menu, clicks "Remove member", and confirms in the Primer dialog.
-     * The dialog contains a "Remove" link with data-turbo-method="delete".
-     * After deletion, Turbo redirects back to the members page.
+     * Removes this member from the project end to end: opens the row context
+     * menu, clicks "Remove member", and confirms in the Primer dialog.
+     *
+     * The confirmation is a `data-turbo-method="delete"` link, clicked via
+     * `dispatchEvent` because Primer dialogs otherwise detach the element
+     * mid-click. Afterwards the browser navigates back to the members page URL
+     * captured before the removal.
+     *
+     * @aliases deleteMember, removeFromProject, revokeMembership
+     * @prerequisites This member row is displayed and the current user may remove members
+     * @observable-state The member is removed from the project, their row disappears, and the browser returns to the members list
      */
     async removeMember(): Promise<void> {
         const membersPageUrl = this.page.url();

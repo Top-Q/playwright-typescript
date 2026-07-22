@@ -1,0 +1,326 @@
+{
+  "module": "meeting",
+  "file": "meeting.json",
+  "app": "openproject",
+  "generatedAt": "2026-07-22T06:18:01.379Z",
+  "schemaVersion": 2,
+  "classes": [
+    {
+      "name": "AgendaItemsComp",
+      "file": "src/po/openproject/meeting/agendaItemsComp.ts",
+      "kind": "component",
+      "description": "Represents the agenda items list on the meeting show page.\nEach agenda item shows a title, duration, and action menu.\n\nThe root is the agenda list wrapper rendered by\n`MeetingAgendaItems::ListComponent`, whose id comes from OpenProject's\n`component_wrapper` helper (`name.underscore.tr('/', '-').tr('_', '-')`).\n\nThe \"Add\" split button is deliberately **outside** this root: the meeting\nshow page renders it as a sibling row via `MeetingAgendaItems::NewButtonComponent`,\ntagged `data-test-selector=\"meeting-main-add-button\"`.",
+      "aliases": [
+        "AgendaComp",
+        "MeetingAgenda"
+      ],
+      "methods": [
+        {
+          "name": "addItem",
+          "signature": "addItem(title: string): Promise<void>",
+          "description": "Adds an agenda item with the given title: opens the \"Add\" split button,\npicks \"Agenda item\" from the dropdown, fills the title, saves, and waits\nfor the saved item to render in the list.\n\nSaving falls back to pressing Enter when no Save button is visible.",
+          "aliases": [
+            "addAgendaItem",
+            "createAgendaItem",
+            "newAgendaItem"
+          ],
+          "prerequisites": "The meeting detail page is open and the meeting is not closed",
+          "observableState": "A new agenda item with this title appears in the agenda list"
+        },
+        {
+          "name": "getItemCount",
+          "signature": "getItemCount(): Promise<number>",
+          "description": "Returns the number of list items in the agenda list.",
+          "aliases": [
+            "countAgendaItems",
+            "getNumberOfItems"
+          ],
+          "prerequisites": "The meeting detail page is open",
+          "observableState": "None — read-only query"
+        },
+        {
+          "name": "hasItemWithTitle",
+          "signature": "hasItemWithTitle(title: string): Promise<boolean>",
+          "description": "Checks whether text matching the given title is visible in the agenda\nlist. Matches any text within the list, not only item titles.",
+          "aliases": [
+            "agendaItemExists",
+            "hasAgendaItem",
+            "isItemVisible"
+          ],
+          "prerequisites": "The meeting detail page is open",
+          "observableState": "None — read-only query"
+        }
+      ]
+    },
+    {
+      "name": "MeetingFormDialogComp",
+      "file": "src/po/openproject/meeting/meetingFormDialogComp.ts",
+      "kind": "component",
+      "description": "Represents the create/edit meeting dialog (#new-meeting-dialog).\nContains fields for title, location, start time, and duration.",
+      "aliases": [
+        "NewMeetingDialog",
+        "MeetingDialog",
+        "CreateMeetingForm"
+      ],
+      "methods": [
+        {
+          "name": "fillTitle",
+          "signature": "fillTitle(title: string): Promise<MeetingFormDialogComp>",
+          "description": "Fills the meeting title field. Returns this component so calls can be\nchained with {@link fillLocation} and {@link clickCreate}.",
+          "aliases": [
+            "setTitle",
+            "enterTitle",
+            "fillMeetingTitle"
+          ],
+          "prerequisites": "The create/edit meeting dialog is open",
+          "observableState": "The title field contains the given text"
+        },
+        {
+          "name": "fillLocation",
+          "signature": "fillLocation(location: string): Promise<MeetingFormDialogComp>",
+          "description": "Fills the meeting location field. Returns this component so calls can be\nchained with {@link fillTitle} and {@link clickCreate}.",
+          "aliases": [
+            "setLocation",
+            "enterLocation",
+            "fillMeetingLocation"
+          ],
+          "prerequisites": "The create/edit meeting dialog is open",
+          "observableState": "The location field contains the given text"
+        },
+        {
+          "name": "clickCreate",
+          "signature": "clickCreate(): Promise<MeetingShowPage>",
+          "description": "Clicks Create to submit the meeting form.",
+          "aliases": [
+            "submitMeetingForm",
+            "saveMeeting",
+            "create"
+          ],
+          "prerequisites": "The create meeting dialog is open and the required title is filled",
+          "observableState": "The meeting is created, the dialog closes, and the browser navigates to the new meeting's detail page"
+        },
+        {
+          "name": "createMeeting",
+          "signature": "createMeeting(title: string, location?: string): Promise<MeetingShowPage>",
+          "description": "Creates a meeting in one call — shorthand for {@link fillTitle}, then\n{@link fillLocation} when a location is given, then {@link clickCreate}.\nLeaves date, time and duration at their dialog defaults.",
+          "aliases": [
+            "createNewMeeting",
+            "addMeeting",
+            "submitMeeting"
+          ],
+          "prerequisites": "The create meeting dialog is open",
+          "observableState": "The meeting is created with the given title and appears in the meetings list; the browser navigates to its detail page"
+        }
+      ]
+    },
+    {
+      "name": "MeetingShowPage",
+      "file": "src/po/openproject/meeting/meetingShowPage.ts",
+      "kind": "page",
+      "description": "Represents the meeting detail/show page at /projects/:id/meetings/:meeting_id.\nContains the meeting header with title and action menu,\nan agenda items section, and a side panel with details/participants.",
+      "aliases": [
+        "MeetingDetailPage",
+        "MeetingPage"
+      ],
+      "methods": [
+        {
+          "name": "getMeetingTitle",
+          "signature": "getMeetingTitle(): Promise<string>",
+          "description": "Returns the meeting's title from the page heading, or an empty string if\nthe heading has no text content.",
+          "aliases": [
+            "getTitle",
+            "meetingTitle"
+          ],
+          "prerequisites": "The meeting detail page is open",
+          "observableState": "None — read-only query"
+        },
+        {
+          "name": "agendaItems",
+          "signature": "agendaItems(): AgendaItemsComp",
+          "description": "Returns the agenda items component, used to add agenda items and assert\non the meeting's agenda.",
+          "aliases": [
+            "getAgendaItems",
+            "agenda"
+          ],
+          "prerequisites": "The meeting detail page is open",
+          "observableState": "None — returns a component wrapper without interacting"
+        },
+        {
+          "name": "sidePanel",
+          "signature": "sidePanel(): MeetingSidePanelComp",
+          "description": "Returns the side panel component, covering meeting details (date, time,\nduration, location), state controls, and participants.",
+          "aliases": [
+            "getSidePanel",
+            "detailsPanel"
+          ],
+          "prerequisites": "The meeting detail page is open",
+          "observableState": "None — returns a component wrapper without interacting"
+        },
+        {
+          "name": "openHeaderActionMenu",
+          "signature": "openHeaderActionMenu(): Promise<void>",
+          "description": "Opens the meeting's header action (\"kebab\") menu, which holds the Delete\nand Close actions.",
+          "aliases": [
+            "openActionMenu",
+            "openKebabMenu",
+            "clickMeetingActions"
+          ],
+          "prerequisites": "The meeting detail page is open",
+          "observableState": "The header action menu opens, exposing its menu items"
+        },
+        {
+          "name": "deleteMeeting",
+          "signature": "deleteMeeting(): Promise<void>",
+          "description": "Deletes this meeting end to end: opens the header action menu, clicks\nDelete, and confirms in the dialog.\n\nDoes not wait for or assert the resulting navigation, so callers that\nneed the meetings list should navigate to it explicitly.",
+          "aliases": [
+            "removeMeeting",
+            "deleteThisMeeting"
+          ],
+          "prerequisites": "The meeting detail page is open and the current user may delete the meeting",
+          "observableState": "The meeting is permanently deleted and no longer appears in the meetings list"
+        },
+        {
+          "name": "closeMeeting",
+          "signature": "closeMeeting(): Promise<void>",
+          "description": "Closes the meeting, moving its state from Draft/Open to Closed, via the\nheader action menu. Closing is not the same as deleting — the meeting\nremains listed.",
+          "aliases": [
+            "closeThisMeeting",
+            "markMeetingClosed",
+            "setMeetingClosed"
+          ],
+          "prerequisites": "The meeting detail page is open and the meeting is not already closed",
+          "observableState": "The meeting's state becomes Closed and its agenda becomes read-only"
+        }
+      ]
+    },
+    {
+      "name": "MeetingSidePanelComp",
+      "file": "src/po/openproject/meeting/meetingSidePanelComp.ts",
+      "kind": "component",
+      "description": "Represents the meeting side panel on the meeting show page.\nContains meeting details (date, time, duration, location),\nstate controls, and participants list.\n\nThe root is the wrapper rendered by `Meetings::SidePanelComponent`, whose id\ncomes from OpenProject's `component_wrapper` helper\n(`name.underscore.tr('/', '-').tr('_', '-')`).\n\nBoth controls are `link`s, not buttons, and OpenProject does not emit a\n`data-test-selector` for either despite the ERB requesting one — verified\nagainst a live ARIA snapshot. \"Manage participants\" appears twice inside the\npanel (section header and participant list), hence `.first()`.",
+      "aliases": [
+        "MeetingDetailsPanel",
+        "SidePanelComp"
+      ],
+      "methods": [
+        {
+          "name": "clickEditDetails",
+          "signature": "clickEditDetails(): Promise<void>",
+          "description": "Clicks the edit details button to open the meeting details dialog, where\ndate, time, duration and location can be changed.",
+          "aliases": [
+            "editMeetingDetails",
+            "openDetailsDialog",
+            "clickEdit"
+          ],
+          "prerequisites": "The meeting detail page is open and the current user may edit the meeting",
+          "observableState": "The edit meeting details dialog opens, pre-filled with the current values"
+        },
+        {
+          "name": "clickManageParticipants",
+          "signature": "clickManageParticipants(): Promise<void>",
+          "description": "Clicks the manage participants button to open the participants dialog,\nwhere invitees and attendees are selected.",
+          "aliases": [
+            "manageParticipants",
+            "openParticipantsDialog",
+            "editAttendees"
+          ],
+          "prerequisites": "The meeting detail page is open and the current user may edit participants",
+          "observableState": "The manage participants dialog opens, listing project members with invited/attended checkboxes"
+        },
+        {
+          "name": "getDetailsText",
+          "signature": "getDetailsText(): Promise<string>",
+          "description": "Returns the meeting details text block, which includes the date, time,\nzone, duration and — when set — the location.\n\nThe location has no element of its own: OpenProject renders it via\n`render_meeting_attribute_row(:location)` as an Octicon plus bare text,\nwith no id, class, or test selector. A live ARIA snapshot shows it merged\ninto one text run, e.g. `07/22/2026 10:00 AM - 11:00 AM UTC 1 hr Room 42`.\nSo this cannot return the location alone — assert with `toContain`.",
+          "aliases": [
+            "getMeetingDetailsText",
+            "getDetailsText"
+          ],
+          "prerequisites": "The meeting detail page is open",
+          "observableState": "None — read-only query"
+        }
+      ]
+    },
+    {
+      "name": "MeetingsPage",
+      "file": "src/po/openproject/meeting/meetingsPage.ts",
+      "kind": "page",
+      "description": "Represents the meetings list page at /projects/:id/meetings.\nShows meetings grouped by date with options to create, filter, and navigate.\nThe \"New Meeting\" button is a split button with a dropdown for one-time vs recurring.",
+      "aliases": [
+        "MeetingListPage",
+        "MeetingsListPage"
+      ],
+      "methods": [
+        {
+          "name": "clickAddOneTimeMeeting",
+          "signature": "clickAddOneTimeMeeting(): Promise<MeetingFormDialogComp>",
+          "description": "Clicks the \"New Meeting\" split button and selects \"One-time\" from its\ndropdown, opening the meeting creation dialog.",
+          "aliases": [
+            "createOneTimeMeeting",
+            "newMeeting",
+            "openMeetingDialog"
+          ],
+          "prerequisites": "The meetings list page is open",
+          "observableState": "The create meeting dialog (#new-meeting-dialog) opens with empty title, location, date, time and duration fields"
+        },
+        {
+          "name": "clickMeetingByTitle",
+          "signature": "clickMeetingByTitle(title: string): Promise<MeetingShowPage>",
+          "description": "Clicks a meeting's title link to open its detail page.",
+          "aliases": [
+            "openMeeting",
+            "selectMeeting",
+            "goToMeeting"
+          ],
+          "prerequisites": "The meetings list page is open and a meeting with this title is listed in the current tab",
+          "observableState": "The browser navigates to the meeting detail page at `/meetings/:id`"
+        },
+        {
+          "name": "clickUpcomingTab",
+          "signature": "clickUpcomingTab(): Promise<MeetingsPage>",
+          "description": "Switches to the \"Upcoming\" meetings tab and waits for the page load.\nReturns the same page instance rather than a fresh one.",
+          "aliases": [
+            "showUpcomingMeetings",
+            "viewUpcoming"
+          ],
+          "prerequisites": "The meetings list page is open",
+          "observableState": "The list reloads showing only meetings scheduled in the future"
+        },
+        {
+          "name": "clickPastTab",
+          "signature": "clickPastTab(): Promise<MeetingsPage>",
+          "description": "Switches to the \"Past\" meetings tab and waits for the page load.\nReturns the same page instance rather than a fresh one.",
+          "aliases": [
+            "showPastMeetings",
+            "viewPast",
+            "viewHistory"
+          ],
+          "prerequisites": "The meetings list page is open",
+          "observableState": "The list reloads showing only meetings that have already occurred"
+        },
+        {
+          "name": "hasMeetingWithTitle",
+          "signature": "hasMeetingWithTitle(title: string): Promise<boolean>",
+          "description": "Checks whether a meeting with the given title is visible in the list.\nScoped to the active tab, so an existing past meeting reads as absent\nwhile the Upcoming tab is selected.",
+          "aliases": [
+            "meetingExists",
+            "isMeetingVisible",
+            "hasMeeting"
+          ],
+          "prerequisites": "The meetings list page is open",
+          "observableState": "None — read-only query"
+        },
+        {
+          "name": "getMeetingCount",
+          "signature": "getMeetingCount(): Promise<number>",
+          "description": "Returns the number of list items in the meetings content area.\n\nCounts every `listitem` under `main`, so any other list rendered in the\ncontent area inflates the result. Prefer\n{@link hasMeetingWithTitle} when asserting about a specific meeting.",
+          "aliases": [
+            "countMeetings",
+            "getNumberOfMeetings"
+          ],
+          "prerequisites": "The meetings list page is open",
+          "observableState": "None — read-only query"
+        }
+      ]
+    }
+  ]
+}

@@ -13,7 +13,15 @@ export default [
       'dist/**',
       'coverage/**',
       'playwright-report/**',
-      'test-results/**',      
+      'test-results/**',
+      // Vendored Playwright trace-viewer sources used by the playwright-trace
+      // skill. Not project code: they import '@isomorphic/*' path aliases that
+      // this project's tsconfig does not define, so they cannot be type-checked
+      // here and must not be linted as if they were ours.
+      '.claude/**',
+      // Catalog test fixtures deliberately contain unused members and
+      // await-less async methods to exercise the extractor; not real code.
+      'tests/unit/fixtures/**',
     ],
   },
 
@@ -27,6 +35,13 @@ export default [
         tsconfigRootDir: import.meta.dirname,
       },
     },
+  },
+
+  // Plain JS/ESM config files (this file included) are not part of the
+  // TypeScript program, so type-aware rules cannot run on them.
+  {
+    files: ['**/*.{js,mjs,cjs}'],
+    ...tseslint.configs.disableTypeChecked,
   },
 
   // Apply Playwright rules only to tests
@@ -44,9 +59,20 @@ export default [
     files: ['scripts/**/*.{ts,tsx}'],
   },
 
+  // Browser-less unit tests iterate over catalog data, so browser-oriented
+  // rules like no-conditional-in-test do not apply.
   {
+    files: ['tests/unit/**/*.{ts,tsx}'],
     rules: {
-      "@typescript-eslint/no-floating-promises": "error",
+      'playwright/no-conditional-in-test': 'off',
+    },
+  },
+
+  // Type-aware rules — TypeScript sources only.
+  {
+    files: ['**/*.{ts,tsx}'],
+    rules: {
+      '@typescript-eslint/no-floating-promises': 'error',
       'require-await': 'error',
     },
   },

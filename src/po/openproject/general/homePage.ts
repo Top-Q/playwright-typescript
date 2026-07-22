@@ -1,4 +1,4 @@
-import {BasePage, ProjectSelectionDropdown} from '../../../../internals';
+import {BasePage, ProjectSelectionDropdownComp} from '../../../../internals';
 import { Locator, Page } from '@playwright/test';
 
 /**
@@ -23,12 +23,12 @@ export class HomePage extends BasePage<HomePage> {
     }   
 
     /**
-     * Clicks on the 'Select a project' link and returns a ProjectSelectionComponent.
-     * 
-     * @returns ProjectSelectionComponent to select a project
+     * Clicks on the 'All projects' button and returns the project selection dropdown.
+     *
+     * @returns ProjectSelectionDropdownComp to select a project
      */
-    async clickAllProjectsButton(): Promise<ProjectSelectionDropdown> {
+    async clickAllProjectsButton(): Promise<ProjectSelectionDropdownComp> {
         await this.allProjectsButton.click();
-        return await new ProjectSelectionDropdown(this.page).waitForLoad();
+        return await new ProjectSelectionDropdownComp(this.page).waitForLoad();
     }
 }

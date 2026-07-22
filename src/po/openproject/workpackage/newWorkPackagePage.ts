@@ -18,6 +18,9 @@ import { WorkPackageDetailsPage } from './workPackageDetailsPage';
  * After saving, the URL changes to `/projects/<id>/work_packages/details/<id>/overview`
  * and the application navigates to the work package details page (also rendered
  * as a split view alongside the work packages table).
+ *
+ * @aliases CreateWorkPackagePage, WorkPackageForm
+ * @url /projects/:projectId/work_packages/create_new?type=:typeId
  */
 export class NewWorkPackagePage extends BasePage<NewWorkPackagePage> {
   private readonly subjectTextbox: Locator;
@@ -48,16 +51,12 @@ export class NewWorkPackagePage extends BasePage<NewWorkPackagePage> {
   }
 
   /**
-   * ## Description
-   * Fills the Subject field with the provided name.
+   * Fills the Subject field, which is the work package's name and is required
+   * before the form can be saved.
    *
-   * ## Aliases
-   * ```ts
-   * setName(name: string);
-   * fillSubject(name: string);
-   * setWorkPackageName(name: string);
-   * ```
-   *
+   * @aliases setName, setWorkPackageName, fillName, enterSubject
+   * @prerequisites The create work package form is open
+   * @observable-state The Subject field contains the given name
    * @param name - The subject / name for the new work package.
    */
   async fillSubject(name: string): Promise<void> {
@@ -65,12 +64,12 @@ export class NewWorkPackagePage extends BasePage<NewWorkPackagePage> {
   }
 
   /**
-   * ## Description
-   * Fills the Description rich text editor with the provided text.
+   * Fills the Description rich text editor. The editor is a CKEditor instance,
+   * so it is clicked first to ensure it has focus before the text is typed.
    *
-   * The description is rendered through a CKEditor instance; clicking the
-   * editor first ensures it receives focus before the text is typed.
-   *
+   * @aliases setDescription, fillBody, enterDescription
+   * @prerequisites The create work package form is open
+   * @observable-state The Description editor contains the given text
    * @param description - The description text for the new work package.
    */
   async fillDescription(description: string): Promise<void> {
@@ -79,11 +78,12 @@ export class NewWorkPackagePage extends BasePage<NewWorkPackagePage> {
   }
 
   /**
-   * ## Description
-   * Clicks the "Save" button to submit the create form. After saving,
-   * the application navigates to the split-view work package details page.
+   * Clicks "Save" to submit the create form.
    *
-   * @returns A `WorkPackageDetailsPage` instance for the created work package.
+   * @aliases save, submitForm, createWorkPackage
+   * @prerequisites The create form is open and the required Subject field is filled
+   * @observable-state The work package is created, appears in the table, and the URL changes to `/work_packages/details/<id>/overview`
+   * @returns A `WorkPackageDetailsPage` for the created work package.
    */
   async clickSaveButton(): Promise<WorkPackageDetailsPage> {
     await this.saveButton.click();
@@ -91,10 +91,11 @@ export class NewWorkPackagePage extends BasePage<NewWorkPackagePage> {
   }
 
   /**
-   * ## Description
-   * Clicks the "Cancel" button to dismiss the create form without saving.
-   * Cancelling closes the split-view form and returns the user to the
-   * underlying work packages list page.
+   * Clicks "Cancel" to dismiss the create form without saving.
+   *
+   * @aliases cancel, discardForm, closeWithoutSaving
+   * @prerequisites The create work package form is open
+   * @observable-state The split-view form closes, no work package is created, and the work packages list is shown
    */
   async clickCancelButton(): Promise<void> {
     await this.cancelButton.click();

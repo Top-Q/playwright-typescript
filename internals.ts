@@ -9,7 +9,7 @@ export * from './src/po/openproject/baseComponent';
 // Open Project - General
 export * from './src/po/openproject/general/loginPage';
 export * from './src/po/openproject/general/homePage';
-export * from './src/po/openproject/general/projectSelectionComp';
+export * from './src/po/openproject/general/projectSelectionDropdownComp';
 export * from './src/po/openproject/general/mainMenuComp';
 export * from './src/po/openproject/general/overviewPage';
 

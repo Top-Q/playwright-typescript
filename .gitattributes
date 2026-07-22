@@ -1,0 +1,4 @@
+# The generated POM catalog is written with LF by build-pom-catalog and is
+# round-tripped by `catalog:check`. Pin it to LF so a checkout under
+# core.autocrlf=true does not rewrite it to CRLF and make the check fail.
+pom-catalog/**/*.json text eol=lf

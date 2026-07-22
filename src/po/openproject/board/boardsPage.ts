@@ -5,6 +5,8 @@ import { Locator, Page } from '@playwright/test';
  * # Board Table Row Component Class
  * This class represents a row in the board table on the boards page in the OpenProject application.
  * It provides methods to interact with the board's details such as name, type, creation date, and delete button.
+ *
+ * @aliases BoardRow, BoardsTableRow
  */
 export class BoardTableRowComp extends BaseComponent {
 
@@ -29,20 +31,12 @@ export class BoardTableRowComp extends BaseComponent {
     }
 
     /**
-     * ## Description
-     * Clicks the delete button for the board.
-     * 
-     * ## Method Aliaes
-     * ```ts
-     * clickDeleteButton();
-     * clickDelete();
-     * ```
-     * ----
-     * 
-     * ## Expected Result
-     * * The board is deleted from the boards page.
-     * * The deletion is confirmed automatically through a dialog.
-     * 
+     * Clicks the delete link for this board and accepts the confirmation dialog.
+     *
+     * @aliases clickDeleteButton, clickDelete, deleteBoard
+     * @prerequisites The boards list is displayed and this row's board exists
+     * @observable-state The board's row is removed from the boards table; the
+     * confirmation dialog is auto-accepted and the browser returns to the boards list
      */
     async clickDeleteButtonAndAcceptDeletion(): Promise<void> {
         const boardsPageUrl = this.page.url();
@@ -65,6 +59,8 @@ export class BoardTableRowComp extends BaseComponent {
  * # Board Table Component Class
  * This class represents a table component that displays a list of boards in the OpenProject application.
  * It provides methods to interact with the rows of the table.
+ *
+ * @aliases BoardsTable, BoardList
  */
 export class BoardTableComp extends BaseComponent<BoardTableComp> {
 
@@ -81,24 +77,16 @@ export class BoardTableComp extends BaseComponent<BoardTableComp> {
     }
 
     /**
-     * ## Description
-     * Refreshes the board table by reloading the page.
-     * This method is useful to ensure that the latest data is displayed in the table.
-     * For example, after deleting a board, you might want to refresh the table to see the changes.
-     * 
-     * ---
-     * ## Aliases
-     * 
-     * waitForTableToLoad();
-     * 
-     * ---
-     * 
-     * 
-     * ## Example usage:
-     * 
+     * Reloads the page so the board table shows the latest server-side data.
+     * Useful after creating or deleting a board.
+     *
+     * @aliases waitForTableToLoad, reloadTable, refreshBoards
+     * @prerequisites The boards page is open
+     * @observable-state The page reloads and the board table re-renders with current data
+     * @example
      * ```typescript
      * await boardTable.refresh();
-     * await expect(boardTable.isRowForTableWithNameExists(boardName)).resolves.toBeFalsy();     
+     * await expect(boardTable.isRowForTableWithNameExists(boardName)).resolves.toBeFalsy();
      * ```
      */
     async refresh(): Promise<void> {
@@ -106,16 +94,14 @@ export class BoardTableComp extends BaseComponent<BoardTableComp> {
     }
 
     /**
-     * ## Description
-     * Returns the number of rows in the board table. That is actually the number of boards in the table.
-     * 
-     * ## Aliases
-     * ```ts
-     * getRowCount();
-     * getNumberOfBoards();
-     * ```
-     * 
-     * @returns 
+     * Returns the number of rows in the board table, which is the number of boards.
+     * Returns 0 both when the table is absent entirely (all boards deleted) and
+     * when it renders a single "No visible results to display." placeholder row.
+     *
+     * @aliases getNumberOfBoards, countBoards, getBoardCount, getRowCount
+     * @prerequisites The boards page is open
+     * @observable-state None — read-only query
+     * @returns The number of boards currently listed.
      */
     async getNumberOfRows(): Promise<number> {
         await this.page.waitForLoadState('domcontentloaded');
@@ -137,10 +123,13 @@ export class BoardTableComp extends BaseComponent<BoardTableComp> {
     }
 
     /**
-     * Get a board table row by its index. This method returns an instance of the BoardTableRowComp class,
-     * 
+     * Gets a board table row by its zero-based index.
+     *
+     * @aliases getBoardByIndex, getRowAt
+     * @prerequisites The boards page is open and the table has at least `index + 1` rows
+     * @observable-state None — read-only query
      * @param index - The index of the row to retrieve.
-     * @returns BoardTableRowComp - An instance of the BoardTableRowComp class representing the row at the specified index.
+     * @returns A `BoardTableRowComp` for the row at the specified index.
      */
     async getRowByIndex(index: number): Promise<BoardTableRowComp> {
         await this.nameColumnHeader.waitFor();
@@ -149,17 +138,13 @@ export class BoardTableComp extends BaseComponent<BoardTableComp> {
     }
 
     /**
-     * ## Description
-     * Checks if a row for the board with the specified name exists in the table.
-     * 
-     * ## Aliases
-     * ```ts
-     * isBoardVisible(boardName: string);
-     * isRowForTableWithNameExists(boardName: string);
-     * ```
-     * 
+     * Checks whether a row for the board with the specified name exists in the table.
+     *
+     * @aliases isBoardVisible, hasBoardWithName, boardExists
+     * @prerequisites The boards page is open
+     * @observable-state None — read-only query
      * @param boardName - The name of the board to check for.
-     * @returns A promise that resolves to true if the row exists, false otherwise.
+     * @returns True if a matching row exists, false otherwise.
      */
     async isRowForTableWithNameExists(boardName: string): Promise<boolean> {
         await this.nameColumnHeader.waitFor();
@@ -168,10 +153,16 @@ export class BoardTableComp extends BaseComponent<BoardTableComp> {
     }
 
     /**
-     * Get the row of the board by its name.
-     * This method returns an instance of the BoardTableRowComp class.
-     * @param boardName 
-     * @returns 
+     * Gets the row for a board by its name. When several boards share a name,
+     * `index` selects which of the matches to return. Throws if no row matches,
+     * or if `index` is out of bounds for the matches found.
+     *
+     * @aliases getBoardRowByName, findBoardByName
+     * @prerequisites The boards page is open and a board with this name exists
+     * @observable-state None — read-only query
+     * @param boardName - The name of the board to look up.
+     * @param index - Which match to return when the name is not unique. Defaults to 0.
+     * @returns A `BoardTableRowComp` for the matching row.
      */
     async getRowByBoardName(boardName: string, index: number = 0): Promise<BoardTableRowComp> {
         await this.page.waitForLoadState('domcontentloaded');
@@ -187,16 +178,15 @@ export class BoardTableComp extends BaseComponent<BoardTableComp> {
         return new BoardTableRowComp(this.page, rowLocator.nth(index));
     }
 
-    async getRowCount(): Promise<number> {
-        return await this.rootLocator.locator('tbody tr').count();
-    }
-
 }
 
 /**
  * # Boards Page Class
  * This class represents the boards list page in the OpenProject application.
  * Users can view, create, and delete boards from this page.
+ *
+ * @aliases BoardsListPage, BoardOverviewPage
+ * @url /projects/:projectId/boards
  */
 export class BoardsPage extends BasePage<BoardsPage> {
 
@@ -223,27 +213,30 @@ export class BoardsPage extends BasePage<BoardsPage> {
     }
 
     /**
-     * Returns the board table component on the boards page.
-     * The board table contains rows of boards with their details.
-     * * This method is useful for interacting with the board list, such as retrieving board names or deleting boards.
-     * 
-     * @returns A BoardTableComp instance representing the board table on the page.
+     * Returns the board table component on the boards page, used to read board
+     * names, count boards, and reach individual rows for deletion.
+     *
+     * @aliases getBoardTable, table
+     * @prerequisites The boards page is open
+     * @observable-state None — returns a component wrapper without interacting
+     * @returns A `BoardTableComp` for the board table on the page.
      */
     boardTable(): BoardTableComp {
         return new BoardTableComp(this.page, this.boardTableRoot);
     }
     /**
-     * Clicks the button to create a new board.
-     * This will navigate the user to the board type selection page.
-     * The user will usually select board type
-     * 
-     * Example usage:
+     * Clicks the "Create new board" button, opening the board creation form.
+     *
+     * @aliases createBoard, clickNewBoard, addBoard
+     * @prerequisites The boards page is open
+     * @observable-state Navigates to the combined board creation form (title, type, Create button)
+     * @returns A `BoardTypePage` for the creation form.
+     * @example
      * ```typescript
-     *       const boardTypePage = await boardsPage.clickCreateBoardButton();
-     *       const boardPage: BoardPage = await boardTypePage.clickBasicBoardButton();
-     *       await boardPage.fillBoardName('Automated board');
+     * const boardTypePage = await boardsPage.clickCreateBoardButton();
+     * const boardPage = await boardTypePage.clickBasicBoardButton();
+     * await boardPage.fillBoardName('Automated board');
      * ```
-     * 
      */
     async clickCreateBoardButton(): Promise<BoardTypePage> {
         await this.createNewBoardButton.click();
@@ -252,9 +245,13 @@ export class BoardsPage extends BasePage<BoardsPage> {
 
 
     /**
-     * Gets the name of a board by its index in the list.
-     * @param index - The index of the board.
-     * @returns The name of the board.
+     * Gets the name of a board by its position in the list.
+     *
+     * @aliases getBoardName, getBoardTitleByIndex
+     * @prerequisites The boards page is open and the list has at least `index + 1` boards
+     * @observable-state None — read-only query
+     * @param index - The zero-based index of the board.
+     * @returns The board's name.
      */
     async getBoardNameByIndex(index: number): Promise<string> {
         return await this.boardNamesTds.nth(index).innerText();

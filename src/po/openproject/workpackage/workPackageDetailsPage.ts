@@ -12,6 +12,9 @@ import { BasePage } from '../basePage';
  * work packages table remains visible on the left. The page exposes a
  * "Close details view" button that hides the side panel and returns the
  * user to the full work packages list view.
+ *
+ * @aliases WorkPackageOverviewPage, WorkPackageSplitView
+ * @url /projects/:projectId/work_packages/details/:workPackageId/overview
  */
 export class WorkPackageDetailsPage extends BasePage<WorkPackageDetailsPage> {
   private readonly closeDetailsViewButton: Locator;
@@ -30,19 +33,14 @@ export class WorkPackageDetailsPage extends BasePage<WorkPackageDetailsPage> {
   }
 
   /**
-   * ## Description
-   * Navigates back to the work packages list page by extracting the project
-   * identifier from the current URL and navigating to `/projects/<id>/work_packages`.
+   * Leaves the details view and returns to the work packages table, so the
+   * caller can filter, delete, or assert on rows. Navigates by extracting the
+   * project identifier from the current URL. Throws if the URL does not contain
+   * a project identifier.
    *
-   * The intent of this method is to leave the work package details view and
-   * return to the work packages table for further interaction (filtering,
-   * deleting, asserting row existence, etc.).
-   *
-   * ## Aliases
-   * ```ts
-   * goBackToWorkPackagesList();
-   * getBackToWorkPackagesPage();
-   * ```
+   * @aliases getBackToWorkPackagesPage, closeDetailsView, returnToWorkPackages
+   * @prerequisites The work package details view is open
+   * @observable-state The browser navigates to `/projects/<id>/work_packages` and the full table is shown
    */
   async goBackToWorkPackagesList(): Promise<void> {
     const url = this.page.url();

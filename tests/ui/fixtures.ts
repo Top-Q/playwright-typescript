@@ -15,8 +15,8 @@ export const test = base.extend<{
             homePage = await loginPage.clickOnSignInButton();
         });
         await base.step("And the user selects the 'Demo project'", async () => {            
-            const projectSelectionComponent = await homePage.clickAllProjectsButton();
-            overviewPage = await projectSelectionComponent.clickProjectByName('Demo project');
+            const projectSelectionDropdown = await homePage.clickAllProjectsButton();
+            overviewPage = await projectSelectionDropdown.clickProjectByName('Demo project');
              // Now on OverviewPage
             await use(overviewPage);
         });

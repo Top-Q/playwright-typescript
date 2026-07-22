@@ -1,0 +1,364 @@
+{
+  "module": "members",
+  "file": "members.json",
+  "app": "openproject",
+  "generatedAt": "2026-07-22T06:18:01.379Z",
+  "schemaVersion": 2,
+  "classes": [
+    {
+      "name": "MembersPage",
+      "file": "src/po/openproject/members/membersPage.ts",
+      "kind": "page",
+      "description": "Represents the Members list page at /projects/:id/members.\nShows project members in a table with options to add, filter, and manage members.\nThe \"+ Member\" button toggles an inline form for adding new members.\n\nSidebar navigation: All | Locked | Invited, Project roles, Work package shares.\nFilter panel: Status, Role, Work package shares, Name.",
+      "aliases": [
+        "ProjectMembersPage",
+        "MemberListPage",
+        "TeamPage"
+      ],
+      "methods": [
+        {
+          "name": "memberTable",
+          "signature": "memberTable(): MemberTableComp",
+          "description": "Returns the member table component, used to count members, list their\nnames, and reach individual rows for role changes or removal.",
+          "aliases": [
+            "getMemberTable",
+            "table",
+            "membersTable"
+          ],
+          "prerequisites": "The Members page is open",
+          "observableState": "None — returns a component wrapper without interacting"
+        },
+        {
+          "name": "openAddMemberForm",
+          "signature": "openAddMemberForm(): Promise<void>",
+          "description": "Opens the inline add member form via the \"+ Member\" button. Idempotent —\nif the form is already open this does nothing.",
+          "aliases": [
+            "showAddMemberForm",
+            "clickAddMember",
+            "openInviteForm"
+          ],
+          "prerequisites": "The Members page is open",
+          "observableState": "The inline add member form is visible, exposing the user search field and role dropdown"
+        },
+        {
+          "name": "addMember",
+          "signature": "addMember(userNameOrEmail: string, role: string = 'Member'): Promise<void>",
+          "description": "Adds a member to the project by searching for a user name, or inviting by\nemail when no matching user exists. Opens the add member form first if it\nis not already open, so it can be called directly.\n\nWaits for the POST to complete and then reloads the page, so the members\ntable reliably reflects the new member on return.",
+          "aliases": [
+            "addMemberToProject",
+            "inviteUser",
+            "createMember",
+            "addUser"
+          ],
+          "prerequisites": "The Members page is open and the named user (or email) can be granted the role",
+          "observableState": "The member is added and appears as a new row in the members table; the page reloads and shows a success flash"
+        },
+        {
+          "name": "isAddMemberFormVisible",
+          "signature": "isAddMemberFormVisible(): Promise<boolean>",
+          "description": "Checks whether the inline add member form is currently visible.",
+          "aliases": [
+            "isAddFormOpen",
+            "addMemberFormIsVisible"
+          ],
+          "prerequisites": "The Members page is open",
+          "observableState": "None — read-only query"
+        },
+        {
+          "name": "closeAddMemberForm",
+          "signature": "closeAddMemberForm(): Promise<void>",
+          "description": "Closes the inline add member form. Idempotent — does nothing if the form\nis already closed.",
+          "aliases": [
+            "hideAddMemberForm",
+            "cancelAddMember",
+            "dismissAddForm"
+          ],
+          "prerequisites": "The Members page is open",
+          "observableState": "The add member form is hidden and no member is added"
+        },
+        {
+          "name": "openFilter",
+          "signature": "openFilter(): Promise<void>",
+          "description": "Opens the filter panel and waits for its Apply button, making the filter\nfields usable.",
+          "aliases": [
+            "showFilterPanel",
+            "clickFilter",
+            "toggleFilterPanel"
+          ],
+          "prerequisites": "The Members page is open",
+          "observableState": "The filter panel opens, exposing the Status, Role, and Name filter fields"
+        },
+        {
+          "name": "filterByName",
+          "signature": "filterByName(name: string): Promise<void>",
+          "description": "Types a name into the filter panel's Name field and applies the filter,\nwaiting for the resulting page load.",
+          "aliases": [
+            "searchMemberByName",
+            "applyNameFilter",
+            "filterMembers"
+          ],
+          "prerequisites": "The filter panel is open — call {@link openFilter} first",
+          "observableState": "The members table reloads showing only members matching the name"
+        },
+        {
+          "name": "clearFilter",
+          "signature": "clearFilter(): Promise<void>",
+          "description": "Clears all active filters and waits for the resulting page load.",
+          "aliases": [
+            "resetFilter",
+            "removeFilters",
+            "clearAllFilters"
+          ],
+          "prerequisites": "The filter panel is open — call {@link openFilter} first",
+          "observableState": "The members table reloads showing the unfiltered member list"
+        },
+        {
+          "name": "clickSidebarAll",
+          "signature": "clickSidebarAll(): Promise<MembersPage>",
+          "description": "Navigates to the \"All\" members view via the sidebar link.",
+          "aliases": [
+            "showAllMembers",
+            "viewAll"
+          ],
+          "prerequisites": "The Members page is open",
+          "observableState": "The table reloads showing every member regardless of status"
+        },
+        {
+          "name": "clickSidebarLocked",
+          "signature": "clickSidebarLocked(): Promise<MembersPage>",
+          "description": "Navigates to the \"Locked\" members view via the sidebar link.",
+          "aliases": [
+            "showLockedMembers",
+            "viewLocked"
+          ],
+          "prerequisites": "The Members page is open",
+          "observableState": "The table reloads showing only members whose account is locked"
+        },
+        {
+          "name": "clickSidebarInvited",
+          "signature": "clickSidebarInvited(): Promise<MembersPage>",
+          "description": "Navigates to the \"Invited\" members view via the sidebar link.",
+          "aliases": [
+            "showInvitedMembers",
+            "viewInvited",
+            "viewPendingInvitations"
+          ],
+          "prerequisites": "The Members page is open",
+          "observableState": "The table reloads showing only members with a pending invitation"
+        },
+        {
+          "name": "hasMemberWithName",
+          "signature": "hasMemberWithName(name: string): Promise<boolean>",
+          "description": "Checks whether a member with the given name exists in the table.\nConvenience delegate to {@link MemberTableComp.hasMemberWithName}.\n\nOnly inspects the rows currently displayed, so an active filter or a\nstatus view other than \"All\" can hide an existing member.",
+          "aliases": [
+            "memberExists",
+            "isMemberVisible",
+            "hasMember"
+          ],
+          "prerequisites": "The Members page is open",
+          "observableState": "None — read-only query"
+        }
+      ]
+    },
+    {
+      "name": "MemberTableComp",
+      "file": "src/po/openproject/members/memberTableComp.ts",
+      "kind": "component",
+      "description": "Represents the members table component on the Members page.\nContains rows of members with their name, email, roles, groups, status, etc.\nThe table columns are: Name, Email, Roles, Groups, Shared, Status, Current Rate.",
+      "aliases": [
+        "MembersTable",
+        "MemberList"
+      ],
+      "methods": [
+        {
+          "name": "getNumberOfRows",
+          "signature": "getNumberOfRows(): Promise<number>",
+          "description": "Returns the number of member rows in the table, or 0 when the table is\nabsent entirely.\n\nUnlike the boards table, this does not special-case an empty-state\nplaceholder row, so verify the members table's empty rendering before\nrelying on a result of 1.",
+          "aliases": [
+            "getMemberCount",
+            "countMembers",
+            "getNumberOfMembers"
+          ],
+          "prerequisites": "The Members page is open",
+          "observableState": "None — read-only query"
+        },
+        {
+          "name": "getRowByIndex",
+          "signature": "getRowByIndex(index: number): Promise<MemberTableRowComp>",
+          "description": "Gets a member row by its zero-based index.",
+          "aliases": [
+            "getMemberByIndex",
+            "getRowAt"
+          ],
+          "prerequisites": "The Members page is open and the table has at least `index + 1` rows",
+          "observableState": "None — read-only query"
+        },
+        {
+          "name": "getRowByMemberName",
+          "signature": "getRowByMemberName(name: string): Promise<MemberTableRowComp>",
+          "description": "Gets a member row by the member's name, returning the first match.\nThrows if no row matches.",
+          "aliases": [
+            "findMemberByName",
+            "getMemberRow",
+            "getRowForMember"
+          ],
+          "prerequisites": "The Members page is open and a member with this name is displayed",
+          "observableState": "None — read-only query"
+        },
+        {
+          "name": "hasMemberWithName",
+          "signature": "hasMemberWithName(name: string): Promise<boolean>",
+          "description": "Checks whether a member with the given name is present in the table.\nMatches against the whole row's text, so a name appearing in another\ncolumn (an email, for example) also counts as a match.",
+          "aliases": [
+            "memberExists",
+            "isMemberVisible",
+            "hasMember"
+          ],
+          "prerequisites": "The Members page is open",
+          "observableState": "None — read-only query"
+        },
+        {
+          "name": "getAllMemberNames",
+          "signature": "getAllMemberNames(): Promise<string[]>",
+          "description": "Returns the names of all members currently displayed in the table.\nReflects the active filter and status view, not the full project roster.",
+          "aliases": [
+            "listMemberNames",
+            "getMemberNames",
+            "getAllMembers"
+          ],
+          "prerequisites": "The Members page is open",
+          "observableState": "None — read-only query"
+        }
+      ]
+    },
+    {
+      "name": "MemberTableRowComp",
+      "file": "src/po/openproject/members/memberTableRowComp.ts",
+      "kind": "component",
+      "description": "Represents a single row in the members table.\nEach row shows a member's name, email, roles, groups, shared status, status, and current rate.\nThe row has a \"...\" context menu with \"Manage roles\" and \"Remove member\" options.\n\"Manage roles\" expands inline with role checkboxes and Change/Cancel buttons.",
+      "aliases": [
+        "MemberRow",
+        "MembersTableRow"
+      ],
+      "methods": [
+        {
+          "name": "getName",
+          "signature": "getName(): Promise<string>",
+          "description": "Returns the member's display name from the Name column.",
+          "aliases": [
+            "getMemberName",
+            "name"
+          ],
+          "prerequisites": "This member row is displayed",
+          "observableState": "None — read-only query"
+        },
+        {
+          "name": "getEmail",
+          "signature": "getEmail(): Promise<string>",
+          "description": "Returns the member's email address from the Email column.",
+          "aliases": [
+            "getMemberEmail",
+            "email"
+          ],
+          "prerequisites": "This member row is displayed and the Email column is populated",
+          "observableState": "None — read-only query"
+        },
+        {
+          "name": "getRolesText",
+          "signature": "getRolesText(): Promise<string>",
+          "description": "Returns the raw text of the Roles cell. A member with several roles\nyields them as a single string, so assert with `toContain` rather than\nexact equality.",
+          "aliases": [
+            "getRoles",
+            "getMemberRoles",
+            "rolesText"
+          ],
+          "prerequisites": "This member row is displayed",
+          "observableState": "None — read-only query"
+        },
+        {
+          "name": "getStatus",
+          "signature": "getStatus(): Promise<string>",
+          "description": "Returns the member's status — typically \"active\", \"locked\", or \"invited\".",
+          "aliases": [
+            "getMemberStatus",
+            "status"
+          ],
+          "prerequisites": "This member row is displayed",
+          "observableState": "None — read-only query"
+        },
+        {
+          "name": "clickManageRoles",
+          "signature": "clickManageRoles(): Promise<void>",
+          "description": "Opens the row's \"...\" context menu and clicks \"Manage roles\", then waits\nfor the inline role editor to appear. This is the gateway to\n{@link toggleRole}, {@link isRoleChecked}, {@link clickChangeButton}, and\n{@link clickCancelButton} — none of them work until it has been called.",
+          "aliases": [
+            "openManageRoles",
+            "editRoles",
+            "clickEditRoles"
+          ],
+          "prerequisites": "This member row is displayed",
+          "observableState": "The row expands inline showing a role checkbox per project role, plus Change and Cancel buttons"
+        },
+        {
+          "name": "toggleRole",
+          "signature": "toggleRole(roleName: string): Promise<void>",
+          "description": "Toggles a role checkbox in the inline manage roles editor. This flips the\ncurrent state rather than setting it, and the change is not saved until\n{@link clickChangeButton} is called.",
+          "aliases": [
+            "checkRole",
+            "toggleRoleCheckbox",
+            "selectRole"
+          ],
+          "prerequisites": "The inline role editor is open — call {@link clickManageRoles} first",
+          "observableState": "The role checkbox flips state; nothing is persisted until Change is clicked"
+        },
+        {
+          "name": "isRoleChecked",
+          "signature": "isRoleChecked(roleName: string): Promise<boolean>",
+          "description": "Returns whether a role checkbox is currently checked. Reflects unsaved\neditor state, not necessarily what is persisted on the server.",
+          "aliases": [
+            "hasRole",
+            "isRoleSelected",
+            "roleIsChecked"
+          ],
+          "prerequisites": "The inline role editor is open — call {@link clickManageRoles} first",
+          "observableState": "None — read-only query"
+        },
+        {
+          "name": "clickChangeButton",
+          "signature": "clickChangeButton(): Promise<void>",
+          "description": "Clicks \"Change\" to save pending role edits, then waits for the page load.",
+          "aliases": [
+            "saveRoles",
+            "submitRoleChanges",
+            "confirmRoleChange"
+          ],
+          "prerequisites": "The inline role editor is open — call {@link clickManageRoles} first",
+          "observableState": "The role changes are persisted, the inline editor closes, and the row's Roles cell shows the new roles"
+        },
+        {
+          "name": "clickCancelButton",
+          "signature": "clickCancelButton(): Promise<void>",
+          "description": "Clicks \"Cancel\" to discard pending role edits.",
+          "aliases": [
+            "discardRoleChanges",
+            "cancelRoleEdit",
+            "closeRoleEditor"
+          ],
+          "prerequisites": "The inline role editor is open — call {@link clickManageRoles} first",
+          "observableState": "The inline editor closes and the member's roles are unchanged"
+        },
+        {
+          "name": "removeMember",
+          "signature": "removeMember(): Promise<void>",
+          "description": "Removes this member from the project end to end: opens the row context\nmenu, clicks \"Remove member\", and confirms in the Primer dialog.\n\nThe confirmation is a `data-turbo-method=\"delete\"` link, clicked via\n`dispatchEvent` because Primer dialogs otherwise detach the element\nmid-click. Afterwards the browser navigates back to the members page URL\ncaptured before the removal.",
+          "aliases": [
+            "deleteMember",
+            "removeFromProject",
+            "revokeMembership"
+          ],
+          "prerequisites": "This member row is displayed and the current user may remove members",
+          "observableState": "The member is removed from the project, their row disappears, and the browser returns to the members list"
+        }
+      ]
+    }
+  ]
+}

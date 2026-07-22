@@ -23,6 +23,9 @@ import { DeleteWorkPackageDialogComp } from './deleteWorkPackageDialogComp';
  *   reveals a "Filter by text" textbox that quick-filters the table.
  * - After saving a new work package the URL changes to the details view
  *   (`/work_packages/details/<id>/overview`).
+ *
+ * @aliases WorkPackageListPage, TasksPage, WorkPackagesTablePage
+ * @url /projects/:projectId/work_packages
  */
 export class WorkPackagesPage extends BasePage<WorkPackagesPage> {
   private readonly createButton: Locator;
@@ -56,18 +59,13 @@ export class WorkPackagesPage extends BasePage<WorkPackagesPage> {
   }
 
   /**
-   * ## Description
-   * Clicks the "+ Create" toolbar button to open the work package type
-   * dropdown. Use the returned `WorkPackageTypeMenuComp` to select a type
-   * (Task, Milestone, Phase, etc.).
+   * Clicks the "+ Create" toolbar button to open the work package type dropdown.
+   * Use the returned component to select a type (Task, Milestone, Phase, etc.).
    *
-   * ## Aliases
-   * ```ts
-   * clickCreateButton();
-   * openCreateMenu();
-   * ```
-   *
-   * @returns A `WorkPackageTypeMenuComp` instance for the open dropdown menu.
+   * @aliases openCreateMenu, clickCreate, openTypeDropdown
+   * @prerequisites The work packages list page is open
+   * @observable-state The work package type dropdown opens in an Angular overlay
+   * @returns A `WorkPackageTypeMenuComp` for the open dropdown menu.
    */
   async clickCreateButton(): Promise<WorkPackageTypeMenuComp> {
     await this.createButton.click();
@@ -75,19 +73,15 @@ export class WorkPackagesPage extends BasePage<WorkPackagesPage> {
   }
 
   /**
-   * ## Description
-   * Convenience method that opens the create dropdown and selects the
-   * requested work package type in a single call, returning the resulting
-   * `NewWorkPackagePage`.
+   * Opens the create dropdown and selects the requested work package type in a
+   * single call — a convenience wrapper over {@link clickCreateButton} followed
+   * by `selectType`.
    *
-   * ## Aliases
-   * ```ts
-   * createNewWorkPackageOfType(type: string);
-   * createWorkPackage(type: string);
-   * ```
-   *
+   * @aliases createWorkPackage, newWorkPackage, startCreatingWorkPackage
+   * @prerequisites The work packages list page is open
+   * @observable-state The split-view create form opens for the chosen type
    * @param type - The work package type label (e.g. 'Task', 'Phase', 'Milestone').
-   * @returns A `NewWorkPackagePage` instance for the create form.
+   * @returns A `NewWorkPackagePage` for the create form.
    */
   async createNewWorkPackageOfType(type: string): Promise<NewWorkPackagePage> {
     const menu = await this.clickCreateButton();
@@ -95,16 +89,13 @@ export class WorkPackagesPage extends BasePage<WorkPackagesPage> {
   }
 
   /**
-   * ## Description
-   * Clicks the "Activate Filter" button to reveal (or hide, if already
-   * active) the filter panel. The "Filter by text" textbox only becomes
-   * usable after this button has been clicked.
+   * Clicks the "Activate Filter" button to reveal the filter panel, then waits
+   * for the "Filter by text" textbox to appear. The button toggles, so guard
+   * the call with {@link isFilterActive}.
    *
-   * ## Aliases
-   * ```ts
-   * clickActivateFilter();
-   * clickActivateFilterButton();
-   * ```
+   * @aliases clickActivateFilter, toggleFilter, showFilterPanel
+   * @prerequisites The work packages list page is open
+   * @observable-state The filter panel opens and the "Filter by text" textbox becomes usable
    */
   async clickActivateFilterButton(): Promise<void> {
     await this.activateFilterButton.click();
@@ -112,22 +103,25 @@ export class WorkPackagesPage extends BasePage<WorkPackagesPage> {
   }
 
   /**
-   * ## Description
-   * Returns whether the "Filter by text" textbox is currently visible,
-   * which corresponds to the filter panel being active.
+   * Returns whether the "Filter by text" textbox is visible, which corresponds
+   * to the filter panel being active.
+   *
+   * @aliases isFilterEnabled, filterIsActive
+   * @prerequisites The work packages list page is open
+   * @observable-state None — read-only query
+   * @returns True if the filter panel is active, false otherwise.
    */
   async isFilterActive(): Promise<boolean> {
     return await this.filterByTextTextbox.isVisible();
   }
 
   /**
-   * ## Description
-   * Fills the "Filter by text" textbox with the provided value. The work
-   * packages table is automatically re-queried as the user types.
+   * Clears the "Filter by text" textbox, types the given value, and waits for
+   * the resulting table query to complete before returning.
    *
-   * This will fail if the filter panel has not been activated first via
-   * `clickActivateFilterButton`.
-   *
+   * @aliases filterByText, searchWorkPackages, applyTextFilter
+   * @prerequisites The filter panel is active — call {@link clickActivateFilterButton} first
+   * @observable-state The work packages table re-queries and shows only rows matching the text
    * @param text - The text used to filter the work packages table.
    */
   async fillFilterByText(text: string): Promise<void> {
@@ -140,24 +134,18 @@ export class WorkPackagesPage extends BasePage<WorkPackagesPage> {
   }
 
   /**
-   * ## Description
-   * Returns whether at least one row in the work packages table contains
-   * the provided work package subject. Matching is performed against the
-   * row's accessible text content.
+   * Returns whether a work package with the given subject exists in the table.
    *
-   * The work packages table is paginated (20 rows per page by default).
-   * To make the check reliable regardless of how many work packages exist,
-   * this method ensures the quick text filter is active and applies the
-   * subject as the filter value so the matching row is brought into view.
+   * The table is paginated (20 rows per page by default), so this method
+   * activates the quick text filter if needed and applies the subject as the
+   * filter value, bringing any matching row into view regardless of how many
+   * work packages exist.
    *
-   * ## Aliases
-   * ```ts
-   * isWorkPackageVisible(name: string);
-   * hasWorkPackageWithName(name: string);
-   * existsInTable(name: string);
-   * ```
-   *
+   * @aliases hasWorkPackageWithName, existsInTable, workPackageExists
+   * @prerequisites The work packages list page is open
+   * @observable-state Side effect — activates the filter panel if inactive and leaves the text filter set to `name`
    * @param name - The work package subject to look for.
+   * @returns True if a matching row exists, false otherwise.
    */
   async isWorkPackageVisible(name: string): Promise<boolean> {
     if (!(await this.isFilterActive())) {
@@ -171,20 +159,15 @@ export class WorkPackagesPage extends BasePage<WorkPackagesPage> {
   }
 
   /**
-   * ## Description
-   * Opens the row context menu for the work package with the given subject
-   * and clicks the "Delete" menuitem. Returns the resulting confirmation
-   * dialog so the caller can decide whether to confirm or cancel.
+   * Opens the row context menu for the work package with the given subject and
+   * clicks "Delete", returning the confirmation dialog so the caller can decide
+   * whether to confirm or cancel. Throws if no matching row is found.
    *
-   * Throws if no row with the given subject is found.
-   *
-   * ## Aliases
-   * ```ts
-   * openDeleteDialogForWorkPackage(name: string);
-   * ```
-   *
+   * @aliases openDeleteDialog, startDeletingWorkPackage
+   * @prerequisites The work packages list page is open and a work package with this subject exists
+   * @observable-state The filter is set to `name`, the row context menu opens, and the delete confirmation dialog appears
    * @param name - The work package subject to delete.
-   * @returns A `DeleteWorkPackageDialogComp` instance for the open dialog.
+   * @returns A `DeleteWorkPackageDialogComp` for the open dialog.
    */
   async openDeleteDialogForWorkPackage(name: string): Promise<DeleteWorkPackageDialogComp> {
     if (!(await this.isFilterActive())) {
@@ -204,18 +187,12 @@ export class WorkPackagesPage extends BasePage<WorkPackagesPage> {
   }
 
   /**
-   * ## Description
-   * Deletes the work package with the given subject end-to-end: opens the
-   * row context menu, clicks Delete, and confirms the dialog.
+   * Deletes the work package with the given subject end to end: opens the row
+   * context menu, clicks Delete, and confirms the dialog.
    *
-   * After the dialog closes, the row is removed from the table.
-   *
-   * ## Aliases
-   * ```ts
-   * deleteWorkPackageByName(name: string);
-   * deleteWorkPackage(name: string);
-   * ```
-   *
+   * @aliases deleteWorkPackage, removeWorkPackage, deleteByName
+   * @prerequisites The work packages list page is open and a work package with this subject exists
+   * @observable-state The work package is permanently deleted and its row disappears from the table
    * @param name - The work package subject to delete.
    */
   async deleteWorkPackageByName(name: string): Promise<void> {

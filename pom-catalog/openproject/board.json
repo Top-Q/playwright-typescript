@@ -1,0 +1,268 @@
+{
+  "module": "board",
+  "file": "board.json",
+  "app": "openproject",
+  "generatedAt": "2026-07-22T06:18:01.379Z",
+  "schemaVersion": 2,
+  "classes": [
+    {
+      "name": "BoardsPage",
+      "file": "src/po/openproject/board/boardsPage.ts",
+      "kind": "page",
+      "description": "# Boards Page Class\nThis class represents the boards list page in the OpenProject application.\nUsers can view, create, and delete boards from this page.",
+      "aliases": [
+        "BoardsListPage",
+        "BoardOverviewPage"
+      ],
+      "methods": [
+        {
+          "name": "boardTable",
+          "signature": "boardTable(): BoardTableComp",
+          "description": "Returns the board table component on the boards page, used to read board\nnames, count boards, and reach individual rows for deletion.",
+          "aliases": [
+            "getBoardTable",
+            "table"
+          ],
+          "prerequisites": "The boards page is open",
+          "observableState": "None — returns a component wrapper without interacting"
+        },
+        {
+          "name": "clickCreateBoardButton",
+          "signature": "clickCreateBoardButton(): Promise<BoardTypePage>",
+          "description": "Clicks the \"Create new board\" button, opening the board creation form.",
+          "aliases": [
+            "createBoard",
+            "clickNewBoard",
+            "addBoard"
+          ],
+          "prerequisites": "The boards page is open",
+          "observableState": "Navigates to the combined board creation form (title, type, Create button)"
+        },
+        {
+          "name": "getBoardNameByIndex",
+          "signature": "getBoardNameByIndex(index: number): Promise<string>",
+          "description": "Gets the name of a board by its position in the list.",
+          "aliases": [
+            "getBoardName",
+            "getBoardTitleByIndex"
+          ],
+          "prerequisites": "The boards page is open and the list has at least `index + 1` boards",
+          "observableState": "None — read-only query"
+        }
+      ]
+    },
+    {
+      "name": "BoardTableComp",
+      "file": "src/po/openproject/board/boardsPage.ts",
+      "kind": "component",
+      "description": "# Board Table Component Class\nThis class represents a table component that displays a list of boards in the OpenProject application.\nIt provides methods to interact with the rows of the table.",
+      "aliases": [
+        "BoardsTable",
+        "BoardList"
+      ],
+      "methods": [
+        {
+          "name": "refresh",
+          "signature": "refresh(): Promise<void>",
+          "description": "Reloads the page so the board table shows the latest server-side data.\nUseful after creating or deleting a board.",
+          "aliases": [
+            "waitForTableToLoad",
+            "reloadTable",
+            "refreshBoards"
+          ],
+          "prerequisites": "The boards page is open",
+          "observableState": "The page reloads and the board table re-renders with current data"
+        },
+        {
+          "name": "getNumberOfRows",
+          "signature": "getNumberOfRows(): Promise<number>",
+          "description": "Returns the number of rows in the board table, which is the number of boards.\nReturns 0 both when the table is absent entirely (all boards deleted) and\nwhen it renders a single \"No visible results to display.\" placeholder row.",
+          "aliases": [
+            "getNumberOfBoards",
+            "countBoards",
+            "getBoardCount",
+            "getRowCount"
+          ],
+          "prerequisites": "The boards page is open",
+          "observableState": "None — read-only query"
+        },
+        {
+          "name": "getRowByIndex",
+          "signature": "getRowByIndex(index: number): Promise<BoardTableRowComp>",
+          "description": "Gets a board table row by its zero-based index.",
+          "aliases": [
+            "getBoardByIndex",
+            "getRowAt"
+          ],
+          "prerequisites": "The boards page is open and the table has at least `index + 1` rows",
+          "observableState": "None — read-only query"
+        },
+        {
+          "name": "isRowForTableWithNameExists",
+          "signature": "isRowForTableWithNameExists(boardName: string): Promise<boolean>",
+          "description": "Checks whether a row for the board with the specified name exists in the table.",
+          "aliases": [
+            "isBoardVisible",
+            "hasBoardWithName",
+            "boardExists"
+          ],
+          "prerequisites": "The boards page is open",
+          "observableState": "None — read-only query"
+        },
+        {
+          "name": "getRowByBoardName",
+          "signature": "getRowByBoardName(boardName: string, index: number = 0): Promise<BoardTableRowComp>",
+          "description": "Gets the row for a board by its name. When several boards share a name,\n`index` selects which of the matches to return. Throws if no row matches,\nor if `index` is out of bounds for the matches found.",
+          "aliases": [
+            "getBoardRowByName",
+            "findBoardByName"
+          ],
+          "prerequisites": "The boards page is open and a board with this name exists",
+          "observableState": "None — read-only query"
+        }
+      ]
+    },
+    {
+      "name": "BoardTableRowComp",
+      "file": "src/po/openproject/board/boardsPage.ts",
+      "kind": "component",
+      "description": "# Board Table Row Component Class\nThis class represents a row in the board table on the boards page in the OpenProject application.\nIt provides methods to interact with the board's details such as name, type, creation date, and delete button.",
+      "aliases": [
+        "BoardRow",
+        "BoardsTableRow"
+      ],
+      "methods": [
+        {
+          "name": "clickDeleteButtonAndAcceptDeletion",
+          "signature": "clickDeleteButtonAndAcceptDeletion(): Promise<void>",
+          "description": "Clicks the delete link for this board and accepts the confirmation dialog.",
+          "aliases": [
+            "clickDeleteButton",
+            "clickDelete",
+            "deleteBoard"
+          ],
+          "prerequisites": "The boards list is displayed and this row's board exists",
+          "observableState": "The board's row is removed from the boards table; the confirmation dialog is auto-accepted and the browser returns to the boards list"
+        }
+      ]
+    },
+    {
+      "name": "BoardTypePage",
+      "file": "src/po/openproject/board/boardTypePage.ts",
+      "kind": "page",
+      "description": "# Board Type Page Class\nThis class represents the \"Create new board\" form page in the OpenProject application.\nUsers fill in a title, choose the board type (Basic is pre-selected), and click Create.",
+      "aliases": [
+        "CreateBoardPage",
+        "NewBoardFormPage"
+      ],
+      "methods": [
+        {
+          "name": "fillBoardName",
+          "signature": "fillBoardName(name: string): Promise<void>",
+          "description": "Fills in the board name on the creation form.",
+          "aliases": [
+            "setBoardName",
+            "fillTitle",
+            "enterBoardName"
+          ],
+          "prerequisites": "The board creation form is open",
+          "observableState": "The Title field contains the given name"
+        },
+        {
+          "name": "clickBasicBoardButton",
+          "signature": "clickBasicBoardButton(): Promise<NewBoardPage>",
+          "description": "Clicks the Create button to create a Basic board (the pre-selected type)\nand returns the resulting board view page.",
+          "aliases": [
+            "createBasicBoard",
+            "selectBasicBoardType",
+            "submitBoardForm"
+          ],
+          "prerequisites": "The board creation form is open and the title has been filled",
+          "observableState": "The board is created and the browser navigates to the new board's view"
+        }
+      ]
+    },
+    {
+      "name": "ListComp",
+      "file": "src/po/openproject/board/newBoardPage.ts",
+      "kind": "component",
+      "description": "# List Component Class\nThis class represents a list component within a board in the OpenProject application.",
+      "aliases": [
+        "BoardList",
+        "BoardColumn"
+      ],
+      "methods": [
+        {
+          "name": "fillListName",
+          "signature": "fillListName(name: string): Promise<void>",
+          "description": "Sets the name of the list, committing the value with Enter.",
+          "aliases": [
+            "setListName",
+            "renameList",
+            "fillTitle"
+          ],
+          "prerequisites": "The list exists on the board",
+          "observableState": "The list's title shows the new name and the change is persisted"
+        }
+      ]
+    },
+    {
+      "name": "NewBoardPage",
+      "file": "src/po/openproject/board/newBoardPage.ts",
+      "kind": "page",
+      "description": "# New Board Page Class\n\nRepresents the board view page in the OpenProject application, where users\nmanage a board by adding lists and setting the board name.\n\nNotable behaviours:\n- The board saves automatically; there is no save action after setting the name.\n- Use {@link NewBoardPage.clickBoardsLink} to navigate back to the boards list.",
+      "aliases": [
+        "BoardPage",
+        "BoardViewPage"
+      ],
+      "methods": [
+        {
+          "name": "getListByIndex",
+          "signature": "getListByIndex(index: number): ListComp",
+          "description": "Gets a list on the board by its zero-based index.",
+          "aliases": [
+            "getList",
+            "getListAt"
+          ],
+          "prerequisites": "The board view is open and has at least `index + 1` lists",
+          "observableState": "None — returns a component wrapper without interacting"
+        },
+        {
+          "name": "fillBoardName",
+          "signature": "fillBoardName(name: string): Promise<void>",
+          "description": "Fills the board name textbox and commits the value with Enter.\nThe board saves automatically — no separate save action is needed.",
+          "aliases": [
+            "setBoardName",
+            "renameBoard"
+          ],
+          "prerequisites": "The board view is open",
+          "observableState": "The board title shows the new name and is persisted automatically"
+        },
+        {
+          "name": "clickAddListToBoardLink",
+          "signature": "clickAddListToBoardLink(): Promise<void>",
+          "description": "Clicks the \"Add list to board\" link to append a new list to the board.\nReach the new list afterwards with {@link getListByIndex}.",
+          "aliases": [
+            "addList",
+            "addListToBoard",
+            "createList"
+          ],
+          "prerequisites": "The board view is open",
+          "observableState": "A new empty list is appended to the board and becomes interactable"
+        },
+        {
+          "name": "clickBoardsLink",
+          "signature": "clickBoardsLink(): Promise<BoardsPage>",
+          "description": "Clicks the breadcrumb link to navigate back to the boards list page.",
+          "aliases": [
+            "clickBackToBoardsPage",
+            "goBackToBoards",
+            "navigateToBoards"
+          ],
+          "prerequisites": "A board view is open",
+          "observableState": "The browser returns to the boards list page showing all boards"
+        }
+      ]
+    }
+  ]
+}

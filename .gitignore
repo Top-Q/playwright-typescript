@@ -151,3 +151,7 @@ dom-snapshots/
 .playwright
 .playwright-mcp/
 .playwright-cli/
+
+# Personal, per-machine Claude Code settings (not shared; team settings go in
+# .claude/settings.json). Contains local paths and a personal permission allowlist.
+.claude/settings.local.json

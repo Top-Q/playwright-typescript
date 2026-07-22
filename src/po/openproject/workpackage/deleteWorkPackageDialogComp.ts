@@ -11,6 +11,8 @@ import { BaseComponent } from '../baseComponent';
  * The dialog contains two buttons:
  * - Cancel — dismisses the dialog without deleting the work package
  * - Delete — confirms the deletion and removes the work package
+ *
+ * @aliases ConfirmDeleteDialog, DeleteConfirmationDialog
  */
 export class DeleteWorkPackageDialogComp extends BaseComponent<DeleteWorkPackageDialogComp> {
   private readonly cancelButton: Locator;
@@ -37,15 +39,22 @@ export class DeleteWorkPackageDialogComp extends BaseComponent<DeleteWorkPackage
   }
 
   /**
-   * Clicks the "Cancel" button to dismiss the dialog without deleting.
+   * Clicks "Cancel" to dismiss the dialog without deleting.
+   *
+   * @aliases cancel, dismissDialog, abortDeletion
+   * @prerequisites The delete confirmation dialog is open
+   * @observable-state The dialog closes and the work package remains in the table
    */
   async clickCancelButton(): Promise<void> {
     await this.cancelButton.click();
   }
 
   /**
-   * Clicks the "Delete" button to confirm the deletion of the work package.
-   * Waits for the dialog to close after submission.
+   * Clicks "Delete" to confirm deletion, then waits for the dialog to detach.
+   *
+   * @aliases confirmDelete, clickDelete, acceptDeletion
+   * @prerequisites The delete confirmation dialog is open
+   * @observable-state The work package is permanently deleted, the dialog closes, and the row disappears from the table
    */
   async clickConfirmDeleteButton(): Promise<void> {
     await this.confirmDeleteButton.click();

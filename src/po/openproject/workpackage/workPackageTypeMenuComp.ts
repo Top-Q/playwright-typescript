@@ -14,6 +14,8 @@ import { NewWorkPackagePage } from './newWorkPackagePage';
  *
  * The menu items live in an Angular overlay outside the regular DOM tree, so we
  * scope the root to the `menu` role directly on the page.
+ *
+ * @aliases CreateWorkPackageMenu, TypeDropdown
  */
 export class WorkPackageTypeMenuComp extends BaseComponent<WorkPackageTypeMenuComp> {
   constructor(protected readonly page: Page) {
@@ -26,19 +28,14 @@ export class WorkPackageTypeMenuComp extends BaseComponent<WorkPackageTypeMenuCo
   }
 
   /**
-   * ## Description
-   * Selects a work package type from the dropdown menu by its visible label.
-   * The label is matched case-insensitively against the menu items
-   * (e.g. "task" matches the "Task" menu item).
+   * Selects a work package type from the dropdown by its visible label. The
+   * label is matched case-insensitively, so "task" matches the "Task" item.
    *
-   * ## Aliases
-   * ```ts
-   * selectType(typeName: string);
-   * clickType(typeName: string);
-   * ```
-   *
+   * @aliases clickType, chooseType, pickWorkPackageType
+   * @prerequisites The work package type dropdown is open
+   * @observable-state The dropdown closes and the split-view create form opens for the chosen type
    * @param typeName - The work package type label (e.g. 'Task', 'Phase', 'Milestone').
-   * @returns A `NewWorkPackagePage` instance for the create form.
+   * @returns A `NewWorkPackagePage` for the create form.
    */
   async selectType(typeName: string): Promise<NewWorkPackagePage> {
     const normalised = typeName.charAt(0).toUpperCase() + typeName.slice(1).toLowerCase();

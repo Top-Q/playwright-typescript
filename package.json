@@ -8,6 +8,9 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md,yml,yaml}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md,yml,yaml}\"",
+    "catalog": "tsx scripts/build-pom-catalog.ts",
+    "catalog:check": "tsx scripts/build-pom-catalog.ts --check",
+    "catalog:report": "tsx scripts/build-pom-catalog.ts --report",
     "dump-dom": "npx tsx scripts/dump-dom.ts",
     "dump-dom:help": "npx tsx scripts/dump-dom.ts --help",
     "dump-dom:dom": "npx tsx scripts/dump-dom.ts --dom",
@@ -37,6 +40,7 @@
     "eslint-plugin-playwright": "^2.2.2",
     "globals": "^16.3.0",
     "prettier": "^3.6.2",
+    "tsx": "^4.23.1",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.39.0"
   }

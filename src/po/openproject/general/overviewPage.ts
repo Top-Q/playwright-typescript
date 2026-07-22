@@ -6,6 +6,9 @@ import { MainMenuComp } from './mainMenuComp';
  * # Overview Page Class
  * This class represents the overview page in the OpenProject application.
  * It provides access to the main menu and filtering options.
+ *
+ * @aliases ProjectOverviewPage, ProjectHomePage
+ * @url /projects/:projectId
  */
 export class OverviewPage extends BasePage<OverviewPage> {
 
@@ -29,35 +32,41 @@ export class OverviewPage extends BasePage<OverviewPage> {
     }
 
     /**
-     * Returns an instance of the MainMenuComp class.
+     * Returns the project's main menu component, used to navigate between modules
+     * (Work packages, Boards, Meetings, Members, Time and costs).
+     *
+     * @aliases getMainMenu, sidebar, menu
+     * @prerequisites A project overview page is open
+     * @observable-state None — returns a component wrapper without interacting
+     * @returns A `MainMenuComp` for the project sidebar menu.
      */
     mainMenu(): MainMenuComp {
         return new MainMenuComp(this.page);
     }
 
     /**
-     * ## Description
-     * Checks if the filter is currently active. 
-     * If active, there is no need to click the activate filter button again by clicking on the `clickActivateFilterButton`. 
-     * Clickin on the button when the filter is already active will deactivate it.
-     * 
-     * @returns true if the filter is active, false otherwise.
+     * Checks whether the filter is currently active. Guard calls to
+     * {@link clickActivateFilterButton} with this — that button toggles, so
+     * clicking it while the filter is already active deactivates it.
+     *
+     * @aliases isFilterEnabled, filterIsActive
+     * @prerequisites The overview page is open
+     * @observable-state None — read-only query
+     * @returns True if the filter is active, false otherwise.
      */
     async isFilterActive(): Promise<boolean> {
         return await this.activateFilterButton.isVisible();        
     }
 
     /**
-     * ## Description
-     * Clicks the activate filter button. Use the `isFilterActive` method to check if the filter is already active.
-     * If the filter is not active, this method will activate it, otherwise it will deactivate it.
+     * Toggles the filter panel. This does not unconditionally activate it — if
+     * the filter is already active the click deactivates it, so guard the call
+     * with {@link isFilterActive}.
      *
-     * 
-     * ## Behavior
-     * If the filter is already active, it will be deactivated.
-     * 
-     * ## Usage
-     * 
+     * @aliases clickActivateFilter, toggleFilter, activateFilter
+     * @prerequisites The overview page is open
+     * @observable-state The filter panel toggles; when activated the "Filter by text" textbox becomes available
+     * @example
      * ```typescript
      * if (!(await overviewPage.isFilterActive())) {
      *     await overviewPage.clickActivateFilterButton();
@@ -69,23 +78,20 @@ export class OverviewPage extends BasePage<OverviewPage> {
     }
 
     /**
-     * ## Description
+     * Clears the "Filter by text" textbox, types the given text, and waits for
+     * the resulting server query to complete before returning.
      *
-     * Fills the filter by text textbox with the provided text.
-     * This will not work if the `clickActivateFilterButton` has not been clicked first.
+     * @aliases filterByText, searchByText, applyTextFilter
+     * @prerequisites The filter panel is active — call {@link clickActivateFilterButton} first
+     * @observable-state The results table re-queries and shows only rows matching the text
      * @param text - The text to filter by.
-     *
-     * ## Behavior
-     * Filling the textbox will trigger a query to the server to filter the results.
-     * This will populate the results table with the filtered results.
-     *
-     * ## Usage
+     * @example
      * ```typescript
      * if (!(await overviewPage.isFilterActive())) {
      *     await overviewPage.clickActivateFilterButton();
      * }
      * await overviewPage.fillFilterByText('My Search Term');
-     *
+     * ```
      */
     async fillFilterByText(text: string): Promise<void> {
         // Clear existing text. This is useful when re-applying the same filter.

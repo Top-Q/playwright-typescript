@@ -40,8 +40,15 @@ export default defineConfig({
   /* Configure projects for major browsers */
   projects: [
     {
+      /* Browser-less unit tests (catalog builder, pure helpers). */
+      name: 'unit',
+      testDir: './tests/unit',
+      use: {},
+    },
+    {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+      testIgnore: '**/unit/**',
     },
 
     // {

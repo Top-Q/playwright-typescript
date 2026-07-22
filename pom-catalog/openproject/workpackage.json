@@ -1,0 +1,261 @@
+{
+  "module": "workpackage",
+  "file": "workpackage.json",
+  "app": "openproject",
+  "generatedAt": "2026-07-22T06:18:01.379Z",
+  "schemaVersion": 2,
+  "classes": [
+    {
+      "name": "DeleteWorkPackageDialogComp",
+      "file": "src/po/openproject/workpackage/deleteWorkPackageDialogComp.ts",
+      "kind": "component",
+      "description": "# Delete Work Package Dialog Component\n\nThis component represents the \"Confirm deletion of work package\" dialog\nthat appears when a user chooses \"Delete\" from a work package row context\nmenu on the work packages list page.\n\nThe dialog contains two buttons:\n- Cancel — dismisses the dialog without deleting the work package\n- Delete — confirms the deletion and removes the work package",
+      "aliases": [
+        "ConfirmDeleteDialog",
+        "DeleteConfirmationDialog"
+      ],
+      "methods": [
+        {
+          "name": "clickCancelButton",
+          "signature": "clickCancelButton(): Promise<void>",
+          "description": "Clicks \"Cancel\" to dismiss the dialog without deleting.",
+          "aliases": [
+            "cancel",
+            "dismissDialog",
+            "abortDeletion"
+          ],
+          "prerequisites": "The delete confirmation dialog is open",
+          "observableState": "The dialog closes and the work package remains in the table"
+        },
+        {
+          "name": "clickConfirmDeleteButton",
+          "signature": "clickConfirmDeleteButton(): Promise<void>",
+          "description": "Clicks \"Delete\" to confirm deletion, then waits for the dialog to detach.",
+          "aliases": [
+            "confirmDelete",
+            "clickDelete",
+            "acceptDeletion"
+          ],
+          "prerequisites": "The delete confirmation dialog is open",
+          "observableState": "The work package is permanently deleted, the dialog closes, and the row disappears from the table"
+        }
+      ]
+    },
+    {
+      "name": "NewWorkPackagePage",
+      "file": "src/po/openproject/workpackage/newWorkPackagePage.ts",
+      "kind": "page",
+      "description": "# New Work Package Page\n\nThis class represents the split-view \"Create new work package\" form rendered\nafter the user selects a work package type from the toolbar dropdown.\n\nThe form is shown on the right side of the work packages page at\n`/projects/<id>/work_packages/create_new?type=<typeId>` and contains:\n- Subject (required)\n- Description (rich text editor)\n- People / Estimates / Details sections\n- Save and Cancel action buttons at the bottom of the form\n\nAfter saving, the URL changes to `/projects/<id>/work_packages/details/<id>/overview`\nand the application navigates to the work package details page (also rendered\nas a split view alongside the work packages table).",
+      "aliases": [
+        "CreateWorkPackagePage",
+        "WorkPackageForm"
+      ],
+      "methods": [
+        {
+          "name": "fillSubject",
+          "signature": "fillSubject(name: string): Promise<void>",
+          "description": "Fills the Subject field, which is the work package's name and is required\nbefore the form can be saved.",
+          "aliases": [
+            "setName",
+            "setWorkPackageName",
+            "fillName",
+            "enterSubject"
+          ],
+          "prerequisites": "The create work package form is open",
+          "observableState": "The Subject field contains the given name"
+        },
+        {
+          "name": "fillDescription",
+          "signature": "fillDescription(description: string): Promise<void>",
+          "description": "Fills the Description rich text editor. The editor is a CKEditor instance,\nso it is clicked first to ensure it has focus before the text is typed.",
+          "aliases": [
+            "setDescription",
+            "fillBody",
+            "enterDescription"
+          ],
+          "prerequisites": "The create work package form is open",
+          "observableState": "The Description editor contains the given text"
+        },
+        {
+          "name": "clickSaveButton",
+          "signature": "clickSaveButton(): Promise<WorkPackageDetailsPage>",
+          "description": "Clicks \"Save\" to submit the create form.",
+          "aliases": [
+            "save",
+            "submitForm",
+            "createWorkPackage"
+          ],
+          "prerequisites": "The create form is open and the required Subject field is filled",
+          "observableState": "The work package is created, appears in the table, and the URL changes to `/work_packages/details/<id>/overview`"
+        },
+        {
+          "name": "clickCancelButton",
+          "signature": "clickCancelButton(): Promise<void>",
+          "description": "Clicks \"Cancel\" to dismiss the create form without saving.",
+          "aliases": [
+            "cancel",
+            "discardForm",
+            "closeWithoutSaving"
+          ],
+          "prerequisites": "The create work package form is open",
+          "observableState": "The split-view form closes, no work package is created, and the work packages list is shown"
+        }
+      ]
+    },
+    {
+      "name": "WorkPackageDetailsPage",
+      "file": "src/po/openproject/workpackage/workPackageDetailsPage.ts",
+      "kind": "page",
+      "description": "# Work Package Details Page\n\nThis class represents the split-view work package details page rendered\nafter a work package is created or selected. The URL pattern is\n`/projects/<projectId>/work_packages/details/<workPackageId>/overview`.\n\nThe details panel is displayed on the right side, while the underlying\nwork packages table remains visible on the left. The page exposes a\n\"Close details view\" button that hides the side panel and returns the\nuser to the full work packages list view.",
+      "aliases": [
+        "WorkPackageOverviewPage",
+        "WorkPackageSplitView"
+      ],
+      "methods": [
+        {
+          "name": "goBackToWorkPackagesList",
+          "signature": "goBackToWorkPackagesList(): Promise<void>",
+          "description": "Leaves the details view and returns to the work packages table, so the\ncaller can filter, delete, or assert on rows. Navigates by extracting the\nproject identifier from the current URL. Throws if the URL does not contain\na project identifier.",
+          "aliases": [
+            "getBackToWorkPackagesPage",
+            "closeDetailsView",
+            "returnToWorkPackages"
+          ],
+          "prerequisites": "The work package details view is open",
+          "observableState": "The browser navigates to `/projects/<id>/work_packages` and the full table is shown"
+        }
+      ]
+    },
+    {
+      "name": "WorkPackagesPage",
+      "file": "src/po/openproject/workpackage/workPackagesPage.ts",
+      "kind": "page",
+      "description": "# Work Packages Page\n\nThis class represents the work packages list page in the OpenProject\napplication, at `/projects/<projectId>/work_packages`.\n\nThe page renders an Angular-driven table of work packages, with toolbar\ncontrols for creating, filtering and viewing work packages. Each row\nexposes a context menu link that lets the user open the details view,\nduplicate, delete, log time, etc.\n\nNotable behaviours:\n- The \"Create new work package\" toolbar button opens a dropdown menu of\n  work package types (Task, Milestone, Phase, etc.). The dropdown items\n  live in an Angular overlay outside the regular DOM tree.\n- The filter panel is hidden by default; clicking \"Activate Filter\"\n  reveals a \"Filter by text\" textbox that quick-filters the table.\n- After saving a new work package the URL changes to the details view\n  (`/work_packages/details/<id>/overview`).",
+      "aliases": [
+        "WorkPackageListPage",
+        "TasksPage",
+        "WorkPackagesTablePage"
+      ],
+      "methods": [
+        {
+          "name": "clickCreateButton",
+          "signature": "clickCreateButton(): Promise<WorkPackageTypeMenuComp>",
+          "description": "Clicks the \"+ Create\" toolbar button to open the work package type dropdown.\nUse the returned component to select a type (Task, Milestone, Phase, etc.).",
+          "aliases": [
+            "openCreateMenu",
+            "clickCreate",
+            "openTypeDropdown"
+          ],
+          "prerequisites": "The work packages list page is open",
+          "observableState": "The work package type dropdown opens in an Angular overlay"
+        },
+        {
+          "name": "createNewWorkPackageOfType",
+          "signature": "createNewWorkPackageOfType(type: string): Promise<NewWorkPackagePage>",
+          "description": "Opens the create dropdown and selects the requested work package type in a\nsingle call — a convenience wrapper over {@link clickCreateButton} followed\nby `selectType`.",
+          "aliases": [
+            "createWorkPackage",
+            "newWorkPackage",
+            "startCreatingWorkPackage"
+          ],
+          "prerequisites": "The work packages list page is open",
+          "observableState": "The split-view create form opens for the chosen type"
+        },
+        {
+          "name": "clickActivateFilterButton",
+          "signature": "clickActivateFilterButton(): Promise<void>",
+          "description": "Clicks the \"Activate Filter\" button to reveal the filter panel, then waits\nfor the \"Filter by text\" textbox to appear. The button toggles, so guard\nthe call with {@link isFilterActive}.",
+          "aliases": [
+            "clickActivateFilter",
+            "toggleFilter",
+            "showFilterPanel"
+          ],
+          "prerequisites": "The work packages list page is open",
+          "observableState": "The filter panel opens and the \"Filter by text\" textbox becomes usable"
+        },
+        {
+          "name": "isFilterActive",
+          "signature": "isFilterActive(): Promise<boolean>",
+          "description": "Returns whether the \"Filter by text\" textbox is visible, which corresponds\nto the filter panel being active.",
+          "aliases": [
+            "isFilterEnabled",
+            "filterIsActive"
+          ],
+          "prerequisites": "The work packages list page is open",
+          "observableState": "None — read-only query"
+        },
+        {
+          "name": "fillFilterByText",
+          "signature": "fillFilterByText(text: string): Promise<void>",
+          "description": "Clears the \"Filter by text\" textbox, types the given value, and waits for\nthe resulting table query to complete before returning.",
+          "aliases": [
+            "filterByText",
+            "searchWorkPackages",
+            "applyTextFilter"
+          ],
+          "prerequisites": "The filter panel is active — call {@link clickActivateFilterButton} first",
+          "observableState": "The work packages table re-queries and shows only rows matching the text"
+        },
+        {
+          "name": "isWorkPackageVisible",
+          "signature": "isWorkPackageVisible(name: string): Promise<boolean>",
+          "description": "Returns whether a work package with the given subject exists in the table.\n\nThe table is paginated (20 rows per page by default), so this method\nactivates the quick text filter if needed and applies the subject as the\nfilter value, bringing any matching row into view regardless of how many\nwork packages exist.",
+          "aliases": [
+            "hasWorkPackageWithName",
+            "existsInTable",
+            "workPackageExists"
+          ],
+          "prerequisites": "The work packages list page is open",
+          "observableState": "Side effect — activates the filter panel if inactive and leaves the text filter set to `name`"
+        },
+        {
+          "name": "openDeleteDialogForWorkPackage",
+          "signature": "openDeleteDialogForWorkPackage(name: string): Promise<DeleteWorkPackageDialogComp>",
+          "description": "Opens the row context menu for the work package with the given subject and\nclicks \"Delete\", returning the confirmation dialog so the caller can decide\nwhether to confirm or cancel. Throws if no matching row is found.",
+          "aliases": [
+            "openDeleteDialog",
+            "startDeletingWorkPackage"
+          ],
+          "prerequisites": "The work packages list page is open and a work package with this subject exists",
+          "observableState": "The filter is set to `name`, the row context menu opens, and the delete confirmation dialog appears"
+        },
+        {
+          "name": "deleteWorkPackageByName",
+          "signature": "deleteWorkPackageByName(name: string): Promise<void>",
+          "description": "Deletes the work package with the given subject end to end: opens the row\ncontext menu, clicks Delete, and confirms the dialog.",
+          "aliases": [
+            "deleteWorkPackage",
+            "removeWorkPackage",
+            "deleteByName"
+          ],
+          "prerequisites": "The work packages list page is open and a work package with this subject exists",
+          "observableState": "The work package is permanently deleted and its row disappears from the table"
+        }
+      ]
+    },
+    {
+      "name": "WorkPackageTypeMenuComp",
+      "file": "src/po/openproject/workpackage/workPackageTypeMenuComp.ts",
+      "kind": "component",
+      "description": "# Work Package Type Menu Component\n\nThis component represents the dropdown menu that appears after clicking the\n\"Create new work package\" toolbar button on the work packages list page.\n\nThe menu lists the available work package types (e.g. Task, Milestone, Phase,\nSummary task) as `menuitem` entries. Selecting a type navigates the user to\nthe split-view create form (`NewWorkPackagePage`).\n\nThe menu items live in an Angular overlay outside the regular DOM tree, so we\nscope the root to the `menu` role directly on the page.",
+      "aliases": [
+        "CreateWorkPackageMenu",
+        "TypeDropdown"
+      ],
+      "methods": [
+        {
+          "name": "selectType",
+          "signature": "selectType(typeName: string): Promise<NewWorkPackagePage>",
+          "description": "Selects a work package type from the dropdown by its visible label. The\nlabel is matched case-insensitively, so \"task\" matches the \"Task\" item.",
+          "aliases": [
+            "clickType",
+            "chooseType",
+            "pickWorkPackageType"
+          ],
+          "prerequisites": "The work package type dropdown is open",
+          "observableState": "The dropdown closes and the split-view create form opens for the chosen type"
+        }
+      ]
+    }
+  ]
+}

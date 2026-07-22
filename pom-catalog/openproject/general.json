@@ -1,0 +1,184 @@
+{
+  "module": "general",
+  "file": "general.json",
+  "app": "openproject",
+  "generatedAt": "2026-07-22T06:18:01.379Z",
+  "schemaVersion": 2,
+  "classes": [
+    {
+      "name": "HomePage",
+      "file": "src/po/openproject/general/homePage.ts",
+      "kind": "page",
+      "description": "Represents the home page of OpenProject.\nThis page shows WELCOME TO OPENPROJECT section, NEW FEATURES\nexisting PROJECT and also, allows the user to select a project by\nclicking on the `Select a project` link.",
+      "aliases": [],
+      "methods": [
+        {
+          "name": "clickAllProjectsButton",
+          "signature": "clickAllProjectsButton(): Promise<ProjectSelectionDropdownComp>",
+          "description": "Clicks on the 'All projects' button and returns the project selection dropdown.",
+          "aliases": [],
+          "prerequisites": "",
+          "observableState": ""
+        }
+      ]
+    },
+    {
+      "name": "IntroPage",
+      "file": "src/po/openproject/general/loginPage.ts",
+      "kind": "page",
+      "description": "# Page Description\nThis page represents the introduction screen of the OpenProject application,\nwhere users can log in to the application.",
+      "aliases": [],
+      "methods": [
+        {
+          "name": "fillUserNameTextBox",
+          "signature": "fillUserNameTextBox(username: string): Promise<void>",
+          "description": "Fills the username text box with the provided text.",
+          "aliases": [],
+          "prerequisites": "",
+          "observableState": ""
+        },
+        {
+          "name": "fillPasswordTextBox",
+          "signature": "fillPasswordTextBox(password: string): Promise<void>",
+          "description": "Fills the password text box with the provided text.",
+          "aliases": [],
+          "prerequisites": "",
+          "observableState": ""
+        },
+        {
+          "name": "clickOnSignInButton",
+          "signature": "clickOnSignInButton(): Promise<HomePage>",
+          "description": "Clicks on the sign-in button and returns a new instance of the HomePage.",
+          "aliases": [],
+          "prerequisites": "",
+          "observableState": ""
+        }
+      ]
+    },
+    {
+      "name": "MainMenuComp",
+      "file": "src/po/openproject/general/mainMenuComp.ts",
+      "kind": "component",
+      "description": "Represents the main menu component in OpenProject on the left of the page.\nAllows navigation to different sections like Boards, Time and Costs, Meetings, and Members.",
+      "aliases": [],
+      "methods": [
+        {
+          "name": "clickBoardsLink",
+          "signature": "clickBoardsLink(): Promise<BoardsPage>",
+          "description": "Click on the 'Boards' menu item and returns a BoardsPage.\nIt will also change the menu to the boards menu.",
+          "aliases": [],
+          "prerequisites": "",
+          "observableState": ""
+        },
+        {
+          "name": "clickTimeAndCostsLink",
+          "signature": "clickTimeAndCostsLink(): Promise<CostReportsPage>",
+          "description": "Click on the 'Time and costs' menu item and returns a CostReportsPage.",
+          "aliases": [],
+          "prerequisites": "",
+          "observableState": ""
+        },
+        {
+          "name": "clickMeetingsLink",
+          "signature": "clickMeetingsLink(): Promise<MeetingsPage>",
+          "description": "Click on the 'Meetings' menu item and returns a MeetingsPage.",
+          "aliases": [],
+          "prerequisites": "",
+          "observableState": ""
+        },
+        {
+          "name": "clickMembersLink",
+          "signature": "clickMembersLink(): Promise<MembersPage>",
+          "description": "Click on the 'Members' menu item and returns a MembersPage.",
+          "aliases": [],
+          "prerequisites": "",
+          "observableState": ""
+        },
+        {
+          "name": "clickWorkPackagesLink",
+          "signature": "clickWorkPackagesLink(): Promise<WorkPackagesPage>",
+          "description": "Click on the 'Work packages' menu item and returns a WorkPackagesPage.\n\nNavigates to the work packages list for the currently selected project.",
+          "aliases": [],
+          "prerequisites": "",
+          "observableState": ""
+        }
+      ]
+    },
+    {
+      "name": "OverviewPage",
+      "file": "src/po/openproject/general/overviewPage.ts",
+      "kind": "page",
+      "description": "# Overview Page Class\nThis class represents the overview page in the OpenProject application.\nIt provides access to the main menu and filtering options.",
+      "aliases": [
+        "ProjectOverviewPage",
+        "ProjectHomePage"
+      ],
+      "methods": [
+        {
+          "name": "mainMenu",
+          "signature": "mainMenu(): MainMenuComp",
+          "description": "Returns the project's main menu component, used to navigate between modules\n(Work packages, Boards, Meetings, Members, Time and costs).",
+          "aliases": [
+            "getMainMenu",
+            "sidebar",
+            "menu"
+          ],
+          "prerequisites": "A project overview page is open",
+          "observableState": "None — returns a component wrapper without interacting"
+        },
+        {
+          "name": "isFilterActive",
+          "signature": "isFilterActive(): Promise<boolean>",
+          "description": "Checks whether the filter is currently active. Guard calls to\n{@link clickActivateFilterButton} with this — that button toggles, so\nclicking it while the filter is already active deactivates it.",
+          "aliases": [
+            "isFilterEnabled",
+            "filterIsActive"
+          ],
+          "prerequisites": "The overview page is open",
+          "observableState": "None — read-only query"
+        },
+        {
+          "name": "clickActivateFilterButton",
+          "signature": "clickActivateFilterButton(): Promise<void>",
+          "description": "Toggles the filter panel. This does not unconditionally activate it — if\nthe filter is already active the click deactivates it, so guard the call\nwith {@link isFilterActive}.",
+          "aliases": [
+            "clickActivateFilter",
+            "toggleFilter",
+            "activateFilter"
+          ],
+          "prerequisites": "The overview page is open",
+          "observableState": "The filter panel toggles; when activated the \"Filter by text\" textbox becomes available"
+        },
+        {
+          "name": "fillFilterByText",
+          "signature": "fillFilterByText(text: string): Promise<void>",
+          "description": "Clears the \"Filter by text\" textbox, types the given text, and waits for\nthe resulting server query to complete before returning.",
+          "aliases": [
+            "filterByText",
+            "searchByText",
+            "applyTextFilter"
+          ],
+          "prerequisites": "The filter panel is active — call {@link clickActivateFilterButton} first",
+          "observableState": "The results table re-queries and shows only rows matching the text"
+        }
+      ]
+    },
+    {
+      "name": "ProjectSelectionDropdownComp",
+      "file": "src/po/openproject/general/projectSelectionDropdownComp.ts",
+      "kind": "component",
+      "description": "A dialog component with a dropdown for project selection.\nOpened from the home page via the 'All projects' button, it lists every\nproject the user can reach and navigates to the selected project's overview.",
+      "aliases": [],
+      "methods": [
+        {
+          "name": "clickProjectByName",
+          "signature": "clickProjectByName(projectName: string): Promise<OverviewPage>",
+          "description": "Selects a project from the project selection list by its name.",
+          "aliases": [],
+          "prerequisites": "",
+          "observableState": ""
+        }
+      ]
+    }
+  ]
+}

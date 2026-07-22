@@ -5,6 +5,8 @@ import { MeetingShowPage } from './meetingShowPage';
 /**
  * Represents the create/edit meeting dialog (#new-meeting-dialog).
  * Contains fields for title, location, start time, and duration.
+ *
+ * @aliases NewMeetingDialog, MeetingDialog, CreateMeetingForm
  */
 export class MeetingFormDialogComp extends BaseComponent<MeetingFormDialogComp> {
     private readonly titleInput: Locator;
@@ -41,27 +43,60 @@ export class MeetingFormDialogComp extends BaseComponent<MeetingFormDialogComp> 
         return this;
     }
 
-    /** Fill in the meeting title. */
+    /**
+     * Fills the meeting title field. Returns this component so calls can be
+     * chained with {@link fillLocation} and {@link clickCreate}.
+     *
+     * @aliases setTitle, enterTitle, fillMeetingTitle
+     * @prerequisites The create/edit meeting dialog is open
+     * @observable-state The title field contains the given text
+     * @param title - The meeting title.
+     * @returns This `MeetingFormDialogComp`, for chaining.
+     */
     async fillTitle(title: string): Promise<MeetingFormDialogComp> {
         await this.titleInput.fill(title);
         return this;
     }
 
-    /** Fill in the meeting location. */
+    /**
+     * Fills the meeting location field. Returns this component so calls can be
+     * chained with {@link fillTitle} and {@link clickCreate}.
+     *
+     * @aliases setLocation, enterLocation, fillMeetingLocation
+     * @prerequisites The create/edit meeting dialog is open
+     * @observable-state The location field contains the given text
+     * @param location - The meeting location.
+     * @returns This `MeetingFormDialogComp`, for chaining.
+     */
     async fillLocation(location: string): Promise<MeetingFormDialogComp> {
         await this.locationInput.fill(location);
         return this;
     }
 
-    /** Click Create to submit the form and navigate to the meeting show page. */
+    /**
+     * Clicks Create to submit the meeting form.
+     *
+     * @aliases submitMeetingForm, saveMeeting, create
+     * @prerequisites The create meeting dialog is open and the required title is filled
+     * @observable-state The meeting is created, the dialog closes, and the browser navigates to the new meeting's detail page
+     * @returns A `MeetingShowPage` for the created meeting.
+     */
     async clickCreate(): Promise<MeetingShowPage> {
         await this.createButton.click();
         return await new MeetingShowPage(this.page).waitForLoad();
     }
 
     /**
-     * Create a meeting with the given title and optional location.
-     * Shorthand for fillTitle + fillLocation + clickCreate.
+     * Creates a meeting in one call — shorthand for {@link fillTitle}, then
+     * {@link fillLocation} when a location is given, then {@link clickCreate}.
+     * Leaves date, time and duration at their dialog defaults.
+     *
+     * @aliases createNewMeeting, addMeeting, submitMeeting
+     * @prerequisites The create meeting dialog is open
+     * @observable-state The meeting is created with the given title and appears in the meetings list; the browser navigates to its detail page
+     * @param title - The meeting title.
+     * @param location - Optional meeting location; skipped when omitted.
+     * @returns A `MeetingShowPage` for the created meeting.
      */
     async createMeeting(
         title: string,

@@ -9,6 +9,9 @@ import { MemberTableComp } from './memberTableComp';
  *
  * Sidebar navigation: All | Locked | Invited, Project roles, Work package shares.
  * Filter panel: Status, Role, Work package shares, Name.
+ *
+ * @aliases ProjectMembersPage, MemberListPage, TeamPage
+ * @url /projects/:projectId/members
  */
 export class MembersPage extends BasePage<MembersPage> {
     private readonly addMemberButton: Locator;
@@ -70,14 +73,26 @@ export class MembersPage extends BasePage<MembersPage> {
         return this;
     }
 
-    /** Returns the member table component for interacting with member rows. */
+    /**
+     * Returns the member table component, used to count members, list their
+     * names, and reach individual rows for role changes or removal.
+     *
+     * @aliases getMemberTable, table, membersTable
+     * @prerequisites The Members page is open
+     * @observable-state None — returns a component wrapper without interacting
+     * @returns A `MemberTableComp` for the members table.
+     */
     memberTable(): MemberTableComp {
         return new MemberTableComp(this.page, this.memberTableRoot);
     }
 
     /**
-     * Opens the add member form by clicking the "+ Member" button.
-     * If the form is already open, this is a no-op.
+     * Opens the inline add member form via the "+ Member" button. Idempotent —
+     * if the form is already open this does nothing.
+     *
+     * @aliases showAddMemberForm, clickAddMember, openInviteForm
+     * @prerequisites The Members page is open
+     * @observable-state The inline add member form is visible, exposing the user search field and role dropdown
      */
     async openAddMemberForm(): Promise<void> {
         if (!(await this.addMemberForm.isVisible())) {
@@ -87,10 +102,16 @@ export class MembersPage extends BasePage<MembersPage> {
     }
 
     /**
-     * Adds a member to the project by searching for a user name or inviting by email.
-     * When an email is provided and no matching user exists, it selects the
-     * "Send invite to ..." option from the dropdown.
-     * After the member is added, the page reloads and a success flash is shown.
+     * Adds a member to the project by searching for a user name, or inviting by
+     * email when no matching user exists. Opens the add member form first if it
+     * is not already open, so it can be called directly.
+     *
+     * Waits for the POST to complete and then reloads the page, so the members
+     * table reliably reflects the new member on return.
+     *
+     * @aliases addMemberToProject, inviteUser, createMember, addUser
+     * @prerequisites The Members page is open and the named user (or email) can be granted the role
+     * @observable-state The member is added and appears as a new row in the members table; the page reloads and shows a success flash
      * @param userNameOrEmail - The name or email to search for.
      * @param role - The role to assign. Defaults to 'Member'.
      */
@@ -126,12 +147,26 @@ export class MembersPage extends BasePage<MembersPage> {
         await this.page.waitForLoadState('load');
     }
 
-    /** Checks if the add member form is currently visible. */
+    /**
+     * Checks whether the inline add member form is currently visible.
+     *
+     * @aliases isAddFormOpen, addMemberFormIsVisible
+     * @prerequisites The Members page is open
+     * @observable-state None — read-only query
+     * @returns True if the add member form is visible, false otherwise.
+     */
     async isAddMemberFormVisible(): Promise<boolean> {
         return await this.addMemberForm.isVisible();
     }
 
-    /** Closes the add member form. */
+    /**
+     * Closes the inline add member form. Idempotent — does nothing if the form
+     * is already closed.
+     *
+     * @aliases hideAddMemberForm, cancelAddMember, dismissAddForm
+     * @prerequisites The Members page is open
+     * @observable-state The add member form is hidden and no member is added
+     */
     async closeAddMemberForm(): Promise<void> {
         if (await this.addMemberForm.isVisible()) {
             await this.closeFormLink.click();
@@ -140,20 +175,41 @@ export class MembersPage extends BasePage<MembersPage> {
 
     // --- Filter methods ---
 
-    /** Opens the filter panel by clicking the Filter button. */
+    /**
+     * Opens the filter panel and waits for its Apply button, making the filter
+     * fields usable.
+     *
+     * @aliases showFilterPanel, clickFilter, toggleFilterPanel
+     * @prerequisites The Members page is open
+     * @observable-state The filter panel opens, exposing the Status, Role, and Name filter fields
+     */
     async openFilter(): Promise<void> {
         await this.filterButton.click();
         await this.filterApplyButton.waitFor();
     }
 
-    /** Filters members by name using the filter panel. */
+    /**
+     * Types a name into the filter panel's Name field and applies the filter,
+     * waiting for the resulting page load.
+     *
+     * @aliases searchMemberByName, applyNameFilter, filterMembers
+     * @prerequisites The filter panel is open — call {@link openFilter} first
+     * @observable-state The members table reloads showing only members matching the name
+     * @param name - The member name to filter by.
+     */
     async filterByName(name: string): Promise<void> {
         await this.filterNameInput.fill(name);
         await this.filterApplyButton.click();
         await this.page.waitForLoadState('load');
     }
 
-    /** Clears all active filters. */
+    /**
+     * Clears all active filters and waits for the resulting page load.
+     *
+     * @aliases resetFilter, removeFilters, clearAllFilters
+     * @prerequisites The filter panel is open — call {@link openFilter} first
+     * @observable-state The members table reloads showing the unfiltered member list
+     */
     async clearFilter(): Promise<void> {
         await this.filterClearButton.click();
         await this.page.waitForLoadState('load');
@@ -161,7 +217,14 @@ export class MembersPage extends BasePage<MembersPage> {
 
     // --- Sidebar navigation ---
 
-    /** Navigates to the "All" members view via sidebar link. */
+    /**
+     * Navigates to the "All" members view via the sidebar link.
+     *
+     * @aliases showAllMembers, viewAll
+     * @prerequisites The Members page is open
+     * @observable-state The table reloads showing every member regardless of status
+     * @returns A `MembersPage` for the reloaded view.
+     */
     async clickSidebarAll(): Promise<MembersPage> {
         await this.page
             .getByRole('link', { name: 'All', exact: true })
@@ -169,7 +232,14 @@ export class MembersPage extends BasePage<MembersPage> {
         return await new MembersPage(this.page).waitForLoad();
     }
 
-    /** Navigates to the "Locked" members view via sidebar link. */
+    /**
+     * Navigates to the "Locked" members view via the sidebar link.
+     *
+     * @aliases showLockedMembers, viewLocked
+     * @prerequisites The Members page is open
+     * @observable-state The table reloads showing only members whose account is locked
+     * @returns A `MembersPage` for the reloaded view.
+     */
     async clickSidebarLocked(): Promise<MembersPage> {
         await this.page
             .getByRole('link', { name: 'Locked', exact: true })
@@ -177,7 +247,14 @@ export class MembersPage extends BasePage<MembersPage> {
         return await new MembersPage(this.page).waitForLoad();
     }
 
-    /** Navigates to the "Invited" members view via sidebar link. */
+    /**
+     * Navigates to the "Invited" members view via the sidebar link.
+     *
+     * @aliases showInvitedMembers, viewInvited, viewPendingInvitations
+     * @prerequisites The Members page is open
+     * @observable-state The table reloads showing only members with a pending invitation
+     * @returns A `MembersPage` for the reloaded view.
+     */
     async clickSidebarInvited(): Promise<MembersPage> {
         await this.page
             .getByRole('link', { name: 'Invited', exact: true })
@@ -185,7 +262,19 @@ export class MembersPage extends BasePage<MembersPage> {
         return await new MembersPage(this.page).waitForLoad();
     }
 
-    /** Checks if a member with the given name exists in the table. */
+    /**
+     * Checks whether a member with the given name exists in the table.
+     * Convenience delegate to {@link MemberTableComp.hasMemberWithName}.
+     *
+     * Only inspects the rows currently displayed, so an active filter or a
+     * status view other than "All" can hide an existing member.
+     *
+     * @aliases memberExists, isMemberVisible, hasMember
+     * @prerequisites The Members page is open
+     * @observable-state None — read-only query
+     * @param name - The member name to look for.
+     * @returns True if a matching row is displayed, false otherwise.
+     */
     async hasMemberWithName(name: string): Promise<boolean> {
         return await this.memberTable().hasMemberWithName(name);
     }

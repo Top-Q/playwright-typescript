@@ -1,0 +1,204 @@
+{
+  "module": "timeandcosts",
+  "file": "timeandcosts.json",
+  "app": "openproject",
+  "generatedAt": "2026-07-22T06:18:01.379Z",
+  "schemaVersion": 2,
+  "classes": [
+    {
+      "name": "CostReportsPage",
+      "file": "src/po/openproject/timeandcosts/costReportsPage.ts",
+      "kind": "page",
+      "description": "# Cost Reports Page\nRepresents the \"Time and costs\" / \"Cost reports\" page in OpenProject.\nThis page allows users to create filtered reports of time and cost entries.\nIt includes filter, group-by, and units sections, plus action buttons (Apply, Save, Clear).",
+      "aliases": [],
+      "methods": [
+        {
+          "name": "clickApply",
+          "signature": "clickApply(): Promise<void>",
+          "description": "Clicks the \"Apply\" link to run the report with current filters.",
+          "aliases": [],
+          "prerequisites": "",
+          "observableState": ""
+        },
+        {
+          "name": "clickClear",
+          "signature": "clickClear(): Promise<void>",
+          "description": "Clicks the \"Clear\" link to reset all filters.",
+          "aliases": [],
+          "prerequisites": "",
+          "observableState": ""
+        },
+        {
+          "name": "clickSave",
+          "signature": "clickSave(): Promise<void>",
+          "description": "Clicks the \"Save\" link to save the current report.",
+          "aliases": [],
+          "prerequisites": "",
+          "observableState": ""
+        },
+        {
+          "name": "hasReportData",
+          "signature": "hasReportData(): Promise<boolean>",
+          "description": "Returns true if the report table is visible (has data).",
+          "aliases": [],
+          "prerequisites": "",
+          "observableState": ""
+        },
+        {
+          "name": "hasNoDataMessage",
+          "signature": "hasNoDataMessage(): Promise<boolean>",
+          "description": "Returns true if the \"nothing to display\" message is shown.",
+          "aliases": [],
+          "prerequisites": "",
+          "observableState": ""
+        },
+        {
+          "name": "getReportHeading",
+          "signature": "getReportHeading(): Promise<string>",
+          "description": "Returns the report heading text (e.g. \"New cost report\").",
+          "aliases": [],
+          "prerequisites": "",
+          "observableState": ""
+        },
+        {
+          "name": "costReportTable",
+          "signature": "costReportTable(): CostReportTableComp",
+          "description": "Returns the cost report table component for reading report data.\nOnly call this when the report has data (after clickApply).",
+          "aliases": [],
+          "prerequisites": "",
+          "observableState": ""
+        },
+        {
+          "name": "selectLaborUnits",
+          "signature": "selectLaborUnits(): Promise<void>",
+          "description": "Selects \"Labor\" as the units option.",
+          "aliases": [],
+          "prerequisites": "",
+          "observableState": ""
+        },
+        {
+          "name": "selectCashValueUnits",
+          "signature": "selectCashValueUnits(): Promise<void>",
+          "description": "Selects \"Cash value\" as the units option.",
+          "aliases": [],
+          "prerequisites": "",
+          "observableState": ""
+        },
+        {
+          "name": "removeDateFilter",
+          "signature": "removeDateFilter(): Promise<void>",
+          "description": "Removes the date filter by clicking its \"Remove filter\" link.\nThis broadens the report to show all dates.",
+          "aliases": [],
+          "prerequisites": "",
+          "observableState": ""
+        }
+      ]
+    },
+    {
+      "name": "CostReportTableComp",
+      "file": "src/po/openproject/timeandcosts/costReportsPage.ts",
+      "kind": "component",
+      "description": "# Cost Report Table Component\nRepresents the result table in the cost reports page.\nShows time/cost data grouped by the configured rows and columns.",
+      "aliases": [],
+      "methods": [
+        {
+          "name": "getNumberOfDataRows",
+          "signature": "getNumberOfDataRows(): Promise<number>",
+          "description": "Returns the number of data rows in the report table (excludes header and footer rows).",
+          "aliases": [],
+          "prerequisites": "",
+          "observableState": ""
+        },
+        {
+          "name": "isWorkPackageInReport",
+          "signature": "isWorkPackageInReport(subject: string): Promise<boolean>",
+          "description": "Checks if a work package with the given subject appears in the report.",
+          "aliases": [],
+          "prerequisites": "",
+          "observableState": ""
+        },
+        {
+          "name": "getHoursForWorkPackage",
+          "signature": "getHoursForWorkPackage(subject: string): Promise<string>",
+          "description": "Returns the hours value for a specific work package row.",
+          "aliases": [],
+          "prerequisites": "",
+          "observableState": ""
+        },
+        {
+          "name": "getTotalHours",
+          "signature": "getTotalHours(): Promise<string>",
+          "description": "Returns the total hours shown in the footer row.",
+          "aliases": [],
+          "prerequisites": "",
+          "observableState": ""
+        }
+      ]
+    },
+    {
+      "name": "LogTimeDialogComp",
+      "file": "src/po/openproject/timeandcosts/logTimeDialogComp.ts",
+      "kind": "component",
+      "description": "# Log Time Dialog Component\nRepresents the \"Log time\" dialog that appears when logging time on a work package.\nContains fields: User, Date, Hours, Activity, and Comment.",
+      "aliases": [],
+      "methods": [
+        {
+          "name": "fillHours",
+          "signature": "fillHours(hours: string): Promise<void>",
+          "description": "Fills in the hours field.",
+          "aliases": [],
+          "prerequisites": "",
+          "observableState": ""
+        },
+        {
+          "name": "fillDate",
+          "signature": "fillDate(date: string): Promise<void>",
+          "description": "Fills in the date field.",
+          "aliases": [],
+          "prerequisites": "",
+          "observableState": ""
+        },
+        {
+          "name": "fillComment",
+          "signature": "fillComment(comment: string): Promise<void>",
+          "description": "Fills in the comment field.",
+          "aliases": [],
+          "prerequisites": "",
+          "observableState": ""
+        },
+        {
+          "name": "selectActivity",
+          "signature": "selectActivity(activityName: string): Promise<void>",
+          "description": "Selects an activity from the dropdown by visible text.",
+          "aliases": [],
+          "prerequisites": "",
+          "observableState": ""
+        },
+        {
+          "name": "clickLogButton",
+          "signature": "clickLogButton(): Promise<void>",
+          "description": "Clicks the \"Log\" button to submit the time entry.\nWaits for the dialog to close after submission.",
+          "aliases": [],
+          "prerequisites": "",
+          "observableState": ""
+        },
+        {
+          "name": "clickCancelButton",
+          "signature": "clickCancelButton(): Promise<void>",
+          "description": "Clicks the \"Cancel\" button to dismiss the dialog.",
+          "aliases": [],
+          "prerequisites": "",
+          "observableState": ""
+        },
+        {
+          "name": "logTime",
+          "signature": "logTime(hours: string, activity: string, comment?: string): Promise<void>",
+          "description": "Logs time in a single call: fills hours, selects activity, optionally sets comment, and submits.",
+          "aliases": [],
+          "prerequisites": "",
+          "observableState": ""
+        }
+      ]
+    }
+  ]
+}

@@ -4,6 +4,8 @@ import { Locator, Page } from '@playwright/test';
 /**
  * # List Component Class
  * This class represents a list component within a board in the OpenProject application.
+ *
+ * @aliases BoardList, BoardColumn
  */
 export class ListComp extends BaseComponent {
     
@@ -24,8 +26,11 @@ export class ListComp extends BaseComponent {
     }
 
     /**
-     * Set the name of the list.
-     * 
+     * Sets the name of the list, committing the value with Enter.
+     *
+     * @aliases setListName, renameList, fillTitle
+     * @prerequisites The list exists on the board
+     * @observable-state The list's title shows the new name and the change is persisted
      * @param name - The name to set for the list.
      */
     async fillListName(name: string): Promise<void> {
@@ -39,14 +44,15 @@ export class ListComp extends BaseComponent {
 
 /**
  * # New Board Page Class
- * 
- * ## Description
- * This class represents the new board page in the OpenProject application.
- * Users can create and manage boards, including adding lists and setting the board name.
- * 
- * ## Usage
- * * There is no need to save the board after filling the name, as it is automatically saved.
- * * Use the `clickBoardsLink` method to navigate back to the boards list page.
+ *
+ * Represents the board view page in the OpenProject application, where users
+ * manage a board by adding lists and setting the board name.
+ *
+ * Notable behaviours:
+ * - The board saves automatically; there is no save action after setting the name.
+ * - Use {@link NewBoardPage.clickBoardsLink} to navigate back to the boards list.
+ *
+ * @aliases BoardPage, BoardViewPage
  */
 export class NewBoardPage extends BasePage<NewBoardPage> {
 
@@ -70,10 +76,13 @@ export class NewBoardPage extends BasePage<NewBoardPage> {
     }
 
     /**
-     * Get the list component by its index.
-     * 
+     * Gets a list on the board by its zero-based index.
+     *
+     * @aliases getList, getListAt
+     * @prerequisites The board view is open and has at least `index + 1` lists
+     * @observable-state None — returns a component wrapper without interacting
      * @param index - The index of the list to retrieve.
-     * @returns ListComp - An instance of the ListComp class representing the list at the specified index.
+     * @returns A `ListComp` for the list at the specified index.
      */
     getListByIndex(index: number): ListComp {
         const listLocator = this.page.locator("board-list").nth(index);
@@ -81,7 +90,12 @@ export class NewBoardPage extends BasePage<NewBoardPage> {
     }
 
     /**
-     * Fills the board name textbox with the provided name.
+     * Fills the board name textbox and commits the value with Enter.
+     * The board saves automatically — no separate save action is needed.
+     *
+     * @aliases setBoardName, renameBoard
+     * @prerequisites The board view is open
+     * @observable-state The board title shows the new name and is persisted automatically
      * @param name - The name to set for the board.
      */
     async fillBoardName(name: string): Promise<void> {
@@ -90,43 +104,29 @@ export class NewBoardPage extends BasePage<NewBoardPage> {
     }
 
     /**
-     * ## Description
-     * 
-     * Clicks the link to add a new list to the board.
-     * 
-     * ## Usage
-     * Use this method to add a new list to the board being created.
-     * You can then use the `getListByIndex` method to interact with the newly added list.
-     * 
-     * ## Aliases
-     * ```ts     
-     * clickAddListToBoardLink();
-     * addList();
-     * ```
-     * 
-     * ## Example
+     * Clicks the "Add list to board" link to append a new list to the board.
+     * Reach the new list afterwards with {@link getListByIndex}.
+     *
+     * @aliases addList, addListToBoard, createList
+     * @prerequisites The board view is open
+     * @observable-state A new empty list is appended to the board and becomes interactable
+     * @example
      * ```typescript
-     * await newBoardPage.clickAddListToBoard();
-     * let list: ListComp = newBoardPage.getListByIndex(0);
+     * await newBoardPage.clickAddListToBoardLink();
+     * const list: ListComp = newBoardPage.getListByIndex(0);
      * ```
-     * ## Results
-     * The new list will be added to the board, and you can interact with it.
      */
     async clickAddListToBoardLink(): Promise<void> {
         await this.addListToBoardLink.click();
     }
 
     /**
-     * ## Description
-     * Clicks the link to navigate back to the boards list page.
-     * 
-     * ## Aliases
-     * clickBackToBoardsPage()
-     * 
-     * ## Results
-     * Return to the boards list page where all boards are displayed.
-     * 
-     * @returns BoardsPage - Returns an instance of the BoardsPage class after clicking the link.
+     * Clicks the breadcrumb link to navigate back to the boards list page.
+     *
+     * @aliases clickBackToBoardsPage, goBackToBoards, navigateToBoards
+     * @prerequisites A board view is open
+     * @observable-state The browser returns to the boards list page showing all boards
+     * @returns A `BoardsPage` for the boards list.
      */
     async clickBoardsLink(): Promise<BoardsPage> {
         await this.boardsLink.click();

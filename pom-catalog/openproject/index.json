@@ -1,0 +1,321 @@
+{
+  "app": "openproject",
+  "poRoot": "src/po/openproject",
+  "generatedAt": "2026-07-22T06:18:01.379Z",
+  "schemaVersion": 2,
+  "totals": {
+    "modules": 6,
+    "classes": 27,
+    "methods": 116
+  },
+  "coverage": {
+    "methods": 116,
+    "withDescription": 116,
+    "withAliases": 85,
+    "withPrerequisites": 85,
+    "withObservableState": 85,
+    "fullyAnnotated": 85
+  },
+  "modules": [
+    {
+      "module": "board",
+      "file": "board.json",
+      "classCount": 6,
+      "methodCount": 16,
+      "classes": [
+        {
+          "name": "BoardsPage",
+          "kind": "page",
+          "file": "src/po/openproject/board/boardsPage.ts",
+          "aliases": [
+            "BoardsListPage",
+            "BoardOverviewPage"
+          ],
+          "methodCount": 3
+        },
+        {
+          "name": "BoardTableComp",
+          "kind": "component",
+          "file": "src/po/openproject/board/boardsPage.ts",
+          "aliases": [
+            "BoardsTable",
+            "BoardList"
+          ],
+          "methodCount": 5
+        },
+        {
+          "name": "BoardTableRowComp",
+          "kind": "component",
+          "file": "src/po/openproject/board/boardsPage.ts",
+          "aliases": [
+            "BoardRow",
+            "BoardsTableRow"
+          ],
+          "methodCount": 1
+        },
+        {
+          "name": "BoardTypePage",
+          "kind": "page",
+          "file": "src/po/openproject/board/boardTypePage.ts",
+          "aliases": [
+            "CreateBoardPage",
+            "NewBoardFormPage"
+          ],
+          "methodCount": 2
+        },
+        {
+          "name": "ListComp",
+          "kind": "component",
+          "file": "src/po/openproject/board/newBoardPage.ts",
+          "aliases": [
+            "BoardList",
+            "BoardColumn"
+          ],
+          "methodCount": 1
+        },
+        {
+          "name": "NewBoardPage",
+          "kind": "page",
+          "file": "src/po/openproject/board/newBoardPage.ts",
+          "aliases": [
+            "BoardPage",
+            "BoardViewPage"
+          ],
+          "methodCount": 4
+        }
+      ]
+    },
+    {
+      "module": "general",
+      "file": "general.json",
+      "classCount": 5,
+      "methodCount": 14,
+      "classes": [
+        {
+          "name": "HomePage",
+          "kind": "page",
+          "file": "src/po/openproject/general/homePage.ts",
+          "aliases": [],
+          "methodCount": 1
+        },
+        {
+          "name": "IntroPage",
+          "kind": "page",
+          "file": "src/po/openproject/general/loginPage.ts",
+          "aliases": [],
+          "methodCount": 3
+        },
+        {
+          "name": "MainMenuComp",
+          "kind": "component",
+          "file": "src/po/openproject/general/mainMenuComp.ts",
+          "aliases": [],
+          "methodCount": 5
+        },
+        {
+          "name": "OverviewPage",
+          "kind": "page",
+          "file": "src/po/openproject/general/overviewPage.ts",
+          "aliases": [
+            "ProjectOverviewPage",
+            "ProjectHomePage"
+          ],
+          "methodCount": 4
+        },
+        {
+          "name": "ProjectSelectionDropdownComp",
+          "kind": "component",
+          "file": "src/po/openproject/general/projectSelectionDropdownComp.ts",
+          "aliases": [],
+          "methodCount": 1
+        }
+      ]
+    },
+    {
+      "module": "meeting",
+      "file": "meeting.json",
+      "classCount": 5,
+      "methodCount": 22,
+      "classes": [
+        {
+          "name": "AgendaItemsComp",
+          "kind": "component",
+          "file": "src/po/openproject/meeting/agendaItemsComp.ts",
+          "aliases": [
+            "AgendaComp",
+            "MeetingAgenda"
+          ],
+          "methodCount": 3
+        },
+        {
+          "name": "MeetingFormDialogComp",
+          "kind": "component",
+          "file": "src/po/openproject/meeting/meetingFormDialogComp.ts",
+          "aliases": [
+            "NewMeetingDialog",
+            "MeetingDialog",
+            "CreateMeetingForm"
+          ],
+          "methodCount": 4
+        },
+        {
+          "name": "MeetingShowPage",
+          "kind": "page",
+          "file": "src/po/openproject/meeting/meetingShowPage.ts",
+          "aliases": [
+            "MeetingDetailPage",
+            "MeetingPage"
+          ],
+          "methodCount": 6
+        },
+        {
+          "name": "MeetingSidePanelComp",
+          "kind": "component",
+          "file": "src/po/openproject/meeting/meetingSidePanelComp.ts",
+          "aliases": [
+            "MeetingDetailsPanel",
+            "SidePanelComp"
+          ],
+          "methodCount": 3
+        },
+        {
+          "name": "MeetingsPage",
+          "kind": "page",
+          "file": "src/po/openproject/meeting/meetingsPage.ts",
+          "aliases": [
+            "MeetingListPage",
+            "MeetingsListPage"
+          ],
+          "methodCount": 6
+        }
+      ]
+    },
+    {
+      "module": "members",
+      "file": "members.json",
+      "classCount": 3,
+      "methodCount": 27,
+      "classes": [
+        {
+          "name": "MembersPage",
+          "kind": "page",
+          "file": "src/po/openproject/members/membersPage.ts",
+          "aliases": [
+            "ProjectMembersPage",
+            "MemberListPage",
+            "TeamPage"
+          ],
+          "methodCount": 12
+        },
+        {
+          "name": "MemberTableComp",
+          "kind": "component",
+          "file": "src/po/openproject/members/memberTableComp.ts",
+          "aliases": [
+            "MembersTable",
+            "MemberList"
+          ],
+          "methodCount": 5
+        },
+        {
+          "name": "MemberTableRowComp",
+          "kind": "component",
+          "file": "src/po/openproject/members/memberTableRowComp.ts",
+          "aliases": [
+            "MemberRow",
+            "MembersTableRow"
+          ],
+          "methodCount": 10
+        }
+      ]
+    },
+    {
+      "module": "timeandcosts",
+      "file": "timeandcosts.json",
+      "classCount": 3,
+      "methodCount": 21,
+      "classes": [
+        {
+          "name": "CostReportsPage",
+          "kind": "page",
+          "file": "src/po/openproject/timeandcosts/costReportsPage.ts",
+          "aliases": [],
+          "methodCount": 10
+        },
+        {
+          "name": "CostReportTableComp",
+          "kind": "component",
+          "file": "src/po/openproject/timeandcosts/costReportsPage.ts",
+          "aliases": [],
+          "methodCount": 4
+        },
+        {
+          "name": "LogTimeDialogComp",
+          "kind": "component",
+          "file": "src/po/openproject/timeandcosts/logTimeDialogComp.ts",
+          "aliases": [],
+          "methodCount": 7
+        }
+      ]
+    },
+    {
+      "module": "workpackage",
+      "file": "workpackage.json",
+      "classCount": 5,
+      "methodCount": 16,
+      "classes": [
+        {
+          "name": "DeleteWorkPackageDialogComp",
+          "kind": "component",
+          "file": "src/po/openproject/workpackage/deleteWorkPackageDialogComp.ts",
+          "aliases": [
+            "ConfirmDeleteDialog",
+            "DeleteConfirmationDialog"
+          ],
+          "methodCount": 2
+        },
+        {
+          "name": "NewWorkPackagePage",
+          "kind": "page",
+          "file": "src/po/openproject/workpackage/newWorkPackagePage.ts",
+          "aliases": [
+            "CreateWorkPackagePage",
+            "WorkPackageForm"
+          ],
+          "methodCount": 4
+        },
+        {
+          "name": "WorkPackageDetailsPage",
+          "kind": "page",
+          "file": "src/po/openproject/workpackage/workPackageDetailsPage.ts",
+          "aliases": [
+            "WorkPackageOverviewPage",
+            "WorkPackageSplitView"
+          ],
+          "methodCount": 1
+        },
+        {
+          "name": "WorkPackagesPage",
+          "kind": "page",
+          "file": "src/po/openproject/workpackage/workPackagesPage.ts",
+          "aliases": [
+            "WorkPackageListPage",
+            "TasksPage",
+            "WorkPackagesTablePage"
+          ],
+          "methodCount": 8
+        },
+        {
+          "name": "WorkPackageTypeMenuComp",
+          "kind": "component",
+          "file": "src/po/openproject/workpackage/workPackageTypeMenuComp.ts",
+          "aliases": [
+            "CreateWorkPackageMenu",
+            "TypeDropdown"
+          ],
+          "methodCount": 1
+        }
+      ]
+    }
+  ]
+}
