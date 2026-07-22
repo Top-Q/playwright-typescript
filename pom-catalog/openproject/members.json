@@ -2,7 +2,7 @@
   "module": "members",
   "file": "members.json",
   "app": "openproject",
-  "generatedAt": "2026-07-22T16:12:29.017Z",
+  "generatedAt": "2026-07-22T16:28:44.936Z",
   "schemaVersion": 2,
   "classes": [
     {
@@ -116,6 +116,18 @@
           "observableState": "The member is added and appears as a new row in the members table"
         },
         {
+          "name": "showAllOnOnePage",
+          "signature": "showAllOnOnePage(): Promise<MembersPage>",
+          "description": "Reloads the current members view with a page size large enough to hold\nthe whole list, so row lookups do not depend on which page a member\nhappens to land on. Preserves the active `status` view.\n\nThe members list paginates at 20 by default. `MemberTableComp` can only\nsee rendered rows, so without this a lookup for a member on page 2\nreports it missing — a false negative that looks exactly like the member\nnever having been created.",
+          "aliases": [
+            "disablePagination",
+            "showEveryMember",
+            "expandPageSize"
+          ],
+          "prerequisites": "The Members page is open",
+          "observableState": "The members table renders up to 100 rows of the current status view on a single page"
+        },
+        {
           "name": "openFilter",
           "signature": "openFilter(): Promise<void>",
           "description": "Opens the filter panel and waits for its Apply button, making the filter\nfields usable.",
@@ -159,7 +171,7 @@
             "showAllMembers",
             "viewAll"
           ],
-          "prerequisites": "The Members page is open",
+          "prerequisites": "The Members page is open and the current view is not already \"All\"",
           "observableState": "The table reloads showing every member regardless of status"
         },
         {
