@@ -37,13 +37,13 @@ Tests simulate an **admin** user logged into the **Demo Project**.
 
 ## Naming Conventions
 
-| Category | Convention | Example |
-|----------|-----------|---------|
-| Page Object classes | PascalCase | `WorkPackagesPage` |
-| Page Object files | camelCase | `workPackagesPage.ts` |
-| Component classes | PascalCase + `Comp` suffix | `MainMenuComp` |
-| Test files | kebab-case + `.spec.ts` | `work-packages-crud.spec.ts` |
-| Test tags | `@` prefix | `@ui`, `@api`, `@regression`, `@task` |
+| Category            | Convention                 | Example                               |
+| ------------------- | -------------------------- | ------------------------------------- |
+| Page Object classes | PascalCase                 | `WorkPackagesPage`                    |
+| Page Object files   | camelCase                  | `workPackagesPage.ts`                 |
+| Component classes   | PascalCase + `Comp` suffix | `MainMenuComp`                        |
+| Test files          | kebab-case + `.spec.ts`    | `work-packages-crud.spec.ts`          |
+| Test tags           | `@` prefix                 | `@ui`, `@api`, `@regression`, `@task` |
 
 ## Architecture Rules (always apply)
 
@@ -79,20 +79,20 @@ Tests must be runnable in isolation and not depend on side effects from other te
 
 Import from `internals.ts`. Captures three artifacts to `test-results/debug-dumps/<timestamp>-<label>/`:
 
-| File | Use for |
-|------|---------|
-| `aria.yml` | Writing `getByRole()` locators and `toMatchAriaSnapshot()` assertions |
-| `content.html` | Finding IDs, classes, and data attributes |
-| `screenshot.png` | Visual confirmation of page state |
+| File             | Use for                                                               |
+| ---------------- | --------------------------------------------------------------------- |
+| `aria.yml`       | Writing `getByRole()` locators and `toMatchAriaSnapshot()` assertions |
+| `content.html`   | Finding IDs, classes, and data attributes                             |
+| `screenshot.png` | Visual confirmation of page state                                     |
 
 **Parameters:**
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `label` | `'dump'` | Folder name suffix |
-| `sleepMs` | `0` | Wait before capturing (ms) |
-| `waitForNetworkIdle` | `false` | Wait for network idle before capturing |
-| `outputDir` | `'test-results/debug-dumps'` | Output folder |
+| Option               | Default                      | Description                            |
+| -------------------- | ---------------------------- | -------------------------------------- |
+| `label`              | `'dump'`                     | Folder name suffix                     |
+| `sleepMs`            | `0`                          | Wait before capturing (ms)             |
+| `waitForNetworkIdle` | `false`                      | Wait for network idle before capturing |
+| `outputDir`          | `'test-results/debug-dumps'` | Output folder                          |
 
 **Usage:** Drop anywhere in a test or page object — the test **resumes automatically**.
 
@@ -116,25 +116,25 @@ A committed, greppable index of every page object and its methods, so agents (an
 
 - **Location:** `pom-catalog/<app>/` — `index.json` (class-level overview) plus one `<module>.json` per module holding the methods.
 - **Read order:** start with `index.json` to find the right class by name or `@aliases`, then open only the relevant `<module>.json` for its method signatures and metadata. The index deliberately carries no method-level data so it stays small as the project grows.
-- **Purpose:** it serves *test writing* (discovery). The catalog contains only public methods and only what you need to pick and call one — it is not a substitute for reading the page-object source when filling in or extending a class.
+- **Purpose:** it serves _test writing_ (discovery). The catalog contains only public methods and only what you need to pick and call one — it is not a substitute for reading the page-object source when filling in or extending a class.
 
 ### Commands
 
-| Command | Does |
-|---------|------|
-| `npm run catalog` | Regenerate the catalog from `src/po/`. Run after adding or changing any page-object method. |
-| `npm run catalog:check` | Fail (exit 1) if the committed catalog is stale — the freshness gate. |
-| `npm run catalog:report` | Print per-module metadata coverage. |
+| Command                  | Does                                                                                        |
+| ------------------------ | ------------------------------------------------------------------------------------------- |
+| `npm run catalog`        | Regenerate the catalog from `src/po/`. Run after adding or changing any page-object method. |
+| `npm run catalog:check`  | Fail (exit 1) if the committed catalog is stale — the freshness gate.                       |
+| `npm run catalog:report` | Print per-module metadata coverage.                                                         |
 
 ### Method metadata tags
 
 Write these on **every public page-object method**. They are what make the catalog searchable by intent rather than exact name.
 
-| Tag | Answers | Example |
-|-----|---------|---------|
-| `@aliases` | Other names someone might search by (2–4, comma-separated) | `@aliases addMember, inviteUser, createMember` |
-| `@prerequisites` | What must be true before calling — state, not narrative | `@prerequisites The add-member form is open` |
-| `@observable-state` | What a test could assert after calling | `@observable-state A new row appears in the members table` |
+| Tag                 | Answers                                                    | Example                                                    |
+| ------------------- | ---------------------------------------------------------- | ---------------------------------------------------------- |
+| `@aliases`          | Other names someone might search by (2–4, comma-separated) | `@aliases addMember, inviteUser, createMember`             |
+| `@prerequisites`    | What must be true before calling — state, not narrative    | `@prerequisites The add-member form is open`               |
+| `@observable-state` | What a test could assert after calling                     | `@observable-state A new row appears in the members table` |
 
 Classes additionally take a class-level `@aliases`. The leading comment text becomes the description; standard `@param` / `@returns` / `@deprecated` are recognized. Example:
 
@@ -157,26 +157,30 @@ async addMember(userNameOrEmail: string, role: string = 'Member'): Promise<void>
 
 `/gen-test <spec-ref>` generates a complete, passing UI test from a specification by running four specialised subagents with deterministic gates between them. `<spec-ref>` is an FR id (`FR-MEM-001`), a TC id (`TC-MEM-001-02`), or a path to a markdown spec.
 
-| Stage | Agent | Does |
-|-------|-------|------|
-| 1 | `test-creator` | Spec → test file, using **only** the POM catalog. No browser. Gaps become throwing `@stub` methods. |
-| 3 | `po-builder` | Implements the stubs, deriving locators from OpenProject's Rails source and the live DOM. |
-| 6 | `test-healer` | Diagnoses failures from the trace and the live app; minimal fixes only. |
-| 7 | `test-reviewer` | Architecture compliance **and** whether the test actually covers the spec. |
+| Stage | Agent           | Does                                                                                                |
+| ----- | --------------- | --------------------------------------------------------------------------------------------------- |
+| 1     | `test-creator`  | Spec → test file, using **only** the POM catalog. No browser. Gaps become throwing `@stub` methods. |
+| 3     | `po-builder`    | Implements the stubs, deriving locators from OpenProject's Rails source and the live DOM.           |
+| 6     | `test-healer`   | Diagnoses failures from the trace and the live app; minimal fixes only.                             |
+| 7     | `test-reviewer` | Architecture compliance **and** whether the test actually covers the spec.                          |
 
 The pipeline works on a `test-gen/<run-id>` branch and never commits, pushes, or deletes it. Run artifacts go to `.pipeline/runs/<run-id>/` (gitignored); the handoff contract is [`.claude/skills/gen-test/references/contract.md`](.claude/skills/gen-test/references/contract.md).
 
 Why the split: one agent doing discovery, browser investigation, PO authoring, and debugging runs out of context and starts inventing locators. Keeping test design (catalog-only) apart from DOM investigation (browser) is the core constraint.
 
+**Agent definitions in `.claude/agents/` are read once, at session start.** After adding or editing one, restart Claude Code before running the pipeline — otherwise the stage fails with `Agent type '<name>' not found`, listing only the built-in agents.
+
+**Browser investigation does not use `--debug=cli`.** That flag does not exist in this project's Playwright (1.56.1), despite the bundled `playwright-cli` skill documenting it. The working recipe is in [`.claude/skills/gen-test/references/browser.md`](.claude/skills/gen-test/references/browser.md).
+
 ### Gates
 
-| Command | Asserts |
-|---------|---------|
-| `npm run gate:catalog` | POM catalog matches `src/po/` |
-| `npm run gate:types` | `tsc --noEmit` clean |
-| `npm run gate:lint` | `eslint .` has no errors |
-| `npm run gate:stubs` | No `@stub` methods remain (`-- --expect <n>` to require exactly *n*) |
-| `npm run gate:all` | All of the above |
+| Command                | Asserts                                                              |
+| ---------------------- | -------------------------------------------------------------------- |
+| `npm run gate:catalog` | POM catalog matches `src/po/`                                        |
+| `npm run gate:types`   | `tsc --noEmit` clean                                                 |
+| `npm run gate:lint`    | `eslint .` has no errors                                             |
+| `npm run gate:stubs`   | No `@stub` methods remain (`-- --expect <n>` to require exactly _n_) |
+| `npm run gate:all`     | All of the above                                                     |
 
 ## Skills & Commands
 
