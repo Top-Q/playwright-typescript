@@ -71,11 +71,15 @@ const runId = values.run ?? latestRun();
 const runDir = path.join(runsRoot, runId);
 if (!fs.existsSync(runDir)) fail(`run not found: ${runId}`);
 
-interface StubEntry {
-  class?: string;
-  file?: string;
-  method?: string;
-  signature?: string;
+/**
+ * A step test-creator could not build from the catalog. It carries the
+ * requirement but no API — po-builder decides the method name and signature.
+ */
+interface GapEntry {
+  id?: string;
+  step?: string;
+  requirement?: string;
+  likelyClass?: string;
   reason?: string;
 }
 
@@ -122,7 +126,7 @@ function nestHeadings(body: string): string {
 const run = readJson<RunRecord>('run.json');
 if (!run) fail(`run.json missing or unreadable in ${runId}`);
 
-const stubs = readJson<StubEntry[]>('stubs.json') ?? [];
+const gaps = readJson<GapEntry[]>('gaps.json') ?? [];
 
 /** Test-run attempts are numbered directories; the highest number is the latest. */
 function testAttempts(): { attempt: number; exitCode: string; tail: string }[] {
@@ -174,7 +178,7 @@ sections.push('|---|---|---|');
 const artifacts: [string, string][] = [
   ['run-init', 'spec.md'],
   ['test-creator', 'plan.md'],
-  ['test-creator', 'stubs.json'],
+  ['test-creator', 'gaps.json'],
   ['po-builder', 'build-report.md'],
   ['test-healer', 'heal-report.md'],
   ['test-reviewer', 'review.md'],
@@ -187,22 +191,25 @@ sections.push('');
 
 sections.push('## Infrastructure written');
 sections.push('');
-if (stubs.length === 0) {
+if (gaps.length === 0) {
   sections.push(
-    fs.existsSync(path.join(runDir, 'stubs.json'))
-      ? 'No stubs were needed — the test was built entirely from existing page objects.'
-      : '_`stubs.json` was never written; the test-creator stage did not complete._',
+    fs.existsSync(path.join(runDir, 'gaps.json'))
+      ? 'No gaps — the test was built entirely from existing page objects.'
+      : '_`gaps.json` was never written; the test-creator stage did not complete._',
   );
 } else {
-  sections.push(`${stubs.length} stub(s) declared by test-creator:`);
+  sections.push(`${gaps.length} gap(s) declared by test-creator:`);
   sections.push('');
-  sections.push('| Class | Method | Reason |');
-  sections.push('|---|---|---|');
-  for (const stub of stubs) {
+  sections.push('| Gap | Step | Likely owner | Why the catalog did not cover it |');
+  sections.push('|---|---|---|---|');
+  for (const gap of gaps) {
+    const owner = gap.likelyClass ? `\`${gap.likelyClass}\`` : '_undecided_';
     sections.push(
-      `| \`${stub.class ?? '?'}\` | \`${stub.method ?? '?'}\` | ${stub.reason ?? ''} |`,
+      `| ${gap.id ?? '?'} | ${gap.step ?? gap.requirement ?? ''} | ${owner} | ${gap.reason ?? ''} |`,
     );
   }
+  sections.push('');
+  sections.push('The API for each was chosen by po-builder — see the build report.');
 }
 sections.push('');
 

@@ -47,7 +47,15 @@ From CLAUDE.md — check each against the diff:
 - No `any` / `unknown` for page objects.
 - **Circular imports:** if `mainMenuComp.ts` imports a new page, that module's files must import `BasePage`/`BaseComponent` from source, not `internals.ts`.
 
-Also verify no `@stub` or `throw new Error('STUB` survives, and that `npm run catalog:check` is clean.
+Also verify no `throw new Error('GAP-` survives anywhere, and that `npm run catalog:check` is clean.
+
+## Gaps that became methods
+
+`gaps.json` states a requirement; po-builder chose the API. Check the join, since nothing else does:
+
+- Does every gap id in `gaps.json` have a corresponding method in `build-report.md`, with evidence cited?
+- Does the method the test now calls actually do what the gap's requirement said? A method that satisfies its own name but not the requirement is a **blocker** — the requirement came from the spec, the name did not.
+- Do the new methods' `@aliases` cover the `searched` terms from `gaps.json`? If not, the next run re-declares the same gap and rebuilds what already exists.
 
 ## Report
 

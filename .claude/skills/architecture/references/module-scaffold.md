@@ -4,14 +4,16 @@ Follow this checklist when creating page objects for an entirely new OpenProject
 
 ## Prerequisites
 
-Run the **investigate-module** skill first to produce a structured investigation report. You need:
+Spawn the **`module-investigator`** agent first to produce a structured report. You need:
 - List of pages and their URL patterns
 - List of components (dialogs, tables, forms)
 - Key load indicators for each page/component
 - DOM quirks to account for
 - The main menu link selector
 
-The investigate-module skill will use **source code** (preferred) if available at the matching version, or **live browser investigation** otherwise. Source code investigation produces more accurate locators upfront and requires fewer debug iterations.
+It runs in its own context because module archaeology — Rails source plus a live browser — is exactly what crowds out the reasoning you are about to do. Give it the module name and a path to write its report to; it reads and reports, and never writes code.
+
+The report is a map, not evidence. Its locators were gathered by an agent that was not implementing them, so confirm each against the live DOM or the source as you build.
 
 ## Directory Structure
 

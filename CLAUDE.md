@@ -130,12 +130,13 @@ async addMember(userNameOrEmail: string, role: string = 'Member'): Promise<void>
 
 ## Test-Generation Pipeline
 
-`/gen-test <spec-ref>` generates a complete, passing UI test from a specification by running four specialised subagents with deterministic gates between them. `<spec-ref>` is an FR id (`FR-MEM-001`), a TC id (`TC-MEM-001-02`), or a path to a markdown spec.
+`/gen-test <spec-ref>` generates a complete, passing UI test from a specification by running specialised subagents with deterministic gates between them. `<spec-ref>` is an FR id (`FR-MEM-001`), a TC id (`TC-MEM-001-02`), or a path to a markdown spec.
 
 | Stage | Agent           | Does                                                                                                |
 | ----- | --------------- | --------------------------------------------------------------------------------------------------- |
-| 1     | `test-creator`  | Spec → test file, using **only** the POM catalog. No browser. Gaps become throwing `@stub` methods. |
-| 3     | `po-builder`    | Implements the stubs, deriving locators from OpenProject's Rails source and the live DOM.           |
+| 1     | `test-creator`  | Spec → test file, using **only** the POM catalog. No browser, no PO authoring. Unbuildable steps become gaps. |
+| 2.5   | `module-investigator` | Only when the gap ratio is too high — maps the module to a report, then `po-builder` scaffolds from it and stage 1 retries once. Read-only: it writes a report, never code. |
+| 3     | `po-builder`    | Designs the API for each gap and implements it, deriving locators from Rails source and the live DOM. |
 | 6     | `test-healer`   | Diagnoses failures from the trace and the live app; minimal fixes only.                             |
 | 7     | `test-reviewer` | Architecture compliance **and** whether the test actually covers the spec.                          |
 
@@ -143,15 +144,32 @@ The pipeline works on a `test-gen/<run-id>` branch and never commits, pushes, or
 
 Why the split: one agent doing discovery, browser investigation, PO authoring, and debugging runs out of context and starts inventing locators. Keeping test design (catalog-only) apart from DOM investigation (browser) is the core constraint.
 
+### Gaps
+
+A **gap** is a test step the creator could not build from the catalog. It is the whole step body, and it names a requirement rather than an API:
+
+```typescript
+await test.step('When the user changes the role to Reader', async () => {
+    throw new Error('GAP-3: change this member row role to a given value');
+});
+```
+
+test-creator does not name the method, choose parameters, or edit anything under `src/po/` — it has never seen the page, and a wrong signature costs more than a missing one because it propagates into the test body. po-builder decides the API and replaces the throw.
+
+Gaps are counted two ways. **How many remain** is completeness — `n` after stage 1, zero after stage 3. **What fraction of the test's steps they are** is a different signal: near 1.0 means the catalog covered this module too thinly for the test to be a design at all, so the run is routed to investigation (exit code 2) instead of handing po-builder a whole module to invent at once.
+
 **Agent definitions in `.claude/agents/` are read once, at session start.** After adding or editing one, restart Claude Code before running the pipeline — otherwise the stage fails with `Agent type '<name>' not found`, listing only the built-in agents.
 
-**Browser investigation has three recipes**, all in [`.claude/skills/gen-test/references/browser.md`](.claude/skills/gen-test/references/browser.md):
+**Browser investigation has two recipes**, both in [`.claude/skills/gen-test/references/browser.md`](.claude/skills/gen-test/references/browser.md):
 
-- `npx playwright test <file>:<line> --debug=cli` + `playwright-cli attach tw-XXXX` — pauses the real test, `pause-at` any line. The healer's default. **Requires Playwright ≥ 1.59**; the project ran 1.56.1 until 2026-07-23, which is why older notes call this flag non-existent.
-- `tests/debug-session.spec.ts` + `playwright-cli attach --cdp=http://localhost:9222` — a logged-in browser with no test attached, for locator hunting. Its teardown is three steps and leaks a Chromium if you skip one.
+- `npx playwright test <file>:<line> --debug=cli` + `playwright-cli attach tw-XXXX` — pauses a real test; `step-over` to drive it, then `goto`/`snapshot` anywhere. Target **one** test: given a whole file the second one dies with `browser.bind: Server is already started`. With no relevant test, attach to `tests/seed.spec.ts` (login fixture, no side effects) and step four times. **Requires Playwright ≥ 1.59**; the project ran 1.56.1 until 2026-07-23, which is why older notes call this flag non-existent.
 - `playwright-cli open` + manual login — only for deliberately logged-out state.
 
+**`pause-at` does not work** (verified 2026-07-23 on Playwright 1.61.1 / `playwright-cli` 0.1.17). All four target forms tried — test line, page-object line, forward and backslash paths — behaved as `resume`: no error, no pause, test ran to completion. It **fails open**, so "pause before the destructive step" instead executes it. Use `step-over`. The CDP-holder recipe that existed to work around `--debug=cli` was removed once stepping was shown to cover it with a one-command teardown.
+
 **What you will find once you are looking** is a separate file: [`references/openproject-dom.md`](.claude/skills/gen-test/references/openproject-dom.md) — the DOM facts that have already cost this project a run each (icon-font glyphs in accessible names, ng-select panels escaping their form, `waitForLoadState('load')` being a no-op after submit, members pagination). Both `po-builder` and `test-healer` read it unconditionally. Keep it separate from `browser.md`: tooling mechanics churn with every Playwright upgrade, these facts do not.
+
+**Where this instance lives** is a third file: [`references/environment.md`](.claude/skills/gen-test/references/environment.md) — UI on `:8090` and API on `:8080` (`.env`'s unqualified `OPENPROJECT_BASE_URL` is the API one, which has misled before), the admin credentials, and the Rails checkout with the version check that must pass before its locators count as evidence. Agents cite this instead of hardcoding addresses. Pointing the pipeline at another instance — or another application — means rewriting this file and `openproject-dom.md`, and nothing else.
 
 ### Gates
 
@@ -160,7 +178,7 @@ Why the split: one agent doing discovery, browser investigation, PO authoring, a
 | `npm run gate:catalog` | POM catalog matches `src/po/`                                        |
 | `npm run gate:types`   | `tsc --noEmit` clean                                                 |
 | `npm run gate:lint`    | `eslint .` has no errors                                             |
-| `npm run gate:stubs`   | No `@stub` methods remain (`-- --expect <n>` to require exactly _n_) |
+| `npm run gate:gaps`    | No `GAP-` markers remain (`-- --expect <n>` to require exactly _n_; `--ratio-max <r>` with `--file` to bound the gap ratio, exit 2 if exceeded) |
 | `npm run gate:all`     | All of the above                                                     |
 
 ## Skills & Commands

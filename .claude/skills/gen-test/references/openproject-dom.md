@@ -6,7 +6,8 @@ concluding you have found something novel, and add to it when you find something
 
 This file is about **OpenProject**, not about tooling. It stays true across
 `playwright-cli` and Playwright upgrades. For how to *get* a browser in front of the
-app, see [`browser.md`](browser.md).
+app, see [`browser.md`](browser.md); for addresses, credentials and the source
+checkout, [`environment.md`](environment.md).
 
 ## Roles and structure
 
@@ -19,6 +20,17 @@ app, see [`browser.md`](browser.md).
 - **Elements that vanish entirely.** When all boards are deleted,
   `table.generic-table` is removed rather than rendered empty, so a row count must
   check for the table's existence first.
+
+- **Heading levels are set by Primer layout components**, not by the page author, so an
+  `h1` in the ERB may render as an `h2`. Do not pin `getByRole('heading', { level: n })`
+  from source alone; confirm the level against the DOM.
+
+## Modules
+
+- **Not every module is enabled.** Several are off by default (Costs is the usual
+  surprise), and a disabled module has no sidebar link and no routes — which looks
+  identical to a module you cannot find. Check Project settings → Modules before
+  concluding the UI is missing.
 
 ## Accessible names
 
@@ -49,6 +61,8 @@ app, see [`browser.md`](browser.md).
   `.ng-dropdown-panel .ng-option` must be scoped to the page, not to the form; scoping
   it to the form matches nothing. After picking, wait on `.ng-value` inside the form to
   confirm the selection actually took.
+- **Escape closes dialogs and dropdowns.** Useful as a component's dismiss method, and
+  worth remembering when a stray open panel is intercepting your clicks.
 
 ## Waiting and navigation
 

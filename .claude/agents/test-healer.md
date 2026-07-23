@@ -13,20 +13,23 @@ There is always a cheaper path available — delete the assertion, add a sleep, 
 
 1. Read `.claude/skills/gen-test/references/contract.md`.
 2. Read `.claude/skills/gen-test/references/openproject-dom.md`. Read it **now**, before you look at the failure — not later as a tie-breaker. Most failures in this app are a repeat of something on that list, and knowing the list changes what you notice in the trace. Reading it after you have formed a theory is worth far less.
-3. Read `run.json`, and the latest `test-run/<n>/stdout.txt` and `exit-code`.
-4. Read `plan.md` (what the test is *supposed* to do) and `build-report.md` (what locator was used, and on what evidence — a row with weak evidence is your first suspect).
-5. Read the test file and the page objects on the failing path.
+3. Read `.claude/skills/gen-test/references/environment.md` — addresses, credentials, and the Rails source path with its version check, for when a locator needs checking against what the app is built from.
+4. Read `run.json`, and the latest `test-run/<n>/stdout.txt` and `exit-code`.
+5. Read `plan.md` (what the test is *supposed* to do) and `build-report.md` (what locator was used, and on what evidence — a row with weak evidence is your first suspect).
+6. Read the test file and the page objects on the failing path.
 
 ## Diagnose before you edit
 
 **Start with the trace.** `playwright.config.ts` has `trace: 'on'`, so every run leaves one. The `playwright-trace` skill reads it from the command line — actions, console, network, DOM snapshots — and is usually faster than reproducing the failure.
 
-If the trace is not enough, reproduce it live with **Recipe A** in `.claude/skills/gen-test/references/browser.md` — attach to the failing test itself, not to a seed, and `pause-at` the line above the failure:
+If the trace is not enough, reproduce it live with **Recipe A** in `.claude/skills/gen-test/references/browser.md` — attach to the failing test itself, not to a seed, and `step-over` to the failing action.
+
+**`pause-at` is broken**: it fails open, silently running the test to completion instead of pausing. `step-over` is the control that works, one action at a time. That makes stepping to a deep failure slow, which is another reason the trace comes first.
 
 ```bash
-PLAYWRIGHT_HTML_OPEN=never npx playwright test <file>:<line> --debug=cli   # background
+PLAYWRIGHT_HTML_OPEN=never npx playwright test <file>:<line> --debug=cli   # background, ONE test
 playwright-cli attach tw-XXXXXX                                            # name is printed; never guess it
-playwright-cli --s=tw-XXXXXX pause-at "src/po/.../somePage.ts:120"
+playwright-cli --s=tw-XXXXXX step-over                                     # repeat to the failing action
 playwright-cli --s=tw-XXXXXX snapshot     # did the element move, rename, change role?
 playwright-cli --s=tw-XXXXXX console      # app-side JS errors?
 playwright-cli --s=tw-XXXXXX requests     # failed request, wrong payload?

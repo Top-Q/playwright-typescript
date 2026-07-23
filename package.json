@@ -14,8 +14,8 @@
     "gate:lint": "eslint .",
     "gate:types": "tsc --noEmit",
     "gate:catalog": "tsx scripts/build-pom-catalog.ts --check",
-    "gate:stubs": "tsx scripts/pipeline/check-stubs.ts",
-    "gate:all": "npm run gate:catalog && npm run gate:types && npm run gate:lint && npm run gate:stubs",
+    "gate:gaps": "tsx scripts/pipeline/check-gaps.ts",
+    "gate:all": "npm run gate:catalog && npm run gate:types && npm run gate:lint && npm run gate:gaps",
     "pipeline:init": "tsx scripts/pipeline/run-init.ts",
     "pipeline:report": "tsx scripts/pipeline/run-report.ts"
   },

@@ -11,7 +11,8 @@ Every `/gen-test` stage runs in its own subagent with its own context. Subagents
 ├── run.json           # the run record (run-init writes; orchestrator updates status)
 ├── spec.md            # normalised Given/When/Then spec (run-init)
 ├── plan.md            # step -> method mapping (test-creator)
-├── stubs.json         # worklist of unimplemented methods (test-creator)
+├── gaps.json          # worklist of unimplemented steps (test-creator)
+├── investigation.md   # module map, stage 2.5 only (module-investigator)
 ├── build-report.md    # what po-builder implemented, and on what evidence
 ├── heal-report.md     # root cause + fix per heal iteration (test-healer)
 ├── review.md          # compliance findings (test-reviewer)
@@ -59,57 +60,73 @@ One row per Gherkin line in `spec.md`. This is the audit trail for whether the c
 | 2 | When click 'Add member' | `MembersPage.openAddMemberForm()` |
 | 3 | And enter an external email address | `MembersPage.addMember(email, role)` |
 | 4 | Then member appears with Status 'Invited' | `MemberTableRowComp.getStatus()` |
+| 5 | And a confirmation banner is shown | `GAP-1` |
 
-## Stubs declared
-| Method | Why nothing existing fits |
-|---|---|
-| `MembersPage.getInviteBanner()` | Catalog has no accessor for the post-invite flash; nearest is `hasMemberWithName` (row presence, not the banner) |
+## Gaps declared
+| Gap | Searched for | Why what I found was insufficient |
+|---|---|---|
+| GAP-1 | `flash`, `banner`, `notification`, `successMessage` | `members.json` has `hasMemberWithName` (row presence) and nothing covering the flash region |
 
 ## Notes
 <Anything the next stage needs: assumptions, ambiguity in the spec, data constraints.>
 ```
 
-Every stub row must name what you *did* find and why it was insufficient. "Nothing existed" is not an acceptable justification — the catalog has `@aliases` precisely so that intent-level searching works.
+Every gap row must name what you searched for and why what you found was insufficient. "Nothing existed" is not an acceptable justification — the catalog has `@aliases` precisely so that intent-level searching works.
 
-### `stubs.json` — written by `test-creator`, read by `po-builder`
+### `gaps.json` — written by `test-creator`, read by `po-builder`
+
+A gap is a **requirement without an API**. The creator has never seen the page, so it does not name the method, choose parameters, or fix a return type — po-builder decides all of that:
 
 ```jsonc
 [
   {
-    "class": "MembersPage",
-    "file": "src/po/openproject/members/membersPage.ts",
-    "method": "getInviteBanner",
-    "signature": "getInviteBanner(): Locator",
-    "description": "Returns the flash banner shown after a successful invite.",
-    "aliases": ["inviteFlash", "successBanner", "getFlashMessage"],
-    "prerequisites": "An invite has just been submitted",
-    "observableState": "None - returns a locator for the test to assert on",
-    "isNewClass": false,
-    "reason": "No accessor exists for the post-invite flash message"
+    "id": "GAP-1",
+    "step": "Then a confirmation banner is shown",
+    "requirement": "Read the confirmation banner shown after a successful invite",
+    "observable": "The banner text, for the test to assert on",
+    "likelyClass": "MembersPage",          // a hint, not an instruction
+    "likelyFile": "src/po/openproject/members/membersPage.ts",
+    "classExists": true,
+    "searched": ["flash", "banner", "notification", "successMessage"],
+    "reason": "No accessor exists for the post-invite flash region"
   }
 ]
 ```
 
+`searched` is load-bearing in both directions: the reviewer uses it to check the catalog was really consulted, and po-builder turns it into `@aliases` on the new method so the *next* run finds it instead of declaring the same gap again.
+
+Each `id` must appear exactly once in the test file as `throw new Error('GAP-1: …')`. The gate compares the two, so a gap in one and not the other fails the run.
+
 An empty array is a valid and good outcome: it means the test was built entirely from existing infrastructure, and the orchestrator skips the po-builder stage.
+
+### `investigation.md` — written by `module-investigator`, read by `po-builder`
+
+Stage 2.5 only, when the ratio gate found the module too thinly covered to design
+against. A map of the module: its pages and URL patterns, the element that proves each
+is loaded, its components, and the sidebar entry — every locator citing a source path
+or a snapshot ref. The report's own schema lives in the agent definition.
+
+It is a map, not evidence. po-builder confirms each locator before shipping it.
 
 ### `build-report.md` — written by `po-builder`, read by `test-healer` and `test-reviewer`
 
-One row per stub, each naming the **evidence** the locator came from. A row without evidence is a guessed locator, which is the specific failure this pipeline exists to prevent:
+One row per gap, naming the API po-builder chose and the **evidence** the locator came from. A row without evidence is a guessed locator, which is the specific failure this pipeline exists to prevent:
 
 ```markdown
 # Build report — <run-id>
 
-| Method | Locator | Evidence |
-|---|---|---|
-| `MembersPage.getInviteBanner()` | `getByRole('alert')` scoped to `#content` | snapshot `.playwright-cli/page-<ts>.yml` ref e42 |
-| `ProjectSettingsPage.clickModulesTab()` | `getByRole('link', { name: 'Modules' })` | `modules/.../menus.rb` + `config/locales/en.yml:project_module_*` |
+| Gap | Method designed | Locator | Evidence |
+|---|---|---|---|
+| GAP-1 | `MembersPage.getFlashBanner(): Locator` | `getByRole('alert')` scoped to `#content` | snapshot `.playwright-cli/page-<ts>.yml` ref e42 |
+| GAP-2 | `ProjectSettingsPage.clickModulesTab(): Promise<ModulesPage>` | `getByRole('link', { name: 'Modules' })` | `modules/.../menus.rb` + `config/locales/en.yml:project_module_*` |
 
-## Deviations from the declared signature
-<If a signature in stubs.json had to change, say which and why. Changing signatures
-breaks the test the creator already wrote, so it also means editing that test.>
+## API notes
+<Why a method landed on a different class than gaps.json suggested, or took a
+different shape than the gap text implied. The creator could not see the page;
+say what it would have got wrong.>
 
 ## Unresolved
-<Anything left throwing, and why. This blocks the run - the stub gate will fail.>
+<Any gap left throwing, and why. This blocks the run - the gap gate will fail.>
 ```
 
 ### `heal-report.md` — appended to by `test-healer`, one section per iteration
