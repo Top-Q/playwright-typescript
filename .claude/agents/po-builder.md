@@ -12,10 +12,11 @@ This is the specific failure this pipeline was built to prevent. A previous appr
 ## Start
 
 1. Read `.claude/skills/gen-test/references/contract.md`.
-2. Read `.claude/skills/gen-test/references/browser.md` — the attach recipe and OpenProject's known quirks.
-3. Read `run.json`, `stubs.json`, and `plan.md` in the run directory you were given.
-4. Read the test file. It shows how each stub is actually called, which constrains behaviour more precisely than the signature does.
-5. Read the page-object source you are extending, and its neighbours in the module. Match their idiom.
+2. Read `.claude/skills/gen-test/references/browser.md` — how to get a browser onto the app.
+3. Read `.claude/skills/gen-test/references/openproject-dom.md` — what OpenProject actually renders. This is a list of things that have already cost a run; reading it is cheaper than rediscovering any one of them.
+4. Read `run.json`, `stubs.json`, and `plan.md` in the run directory you were given.
+5. Read the test file. It shows how each stub is actually called, which constrains behaviour more precisely than the signature does.
+6. Read the page-object source you are extending, and its neighbours in the module. Match their idiom.
 
 For patterns and templates: `.claude/skills/architecture/references/page-objects.md`, `components.md`, `locator-patterns.md`.
 
@@ -32,9 +33,13 @@ Check the branch matches the deployed Docker tag first (the `investigate-module`
 | Button/menu accessible names | `modules/<module>/config/locales/en.yml` — resolve i18n keys to the English string that actually renders |
 | Component hierarchy | `modules/<module>/app/components/` tree |
 
-**2. The live DOM** — the attach recipe in `browser.md`. `playwright-cli snapshot` for the tree, then `playwright-cli generate-locator <ref> --raw` to get a locator that accounts for role, accessible name, and disambiguation.
+**2. OpenProject's own test suite** — `spec/support/pages/**/*.rb` and `spec/features/**/*_spec.rb` in the same checkout. These are page objects the OpenProject team maintains against this UI, so they encode selectors already known to work, and they are cheap to read. Go here when a widget's structure is not obvious from the ERB — the ng-select handling on the members form was solved this way.
 
-**When source and DOM disagree, the DOM wins.** The deployed build does not always render what the source implies — `data-test-selector` attributes especially. Source tells you what to look for; the browser tells you what is there.
+**3. The live DOM** — a recipe from `browser.md`. `playwright-cli snapshot` for the tree, then `playwright-cli generate-locator <ref> --raw` to get a locator that accounts for role, accessible name, and disambiguation.
+
+**When they disagree, the live DOM wins.** The deployed build does not always render what the source implies — `data-test-selector` attributes especially. Source tells you what to look for; the browser tells you what is there.
+
+This ranking lives here and nowhere else. If you find a second copy of it, they have drifted and this one is authoritative.
 
 Use `generate-locator` rather than composing a locator by reading snapshot YAML. It is more accurate than your eye and it is free.
 
@@ -66,7 +71,7 @@ playwright-cli eval "document.querySelectorAll('<selector>').length"
 playwright-cli click "getByRole('link', { name: 'Members' })"
 ```
 
-A locator that matches two elements passes lint and fails at runtime. OpenProject has several known duplicates — see `browser.md`.
+A locator that matches two elements passes lint and fails at runtime. OpenProject has several known duplicates — see `openproject-dom.md`.
 
 ## Finish
 

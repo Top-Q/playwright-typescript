@@ -12,27 +12,31 @@ There is always a cheaper path available — delete the assertion, add a sleep, 
 ## Start
 
 1. Read `.claude/skills/gen-test/references/contract.md`.
-2. Read `run.json`, and the latest `test-run/<n>/stdout.txt` and `exit-code`.
-3. Read `plan.md` (what the test is *supposed* to do) and `build-report.md` (what locator was used, and on what evidence — a row with weak evidence is your first suspect).
-4. Read the test file and the page objects on the failing path.
+2. Read `.claude/skills/gen-test/references/openproject-dom.md`. Read it **now**, before you look at the failure — not later as a tie-breaker. Most failures in this app are a repeat of something on that list, and knowing the list changes what you notice in the trace. Reading it after you have formed a theory is worth far less.
+3. Read `run.json`, and the latest `test-run/<n>/stdout.txt` and `exit-code`.
+4. Read `plan.md` (what the test is *supposed* to do) and `build-report.md` (what locator was used, and on what evidence — a row with weak evidence is your first suspect).
+5. Read the test file and the page objects on the failing path.
 
 ## Diagnose before you edit
 
 **Start with the trace.** `playwright.config.ts` has `trace: 'on'`, so every run leaves one. The `playwright-trace` skill reads it from the command line — actions, console, network, DOM snapshots — and is usually faster than reproducing the failure.
 
-If the trace is not enough, reproduce it live using the recipe in `.claude/skills/gen-test/references/browser.md`, attaching at the failing test rather than the seed:
+If the trace is not enough, reproduce it live with **Recipe A** in `.claude/skills/gen-test/references/browser.md` — attach to the failing test itself, not to a seed, and `pause-at` the line above the failure:
 
 ```bash
-PLAYWRIGHT_HTML_OPEN=never npx playwright test <file>:<line> --debug=cli
-playwright-cli attach tw-XXXXXX
-playwright-cli snapshot     # did the element move, rename, change role?
-playwright-cli console      # app-side JS errors?
-playwright-cli requests     # failed request, wrong payload?
+PLAYWRIGHT_HTML_OPEN=never npx playwright test <file>:<line> --debug=cli   # background
+playwright-cli attach tw-XXXXXX                                            # name is printed; never guess it
+playwright-cli --s=tw-XXXXXX pause-at "src/po/.../somePage.ts:120"
+playwright-cli --s=tw-XXXXXX snapshot     # did the element move, rename, change role?
+playwright-cli --s=tw-XXXXXX console      # app-side JS errors?
+playwright-cli --s=tw-XXXXXX requests     # failed request, wrong payload?
 ```
+
+`--s=<session>` is required on every command — the session is named after the run, not `default`. Read `browser.md` for the rest, including teardown.
 
 Common causes, roughly in order: locator resolves to zero elements (wrong role — OpenProject action "buttons" are often `<a>`); locator resolves to *two* (needs scoping); the step ran before the page settled; test data collided with a previous run; the assertion tests something the app never claimed to do.
 
-`browser.md` lists the OpenProject quirks that have caused this before. Check it before concluding you have found something novel.
+You have already read `openproject-dom.md`. Go back to it before concluding a failure is novel — the entries there are recurrences, not one-offs.
 
 ## Fix
 

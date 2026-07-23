@@ -9,7 +9,7 @@ You are the **orchestrator**. You do not write the test yourself. You run stages
 
 `$ARGUMENTS` is the spec reference: an FR id (`FR-MEM-001`), a TC id (`TC-MEM-001-02`), or a path to a markdown spec. If it is empty, ask which spec before doing anything else.
 
-Read [references/gates.md](references/gates.md) for the gate commands and [references/contract.md](references/contract.md) for the artifact schemas. The four agents read the contract themselves — you do not need to explain it to them.
+Read [references/gates.md](references/gates.md) for the gate commands and [references/contract.md](references/contract.md) for the artifact schemas. The four agents read the contract themselves — you do not need to explain it to them, and the same goes for [references/browser.md](references/browser.md) (how to drive the app) and [references/openproject-dom.md](references/openproject-dom.md) (what it renders), which `po-builder` and `test-healer` load from their own instructions.
 
 ## Why it is split up
 

@@ -170,7 +170,13 @@ Why the split: one agent doing discovery, browser investigation, PO authoring, a
 
 **Agent definitions in `.claude/agents/` are read once, at session start.** After adding or editing one, restart Claude Code before running the pipeline — otherwise the stage fails with `Agent type '<name>' not found`, listing only the built-in agents.
 
-**Browser investigation does not use `--debug=cli`.** That flag does not exist in this project's Playwright (1.56.1), despite the bundled `playwright-cli` skill documenting it. The working recipe is in [`.claude/skills/gen-test/references/browser.md`](.claude/skills/gen-test/references/browser.md).
+**Browser investigation has three recipes**, all in [`.claude/skills/gen-test/references/browser.md`](.claude/skills/gen-test/references/browser.md):
+
+- `npx playwright test <file>:<line> --debug=cli` + `playwright-cli attach tw-XXXX` — pauses the real test, `pause-at` any line. The healer's default. **Requires Playwright ≥ 1.59**; the project ran 1.56.1 until 2026-07-23, which is why older notes call this flag non-existent.
+- `tests/debug-session.spec.ts` + `playwright-cli attach --cdp=http://localhost:9222` — a logged-in browser with no test attached, for locator hunting. Its teardown is three steps and leaks a Chromium if you skip one.
+- `playwright-cli open` + manual login — only for deliberately logged-out state.
+
+**What you will find once you are looking** is a separate file: [`references/openproject-dom.md`](.claude/skills/gen-test/references/openproject-dom.md) — the DOM facts that have already cost this project a run each (icon-font glyphs in accessible names, ng-select panels escaping their form, `waitForLoadState('load')` being a no-op after submit, members pagination). Both `po-builder` and `test-healer` read it unconditionally. Keep it separate from `browser.md`: tooling mechanics churn with every Playwright upgrade, these facts do not.
 
 ### Gates
 
@@ -188,3 +194,11 @@ Why the split: one agent doing discovery, browser investigation, PO authoring, a
 - **Write web test** skill — single-shot manual test writing, when you don't want the pipeline
 - **Write api test** skill — generate API tests
 - `/heal-test <test name>` — run a test, diagnose failures, apply minimal fixes
+
+## Environment
+This machine is Windows. Use PowerShell/Windows path conventions (`C:\...`) for all shell commands, config files, and scripts. 
+Do NOT assume bash, `~/.bashrc`, `~/.zshrc`, or POSIX-only tooling. 
+When writing Python that shells out or handles paths, use `pathlib` and avoid MSYS-style `/c/...` paths.
+
+## Python / uv'
+This project uses `uv`. Do not run `uv add`. Add dependencies by editing `pyproject.toml` directly, then run `uv sync`.
