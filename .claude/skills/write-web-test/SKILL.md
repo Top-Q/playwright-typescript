@@ -77,7 +77,7 @@ If a page object exists but lacks a needed method:
 
 If a page or component has no PO at all but the module is known:
 1. Create the PO/component following the architecture skill's templates ([page-objects.md](../architecture/references/page-objects.md), [components.md](../architecture/references/components.md))
-2. Use `dumpDom` to capture the page's ARIA tree and write accurate locators
+2. Use `playwright-cli snapshot` to capture the page's ARIA tree, then `playwright-cli generate-locator <ref> --raw` to turn a ref into a real locator
 3. Update `internals.ts` with the new export
 4. Update `MainMenuComp` if the module needs a new sidebar navigation method
 5. Run `npx eslint` on all new/modified files
@@ -91,21 +91,26 @@ If the module has never been automated and you have no knowledge of its pages:
 
 ## Investigating Unfamiliar Pages
 
-When you need to understand a page's structure to write accurate locators:
+When you need to understand a page's structure to write accurate locators, look at the
+running app rather than editing the test to make it report back.
 
-1. Add a `dumpDom` call at the relevant point in the test:
+1. Get a logged-in browser — Recipe B in [`../gen-test/references/browser.md`](../gen-test/references/browser.md), then attach:
 
-```typescript
-import { dumpDom } from '../../../src/utils/dumpDom';
-
-// Inside a test step, after navigating to the page:
-await dumpDom(page, { label: 'page-to-investigate', waitForNetworkIdle: true });
+```bash
+PW_DEBUG_SESSION=1 npx playwright test tests/debug-session.spec.ts --project=chromium  # background
+playwright-cli attach --cdp=http://localhost:9222
+playwright-cli goto http://localhost:8090/projects/demo-project/<page>
 ```
 
-2. Run the test — it completes automatically.
-3. Read `test-results/debug-dumps/<timestamp>-<label>/aria.yml` to see the ARIA tree.
-4. Use the ARIA tree to write precise `getByRole()` locators.
-5. Remove the `dumpDom` call when done.
+2. `playwright-cli snapshot "#content"` — the ARIA tree, with a `ref` on every element.
+3. `playwright-cli generate-locator <ref> --raw` — emits the actual Playwright locator, which is more reliable than composing one by reading the tree.
+4. Follow that file's teardown steps; skipping one leaks a Chromium.
+
+If the page state you care about only occurs mid-test, use Recipe A instead: run the
+test with `--debug=cli` and `pause-at` the line you care about.
+
+If the test has already failed, read its trace first — `trace: 'on'` means the DOM and a
+screenshot were captured at every action, and that costs nothing to open.
 
 For investigating an entire module (multiple pages, navigation flows), use the **investigate-module** skill instead — it provides a structured workflow for full module discovery.
 

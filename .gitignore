@@ -144,9 +144,6 @@ vite.config.ts.timestamp-*
 /blob-report/
 /playwright/.cache/
 
-# dump-dom snapshots (generated artifacts, not source)
-dom-snapshots/
-
 # Playwright cli/mcp
 .playwright
 .playwright-mcp/

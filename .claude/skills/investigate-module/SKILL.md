@@ -43,7 +43,7 @@ Button labels and menu items are often i18n keys like `t("meeting.types.one_time
 
 ### Verifying locators against runtime
 
-Even with source code, verify ambiguous locators against the live DOM using `error-context.md` from a failed test run (cheaper than `dumpDom`). The most common mismatches are:
+Even with source code, verify ambiguous locators against the live DOM. `error-context.md` from a failed test run is the cheapest look; `playwright-cli snapshot` against the running app is the authoritative one. The most common mismatches are:
 - `data-test-selector` attributes present in source but not rendered in the deployed build
 - i18n keys resolving to different text than expected
 - Heading levels (`h1` vs `h2`) set by Primer layout components
@@ -80,7 +80,7 @@ Use the main menu sidebar to reach the module's landing page. Note:
 
 For every distinct page or dialog in the module:
 
-1. **Take a snapshot** — use `dumpDom(page, { label: '<page-name>', waitForNetworkIdle: true })` to capture `aria.yml`, `content.html`, and `screenshot.png`
+1. **Take a snapshot** — `playwright-cli snapshot` for the ARIA tree with refs (scope it with `playwright-cli snapshot "#content"`; a full OpenProject page is large). See [`../gen-test/references/browser.md`](../gen-test/references/browser.md) for getting a browser onto the page.
 2. **Note the URL** — record the full path pattern
 3. **Identify the key load indicator** — the element that confirms the page is ready (used for `waitForLoad()`)
 4. **Catalog interactive elements** — buttons, links, dropdowns, form fields, tables

@@ -50,7 +50,7 @@ Tests simulate an **admin** user logged into the **Demo Project**.
 1. All page objects extend `BasePage<T>` with own type as generic parameter
 2. All components extend `BaseComponent<T>`, scoped to `rootComponent` locator
 3. Assertions belong in tests only — page objects never import `expect`
-4. All PO/component imports go through `internals.ts` — every new PO/component must be exported there. Standalone utilities (e.g. `dumpDom`) are imported directly from their source file to avoid barrel re-export type resolution issues in the IDE.
+4. All PO/component imports go through `internals.ts` — every new PO/component must be exported there. Standalone utilities are imported directly from their source file, to avoid barrel re-export type resolution issues in the IDE.
 5. Use Playwright fixtures for test setup (not `beforeEach`)
 6. Use `test.step()` with Given/When/Then BDD structure
 7. Locators use `.describe()` for trace clarity
@@ -75,40 +75,15 @@ Tests must be runnable in isolation and not depend on side effects from other te
 
 ## Debugging Utilities
 
-### `dumpDom(page, options?)`
+To see what a page actually renders, drive the live app with `playwright-cli` — the
+three recipes are in
+[`.claude/skills/gen-test/references/browser.md`](.claude/skills/gen-test/references/browser.md).
+`playwright-cli snapshot` gives the ARIA tree **with element refs**, which
+`generate-locator` then turns into a real locator.
 
-Import from `internals.ts`. Captures three artifacts to `test-results/debug-dumps/<timestamp>-<label>/`:
-
-| File             | Use for                                                               |
-| ---------------- | --------------------------------------------------------------------- |
-| `aria.yml`       | Writing `getByRole()` locators and `toMatchAriaSnapshot()` assertions |
-| `content.html`   | Finding IDs, classes, and data attributes                             |
-| `screenshot.png` | Visual confirmation of page state                                     |
-
-**Parameters:**
-
-| Option               | Default                      | Description                            |
-| -------------------- | ---------------------------- | -------------------------------------- |
-| `label`              | `'dump'`                     | Folder name suffix                     |
-| `sleepMs`            | `0`                          | Wait before capturing (ms)             |
-| `waitForNetworkIdle` | `false`                      | Wait for network idle before capturing |
-| `outputDir`          | `'test-results/debug-dumps'` | Output folder                          |
-
-**Usage:** Drop anywhere in a test or page object — the test **resumes automatically**.
-
-```typescript
-// Minimal — snapshot current state
-await dumpDom(page);
-
-// After an action — wait for dynamic content to settle
-await someButton.click();
-await dumpDom(page, { waitForNetworkIdle: true, label: 'after-click' });
-
-// With a short animation delay
-await dumpDom(page, { sleepMs: 500, label: 'modal-open' });
-```
-
-Remove `dumpDom` calls after investigation is complete.
+For a test that already failed, read its trace instead of re-running anything:
+`playwright.config.ts` sets `trace: 'on'`, so every run records a DOM snapshot and a
+screenshot for every action. The `playwright-trace` skill reads it from the command line.
 
 ## POM Catalog
 
