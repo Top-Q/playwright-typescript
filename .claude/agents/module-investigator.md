@@ -73,7 +73,7 @@ Then, for the module:
 Prefer `playwright-cli generate-locator <ref> --raw` over composing a locator from the
 snapshot by eye.
 
-**Release the session when you finish** — `playwright-cli close-all`, and stop any
+**Release the session when you finish** — `npm run pipeline:cleanup -- --kill`, and stop any
 background run you started. A leaked browser breaks the next stage.
 
 ## The report

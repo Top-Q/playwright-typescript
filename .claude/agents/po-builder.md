@@ -131,7 +131,7 @@ A locator that matches two elements passes lint and fails at runtime. OpenProjec
 - Confirm no `GAP-` marker survives in the test file — each one must have become a real call.
 - `npm run catalog` to regenerate.
 - `npx eslint <every file you touched>` — fix all errors.
-- **Stop any background `--debug=cli` run you started**, and `playwright-cli close-all`. A leaked session breaks the next stage.
+- **Stop any background `--debug=cli` run you started**: `npm run pipeline:cleanup -- --kill` closes the sessions and terminates the leaked runs. A leaked session breaks the next stage.
 - Report: methods designed and implemented, files touched, any gap left unfilled.
 
 If you cannot implement a gap on real evidence, **leave the throw in place and say so** in `build-report.md` and your report. The gap gate will catch it and the run will stop, which is the correct outcome. A method that silently does the wrong thing is worse than a step that is honestly unfinished.

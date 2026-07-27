@@ -12,6 +12,7 @@
 import { parseArgs } from 'node:util';
 import * as fs from 'fs';
 import * as path from 'path';
+import { PipelineError, resolveRunDir } from './run-directory';
 
 const HELP = `
 Usage: run-report [--run <run-id>] [options]
@@ -54,22 +55,15 @@ const repoRoot = process.cwd();
 const runsRoot = path.resolve(repoRoot, values.out);
 if (!fs.existsSync(runsRoot)) fail(`no runs directory at ${values.out}`);
 
-function latestRun(): string {
-  const candidates = fs
-    .readdirSync(runsRoot, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => ({
-      name: entry.name,
-      mtime: fs.statSync(path.join(runsRoot, entry.name)).mtimeMs,
-    }))
-    .sort((a, b) => b.mtime - a.mtime);
-  if (candidates.length === 0) fail(`no runs found under ${values.out}`);
-  return candidates[0].name;
+let runId: string;
+let runDir: string;
+try {
+  // Shared with every other pipeline script, so "latest" means the same run
+  // whichever one you ask.
+  ({ runId, runDir } = resolveRunDir(runsRoot, values.run));
+} catch (error) {
+  fail(error instanceof PipelineError ? error.message : String(error));
 }
-
-const runId = values.run ?? latestRun();
-const runDir = path.join(runsRoot, runId);
-if (!fs.existsSync(runDir)) fail(`run not found: ${runId}`);
 
 /**
  * A step test-creator could not build from the catalog. It carries the
@@ -83,6 +77,15 @@ interface GapEntry {
   reason?: string;
 }
 
+/** One stage boundary, recorded by `pipeline:stage` or `pipeline:test-run`. */
+interface StageEntry {
+  stage?: string;
+  status?: string;
+  at?: string;
+  exitCode?: number;
+  note?: string;
+}
+
 /** The subset of run.json this report renders; written by run-init. */
 interface RunRecord {
   runId: string;
@@ -92,6 +95,8 @@ interface RunRecord {
   module: string;
   branch: string | null;
   createdAt: string;
+  status?: string;
+  stages?: StageEntry[];
 }
 
 function readJson<T>(name: string): T | undefined {
@@ -166,10 +171,29 @@ sections.push(
     `- **Module:** \`${run.module}\``,
     `- **Branch:** ${run.branch ? `\`${run.branch}\`` : '_not recorded_'}`,
     `- **Created:** ${run.createdAt}`,
+    `- **Status:** ${run.status ?? 'unrecorded'}`,
     `- **Outcome:** ${last === undefined ? '⚠️ test never executed' : passed ? '✅ passing' : '❌ failing'}`,
   ].join('\n'),
 );
 sections.push('');
+
+const stages = run.stages ?? [];
+if (stages.length > 0) {
+  // The one account of what happened when. Without it the summary can say which
+  // artifacts exist but not the order they arrived in, or which gate turned the
+  // run around — the orchestrator's narration does not outlive its context.
+  sections.push('## Timeline');
+  sections.push('');
+  sections.push('| When | Stage | Status | Detail |');
+  sections.push('|---|---|---|---|');
+  for (const entry of stages) {
+    const when = (entry.at ?? '').slice(11, 19) || '—';
+    const exit = entry.exitCode === undefined ? '' : ` (exit ${entry.exitCode})`;
+    const detail = `${entry.note ?? ''}${exit}`.replace(/\|/g, '\\|').trim();
+    sections.push(`| ${when} | ${entry.stage ?? '?'} | ${entry.status ?? '?'} | ${detail} |`);
+  }
+  sections.push('');
+}
 
 sections.push('## Stage artifacts');
 sections.push('');

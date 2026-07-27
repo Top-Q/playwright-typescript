@@ -14,7 +14,7 @@ There is always a cheaper path available — delete the assertion, add a sleep, 
 1. Read `.claude/skills/gen-test/references/contract.md`.
 2. Read `.claude/skills/gen-test/references/openproject-dom.md`. Read it **now**, before you look at the failure — not later as a tie-breaker. Most failures in this app are a repeat of something on that list, and knowing the list changes what you notice in the trace. Reading it after you have formed a theory is worth far less.
 3. Read `.claude/skills/gen-test/references/environment.md` — addresses, credentials, and the Rails source path with its version check, for when a locator needs checking against what the app is built from.
-4. Read `run.json`, and the latest `test-run/<n>/stdout.txt` and `exit-code`.
+4. Read `run.json`, and the latest `test-run/<n>/stdout.txt` and `exit-code` — `npm run pipeline:stage -- --list` names the attempts and their exit codes if you are unsure which is latest.
 5. Read `plan.md` (what the test is *supposed* to do) and `build-report.md` (what locator was used, and on what evidence — a row with weak evidence is your first suspect).
 6. Read the test file and the page objects on the failing path.
 
@@ -27,7 +27,8 @@ If the trace is not enough, reproduce it live with **Recipe A** in `.claude/skil
 **`pause-at` is broken**: it fails open, silently running the test to completion instead of pausing. `step-over` is the control that works, one action at a time. That makes stepping to a deep failure slow, which is another reason the trace comes first.
 
 ```bash
-PLAYWRIGHT_HTML_OPEN=never npx playwright test <file>:<line> --debug=cli   # background, ONE test
+$env:PLAYWRIGHT_HTML_OPEN='never'                                          # PowerShell: own line
+npx playwright test <file>:<line> --debug=cli                              # background, ONE test
 playwright-cli attach tw-XXXXXX                                            # name is printed; never guess it
 playwright-cli --s=tw-XXXXXX step-over                                     # repeat to the failing action
 playwright-cli --s=tw-XXXXXX snapshot     # did the element move, rename, change role?
@@ -62,5 +63,5 @@ If your diagnosis is that **the application is wrong** — the test correctly en
 - Append an iteration section to `heal-report.md`: failure, root cause, the fix with `file:line`, the evidence, and your confidence. If you are guessing, say you are guessing — the orchestrator has a limited budget and needs to know whether to spend the next iteration on you.
 - `npm run catalog` if you changed a page object.
 - `npx eslint <files you touched>`.
-- **Stop any background `--debug=cli` run**, then `playwright-cli close-all`.
+- **Stop any background `--debug=cli` run**: `npm run pipeline:cleanup -- --kill`.
 - Report what you changed and why. The orchestrator re-runs the test; do not claim it passes unless you ran it yourself and saw it.

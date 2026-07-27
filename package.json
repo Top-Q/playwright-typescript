@@ -14,10 +14,16 @@
     "gate:lint": "eslint .",
     "gate:types": "tsc --noEmit",
     "gate:catalog": "tsx scripts/build-pom-catalog.ts --check",
-    "gate:gaps": "tsx scripts/pipeline/check-gaps.ts",
+    "gate:gaps": "tsx .claude/skills/gen-test/scripts/check-gaps.ts",
     "gate:all": "npm run gate:catalog && npm run gate:types && npm run gate:lint && npm run gate:gaps",
-    "pipeline:init": "tsx scripts/pipeline/run-init.ts",
-    "pipeline:report": "tsx scripts/pipeline/run-report.ts"
+    "pipeline:preflight": "tsx .claude/skills/gen-test/scripts/preflight.ts",
+    "pipeline:init": "tsx .claude/skills/gen-test/scripts/run-init.ts",
+    "pipeline:set": "tsx .claude/skills/gen-test/scripts/set-field.ts",
+    "pipeline:stage": "tsx .claude/skills/gen-test/scripts/stage.ts",
+    "pipeline:test-run": "tsx .claude/skills/gen-test/scripts/test-run.ts",
+    "pipeline:cleanup": "tsx .claude/skills/gen-test/scripts/cleanup.ts",
+    "pipeline:report": "tsx .claude/skills/gen-test/scripts/run-report.ts",
+    "pipeline:audit": "tsx .claude/skills/gen-test/scripts/audit-run.ts"
   },
   "repository": {
     "type": "git",

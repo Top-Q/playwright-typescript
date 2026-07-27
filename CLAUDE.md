@@ -29,6 +29,11 @@ Tests simulate an **admin** user logged into the **Demo Project**.
 ├── tests/
 │   ├── ui/                       # UI test specs + fixtures.ts
 │   └── api/                      # API test specs + fixtures.ts
+├── .claude/skills/gen-test/      # The test-generation pipeline, self-contained
+│   ├── SKILL.md                  # Orchestration
+│   ├── references/               # Contract, gates, environment, DOM facts
+│   └── scripts/                  # Its TypeScript, run through the npm aliases
+├── scripts/                      # Repo tooling not owned by a skill (POM catalog)
 ├── internals.ts                  # Central barrel export — ALL imports go through here
 ├── playwright.config.ts
 ├── eslint.config.mjs             # ESLint v9 flat config
@@ -178,12 +183,36 @@ Gaps are counted two ways. **How many remain** is completeness — `n` after sta
 | `npm run gate:catalog` | POM catalog matches `src/po/`                                        |
 | `npm run gate:types`   | `tsc --noEmit` clean                                                 |
 | `npm run gate:lint`    | `eslint .` has no errors                                             |
-| `npm run gate:gaps`    | No `GAP-` markers remain (`-- --expect <n>` to require exactly _n_; `--ratio-max <r>` with `--file` to bound the gap ratio, exit 2 if exceeded) |
+| `npm run gate:gaps`    | No `GAP-` markers remain (`-- --run latest` derives the file, the expected count and the declared ids from the run record; `--ratio-max <r>` bounds the gap ratio, exit 2 if exceeded) |
 | `npm run gate:all`     | All of the above                                                     |
+
+Gates check the repository. `npm run pipeline:audit -- --run <run-id>` checks the **run record** — that every gap carries what was searched for, that every `build-report.md` row cites evidence, that no artifact is missing. It reads shape, not meaning, so a clean audit means nothing is missing, not that the locators are sound.
+
+### Pipeline commands
+
+Everything deterministic about running the pipeline is a script, so the orchestrator spends its context on judgement rather than on retyping shell:
+
+| Command                    | Does                                                                                   |
+| -------------------------- | -------------------------------------------------------------------------------------- |
+| `npm run pipeline:preflight -- --spec <ref>` | Stage 0 whole: gates, app reachability, `playwright-cli`, run branch, run directory. Changes nothing until every check passes. |
+| `npm run pipeline:test-run` | Stage 5: runs the run's test into the next `test-run/<n>/`, writing `stdout.txt` and `exit-code`, and exits with the test's exit code. |
+| `npm run pipeline:stage -- --stage <name> --status <ok\|fail\|skip>` | Records a stage boundary in `run.json`; `--list` prints the timeline. |
+| `npm run pipeline:set -- --test-file <path>` | Records where the test actually landed, validated, instead of hand-editing `run.json`. |
+| `npm run pipeline:cleanup [-- --kill]` | Closes `playwright-cli` sessions; reports (and with `--kill`, terminates) leaked `--debug=cli` runs. |
+| `npm run pipeline:report -- --run <id>` | Collapses the run directory into `summary.md`. |
+
+The pipeline runs on Windows/PowerShell, which is why these exist as scripts rather than as command lines in a document: `curl -o /dev/null` and `VAR=x cmd` are both silently wrong here, and a gap count transcribed by eye is wrong occasionally, which is worse.
+
+They live in **`.claude/skills/gen-test/scripts/`**, as assets of the skill they serve, so the pipeline is one folder: instructions, references and code together. Only `package.json`'s aliases point at them, and only `tsconfig.json` and `eslint.config.mjs` need to know where they are — both are extended to cover that directory, because the pipeline's own code must stay under the same gates it enforces on generated tests.
+
+### Testing the pipeline itself
+
+`/verify-pipeline covered|bare|both|replay <run-id>` runs the pipeline end to end as a greybox test and reports how it behaved. `covered` exercises the normal path against a module that already has page objects; `bare` exercises the stage-2.5 branch against one with none. It observes every stage boundary, gate exit code and git diff, then reports findings against the pipeline's own files — never against the application. Re-testing after changing an agent definition needs a Claude Code restart.
 
 ## Skills & Commands
 
 - `/gen-test <spec-ref>` — the full pipeline above; the normal way to create a test
+- `/verify-pipeline <scenario>` — greybox-test the pipeline itself and report improvements
 - **Write web test** skill — single-shot manual test writing, when you don't want the pipeline
 - **Write api test** skill — generate API tests
 - `/heal-test <test name>` — run a test, diagnose failures, apply minimal fixes

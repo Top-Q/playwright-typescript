@@ -45,11 +45,15 @@ never tested.
 
 ## Recipe A — attach to a real test
 
-```bash
+```powershell
 # 1. Run ONE test in the BACKGROUND with --debug=cli.
-PLAYWRIGHT_HTML_OPEN=never \
-  npx playwright test tests/seed.spec.ts --project=chromium --debug=cli
+$env:PLAYWRIGHT_HTML_OPEN='never'
+npx playwright test tests/seed.spec.ts --project=chromium --debug=cli
 ```
+
+The variable is set on its own line because this machine runs PowerShell, where a
+`VAR=value cmd` prefix is a parse error rather than an environment assignment. Without
+the variable a *passing* debug run opens the HTML report and blocks.
 
 **One test per run.** A file holding several needs `<file>:<line>` to pick one —
 otherwise the first test runs and the second dies with
@@ -148,7 +152,7 @@ bite you.
 
 Refs are scoped to the frame and re-issued on navigation — after a `goto` they come back with a prefix (`f3e43` rather than `e43`). Re-snapshot after every navigation; never carry a ref across one.
 
-**Always `playwright-cli close-all` before you return.** A leaked session holds a browser, and `playwright-cli list` should print `(no browsers)` when you are done.
+**Always `npm run pipeline:cleanup -- --kill` before you return.** It closes the sessions and terminates any `--debug=cli` run still holding a browser; `playwright-cli list` should print `(no browsers)` when you are done.
 
 ### What this costs
 

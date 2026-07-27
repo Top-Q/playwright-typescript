@@ -40,12 +40,23 @@ Every `/gen-test` stage runs in its own subagent with its own context. Subagents
   "testCaseIds": ["TC-MEM-001-02"],
   "branch": "test-gen/tc-mem-001-02",
   "createdAt": "2026-07-22T09:46:16.347Z",
-  "status": "initialised",
-  "stages": []
+  "status": "in-progress",
+  "stages": [
+    { "stage": "test-creator", "status": "ok", "at": "…", "note": "4 gaps across 7 steps" },
+    { "stage": "execute", "status": "fail", "at": "…", "exitCode": 1, "note": "attempt 1: …" }
+  ]
 }
 ```
 
-`suggestedTestFile` is a suggestion. If the test-creator picks a different path it **must** write the real path back into `run.json` as `testFile`, because every later stage runs the test from that value.
+`stages` is the run's timeline, appended to by `npm run pipeline:stage` (and by `pipeline:test-run` for each attempt). `status` is derived from the last entry, never set independently: a failed stage fails the run, `finalize` completes it, anything else means still in flight.
+
+`suggestedTestFile` is a suggestion. If the test-creator picks a different path it **must** record the real path as `testFile`, because every later stage runs the test from that value:
+
+```bash
+npm run pipeline:set -- --test-file tests/ui/members/invite-a-new-user.spec.ts
+```
+
+Do not hand-edit `run.json`. `pipeline:set` validates the value — a `--test-file` that does not exist is rejected on the spot rather than three stages later, as a test file Playwright cannot find.
 
 ### `plan.md` — written by `test-creator`, read by `test-reviewer`
 
@@ -95,7 +106,7 @@ A gap is a **requirement without an API**. The creator has never seen the page, 
 
 `searched` is load-bearing in both directions: the reviewer uses it to check the catalog was really consulted, and po-builder turns it into `@aliases` on the new method so the *next* run finds it instead of declaring the same gap again.
 
-Each `id` must appear exactly once in the test file as `throw new Error('GAP-1: …')`. The gate compares the two, so a gap in one and not the other fails the run.
+Each `id` must appear exactly once in the test file as `throw new Error('GAP-1: …')`. `npm run gate:gaps -- --run latest` compares the two **by id**, not merely by count: an id declared and never written, written and never declared, or written twice, each fails the run.
 
 An empty array is a valid and good outcome: it means the test was built entirely from existing infrastructure, and the orchestrator skips the po-builder stage.
 
@@ -151,4 +162,4 @@ Severity-ranked findings against CLAUDE.md. `blocker` / `should-fix` / `nit`, ea
 2. **Never edit another stage's artifact.** Append to your own; read the others.
 3. **Report file paths, not summaries**, in your final message to the orchestrator — it needs to know what to gate, not what you thought.
 4. **Leave the repo compiling.** Every stage ends with `npx eslint <touched files>` clean and no type errors, because the orchestrator gates on exactly that before advancing.
-5. **Stop what you started.** If you launched a background `playwright test --debug=cli`, kill it before you return. A leaked debug session holds a browser and a port and will break the next stage.
+5. **Stop what you started.** If you launched a background `playwright test --debug=cli`, kill it before you return: `npm run pipeline:cleanup -- --kill` closes the sessions and terminates the leaked runs. A leaked debug session holds a browser and a port and will break the next stage.

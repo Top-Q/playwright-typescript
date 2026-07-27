@@ -43,7 +43,7 @@ For every gap, `plan.md` must record **what you searched for and why what you fo
 
 Conventions, all mandatory:
 
-- `tests/ui/<module>/<kebab-name>.spec.ts`. If you deviate from `suggestedTestFile`, write your chosen path back into `run.json` as `testFile` — every later stage runs that value.
+- `tests/ui/<module>/<kebab-name>.spec.ts`. If you deviate from `suggestedTestFile`, record your chosen path with `npm run pipeline:set -- --test-file <path>` — every later stage runs that value. Do not hand-edit `run.json`.
 - `import { test } from '../fixtures';` — **never** from `@playwright/test`.
 - `import { expect } from '@playwright/test';`
 - Page objects from `'../../../internals'` only.
@@ -82,7 +82,7 @@ A test full of gaps is a legitimate outcome and an honest one — the gate measu
 
 - `npx eslint <the test file>` and fix all errors.
 - Confirm `plan.md`, `gaps.json`, and the test file all exist.
-- Confirm the gap ids in the test and in `gaps.json` are the same set.
+- `npm run gate:gaps -- --run latest` — this is the gate the orchestrator will run, and it compares the gap ids in the test against `gaps.json` by name. Checking it yourself is cheaper than a repair pass.
 - Report the test file path, the gap count, the number of `test.step()` calls, and any spec ambiguity you had to resolve by assumption.
 
 If the spec is too vague to test — an expected result that names no observable outcome — say so in `plan.md` and in your report rather than inventing an assertion.
