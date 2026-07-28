@@ -136,6 +136,7 @@ Then report to the user: the test file, whether it passes, what infrastructure w
 
 ## Rules
 
+- **On PowerShell, type `npm.cmd run …` for every command in this file.** `npm` resolves to `npm.ps1`, a PowerShell script whose parameter binder eats `--` and every `--flag`, so `npm run gate:gaps -- --run latest` arrives as `check-gaps.ts latest`. Value flags fail loudly, boolean flags (`--kill`, `--json`, `--skip-gates`) vanish silently. See [references/gates.md](references/gates.md).
 - **Never commit, push, or delete the branch.** The branch is left in place for the user; cleanup is their call.
 - **Use the pipeline scripts rather than reconstructing what they do.** `pipeline:preflight`, `pipeline:test-run`, `pipeline:cleanup` and `gate:gaps -- --run` exist because each of them was a sequence of shell commands that had to be retyped correctly every run, and was not: a `/dev/null` that means nothing on Windows, an env-var prefix that PowerShell cannot parse, a gap count transcribed by eye.
 - **Do not skip a red gate.** If you find yourself wanting to, the honest move is to stop and report.

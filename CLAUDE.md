@@ -190,6 +190,8 @@ Gates check the repository. `npm run pipeline:audit -- --run <run-id>` checks th
 
 ### Pipeline commands
 
+**On PowerShell, run these as `npm.cmd run …`, not `npm run …`.** `npm` resolves to `npm.ps1`, a PowerShell script, so the parameter binder swallows `--` and every `--flag` before npm sees them: `npm run pipeline:preflight -- --spec TC-MEM-009-01` reaches the script as `preflight.ts TC-MEM-009-01`. `npm.cmd` is a batch file — a real native command — and passes the flags through verbatim. Quoting every token (`npm run pipeline:preflight '--' '--spec' 'TC-MEM-009-01'`) also works. Value-taking flags fail loudly when eaten; **boolean flags fail silently** (`-- --kill` becomes report-only, `--json` yields text), which is the reason for the rule. Full explanation in [`references/gates.md`](.claude/skills/gen-test/references/gates.md).
+
 Everything deterministic about running the pipeline is a script, so the orchestrator spends its context on judgement rather than on retyping shell:
 
 | Command                    | Does                                                                                   |

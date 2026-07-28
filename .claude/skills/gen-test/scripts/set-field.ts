@@ -17,6 +17,7 @@
 import { parseArgs } from 'node:util';
 import * as fs from 'fs';
 import * as path from 'path';
+import { requireFlagsSurvived } from './cli-args';
 import { PipelineError, RunRecord, readRun, resolveRunDir, toPosix, writeRun } from './run-directory';
 
 const HELP = `
@@ -44,6 +45,8 @@ Examples:
   set-field --test-file tests/ui/members/invite-a-new-user.spec.ts
   set-field --run fr-mem-001-2026-07-22-09-46-16 --status failed
 `;
+
+requireFlagsSurvived('pipeline:set');
 
 const { values } = parseArgs({
   args: process.argv.slice(2),

@@ -45,6 +45,7 @@
 import { parseArgs } from 'node:util';
 import * as fs from 'fs';
 import * as path from 'path';
+import { requireFlagsSurvived } from './cli-args';
 import { PipelineError, readRun, resolveRunDir, resolveTestFile } from './run-directory';
 
 /** The gate's threshold for "this test is mostly deferred", in one place. */
@@ -59,7 +60,9 @@ Options:
   -h, --help            Show this help message
       --root <dirs>     Comma-separated dirs to scan (default: tests,src/po)
       --file <path>     Scan only this file; required by --ratio-max
-      --expect <n>      Required gap count; exits 1 on any other count (default: 0)
+      --expect <n>      Required gap count; exits 1 on any other count (default: 0).
+                        With --expect 0 the declared ids are expected to be gone,
+                        so only "undeclared" and "duplicated" are checked
       --ratio-max <r>   Exit 2 if gaps/steps exceeds r (needs --file)
       --run <run-id>    Take the file, the expected count and the declared ids
                         from a run directory ("latest" for the newest run)
@@ -83,6 +86,8 @@ function fail(message: string): never {
   console.error(`check-gaps: ${message}`);
   process.exit(1);
 }
+
+requireFlagsSurvived('gate:gaps');
 
 const { values } = parseArgs({
   args: process.argv.slice(2),
@@ -114,6 +119,12 @@ interface DeclaredGap {
 /** Scope taken from the command line, or from the run record under `--run`. */
 let scopeFile = values.file;
 let declaredIds: string[] | undefined;
+/**
+ * Whether every id in gaps.json must still appear in the source. True at stage
+ * 2, where the worklist describes what the test defers; false whenever zero
+ * gaps are expected, where their absence is the whole point.
+ */
+let declaredMustAppear = true;
 let expected = values.expect === undefined ? 0 : Number(values.expect);
 let ratioMax = values['ratio-max'] === undefined ? undefined : Number(values['ratio-max']);
 
@@ -140,6 +151,13 @@ if (values.run !== undefined) {
     // An explicit --expect still wins: it is how stage 4 asks for zero against a
     // gaps.json that legitimately still lists what stage 1 deferred.
     if (values.expect === undefined) expected = declared.length;
+    // …and asking for zero is asking for those ids to be *gone*, so the
+    // "declared but never written" arm cannot also apply there. It used to,
+    // which made `--run latest --expect 0` — the documented stage-4 gate —
+    // unpassable by construction: a po-builder that implemented every gap
+    // scored one `missing` per gap and exited 1. The other two arms still mean
+    // what they always meant, so they stay on.
+    declaredMustAppear = expected > 0;
     ratioMax ??= DEFAULT_RATIO_MAX;
   } catch (error) {
     if (error instanceof PipelineError) fail(error.message);
@@ -270,7 +288,9 @@ const idComparison: IdComparison | undefined =
   declaredIds === undefined
     ? undefined
     : {
-        missing: declaredIds.filter((id) => !hits.some((hit) => hit.id === id)),
+        missing: declaredMustAppear
+          ? declaredIds.filter((id) => !hits.some((hit) => hit.id === id))
+          : [],
         undeclared: hits.map((hit) => hit.id).filter((id) => !declaredIds.includes(id)),
         duplicated: [
           ...new Set(
@@ -367,6 +387,11 @@ if (!values.quiet && !values.json) {
     );
   }
   if (idComparison !== undefined) {
-    console.log(`  ids agree with gaps.json (${declaredIds?.length ?? 0} declared)`);
+    const declaredCount = declaredIds?.length ?? 0;
+    console.log(
+      declaredMustAppear
+        ? `  ids agree with gaps.json (${declaredCount} declared)`
+        : `  all ${declaredCount} declared gap(s) implemented; no undeclared or duplicate markers`,
+    );
   }
 }

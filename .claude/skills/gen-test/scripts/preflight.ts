@@ -24,6 +24,7 @@
 import { parseArgs } from 'node:util';
 import { spawnSync } from 'node:child_process';
 import * as path from 'path';
+import { requireFlagsSurvived } from './cli-args';
 import { PipelineError, RunRecord, makeRunId } from './run-directory';
 import { initRun } from './run-init';
 
@@ -51,6 +52,8 @@ Examples:
   preflight --spec TC-MEM-001-02
   preflight --spec FR-MEM-001 --json
 `;
+
+requireFlagsSurvived('pipeline:preflight');
 
 const { values } = parseArgs({
   args: process.argv.slice(2),

@@ -21,6 +21,7 @@ import { parseArgs } from 'node:util';
 import * as fs from 'fs';
 import * as path from 'path';
 import { load } from 'js-yaml';
+import { requireFlagsSurvived } from './cli-args';
 import { PipelineError, RunRecord, isMain, kebab, makeRunId, toPosix } from './run-directory';
 
 const HELP = `
@@ -240,6 +241,8 @@ export function initRun(options: InitOptions): InitResult {
 }
 
 if (isMain('run-init.ts')) {
+  requireFlagsSurvived('pipeline:init');
+
   const { values } = parseArgs({
     args: process.argv.slice(2),
     options: {

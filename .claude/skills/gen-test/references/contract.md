@@ -158,6 +158,7 @@ Severity-ranked findings against CLAUDE.md. `blocker` / `should-fix` / `nit`, ea
 
 ## Rules that bind every stage
 
+0. **On PowerShell, invoke npm scripts as `npm.cmd run …`.** `npm` resolves to `npm.ps1`, a PowerShell script, whose parameter binder eats `--` and every `--flag` before npm sees them — `npm run pipeline:set -- --test-file x.spec.ts` arrives as `set-field.ts x.spec.ts`. `npm.cmd` passes them through verbatim. Value flags then fail loudly; boolean flags (`--kill`, `--json`) vanish without a trace, so a `cleanup -- --kill` typed the wrong way reports instead of killing.
 1. **Write your artifact before you finish**, even if your stage failed. A missing artifact is indistinguishable from a crashed agent.
 2. **Never edit another stage's artifact.** Append to your own; read the others.
 3. **Report file paths, not summaries**, in your final message to the orchestrator — it needs to know what to gate, not what you thought.

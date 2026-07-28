@@ -33,6 +33,7 @@
 import { parseArgs } from 'node:util';
 import * as fs from 'fs';
 import * as path from 'path';
+import { requireFlagsSurvived } from './cli-args';
 import { PipelineError, resolveRunDir } from './run-directory';
 
 const HELP = `
@@ -57,6 +58,8 @@ function fail(message: string): never {
   console.error(`audit-run: ${message}`);
   process.exit(1);
 }
+
+requireFlagsSurvived('pipeline:audit');
 
 const { values } = parseArgs({
   args: process.argv.slice(2),

@@ -19,6 +19,7 @@
 
 import { parseArgs } from 'node:util';
 import { spawnSync } from 'node:child_process';
+import { requireFlagsSurvived } from './cli-args';
 
 const HELP = `
 Usage: cleanup [options]
@@ -41,6 +42,8 @@ Examples:
   cleanup --kill
   cleanup --dry-run --json
 `;
+
+requireFlagsSurvived('pipeline:cleanup');
 
 const { values } = parseArgs({
   args: process.argv.slice(2),

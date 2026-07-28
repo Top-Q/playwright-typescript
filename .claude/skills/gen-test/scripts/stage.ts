@@ -19,6 +19,7 @@
 
 import { parseArgs } from 'node:util';
 import * as path from 'path';
+import { requireFlagsSurvived } from './cli-args';
 import { PipelineError, StageEntry, appendStage, readRun, resolveRunDir } from './run-directory';
 
 const HELP = `
@@ -46,6 +47,8 @@ Examples:
   stage --stage gate:2 --status fail --exit 2 --note "ratio 0.71 — routing to 2.5"
   stage --list
 `;
+
+requireFlagsSurvived('pipeline:stage');
 
 const { values } = parseArgs({
   args: process.argv.slice(2),

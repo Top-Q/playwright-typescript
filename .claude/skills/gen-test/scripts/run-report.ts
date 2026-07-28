@@ -12,6 +12,7 @@
 import { parseArgs } from 'node:util';
 import * as fs from 'fs';
 import * as path from 'path';
+import { requireFlagsSurvived } from './cli-args';
 import { PipelineError, resolveRunDir } from './run-directory';
 
 const HELP = `
@@ -35,6 +36,8 @@ function fail(message: string): never {
   console.error(`run-report: ${message}`);
   process.exit(1);
 }
+
+requireFlagsSurvived('pipeline:report');
 
 const { values } = parseArgs({
   args: process.argv.slice(2),

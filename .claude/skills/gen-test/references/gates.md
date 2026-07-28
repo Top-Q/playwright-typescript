@@ -4,6 +4,26 @@ Gates are commands, not judgement. They exist so that a mistake made by one agen
 
 **Never advance a stage on a red gate.** A gate that is failing is telling you the previous stage did not finish its job.
 
+## On PowerShell, type `npm.cmd`, not `npm`
+
+Every command in this file and in `SKILL.md` is written as `npm run <alias> -- --flag value`. That form works in bash. **In PowerShell it silently loses every flag**, and the cause is not npm:
+
+```
+npm run pipeline:preflight -- --spec TC-MEM-009-01
+> tsx .../preflight.ts TC-MEM-009-01          # --spec is gone
+```
+
+`npm` resolves to `npm.ps1`, a PowerShell *script*, so PowerShell binds its arguments with the parameter binder instead of forwarding them as it would for a native command. The binder eats `--` as end-of-parameters and every `--flag` as the name of a parameter `npm.ps1` does not declare, passing on only the values.
+
+Two forms work. Prefer the first — the flags are then typed exactly as documented:
+
+```powershell
+npm.cmd run pipeline:preflight -- --spec TC-MEM-009-01     # npm.cmd is a batch file: a real native command
+npm run pipeline:preflight '--' '--spec' 'TC-MEM-009-01'   # quoting every token also survives the binder
+```
+
+Flags that take a value fail loudly when they are eaten — the value arrives as a stray positional and the script exits 1 explaining this (`cli-args.ts`). **Boolean flags fail silently**: `pipeline:cleanup -- --kill` becomes report-only, `--json` yields text, `--skip-gates` stops skipping. Nothing can detect those, which is why the rule is `npm.cmd` rather than a code fix.
+
 ## The gates
 
 | Command | Asserts | On failure |
@@ -28,7 +48,7 @@ It also enables a check the count alone cannot make: that the gap **ids** in the
 - **written but never declared** — the test throws `GAP-3`; the worklist has no such entry, so nobody will implement it.
 - **written more than once** — the same id in two steps, which makes "implement GAP-1" ambiguous.
 
-An explicit `--expect` still wins over the derived count. That is how stage 4 asks for zero against a `gaps.json` that legitimately still lists what stage 1 deferred.
+An explicit `--expect` still wins over the derived count. That is how stage 4 asks for zero against a `gaps.json` that legitimately still lists what stage 1 deferred — and with `--expect 0` the **declared but never written** arm is switched off, because their absence is exactly what that command is asking about. (It used to fire regardless, which made the documented stage-4 gate unpassable: a po-builder that implemented every gap scored one `missing` per gap and exited 1. The other two arms still apply.)
 
 ## The ratio gate
 
