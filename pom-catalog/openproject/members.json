@@ -2,7 +2,7 @@
   "module": "members",
   "file": "members.json",
   "app": "openproject",
-  "generatedAt": "2026-07-22T16:28:44.936Z",
+  "generatedAt": "2026-07-28T09:34:02.152Z",
   "schemaVersion": 2,
   "classes": [
     {
@@ -130,14 +130,14 @@
         {
           "name": "openFilter",
           "signature": "openFilter(): Promise<void>",
-          "description": "Opens the filter panel and waits for its Apply button, making the filter\nfields usable.",
+          "description": "Opens the filter panel and waits for its Apply button, making the filter\nfields usable. Idempotent — the Filter control is a *toggle*, and the\npanel's open state is persisted in `localStorage` (\"showFilter\") and so\nsurvives page loads within a test, which means an unconditional click can\njust as easily close it.",
           "aliases": [
             "showFilterPanel",
             "clickFilter",
             "toggleFilterPanel"
           ],
           "prerequisites": "The Members page is open",
-          "observableState": "The filter panel opens, exposing the Status, Role, and Name filter fields"
+          "observableState": "The filter panel is visible, exposing the Status, Role, Work package shares, and Name filter fields"
         },
         {
           "name": "filterByName",
@@ -150,6 +150,19 @@
           ],
           "prerequisites": "The filter panel is open — call {@link openFilter} first",
           "observableState": "The members table reloads showing only members matching the name"
+        },
+        {
+          "name": "filterByRole",
+          "signature": "filterByRole(role: string): Promise<MembersPage>",
+          "description": "Filters the members list by a project role: opens the filter panel if it\nis not already open, picks the role in the panel's Role dropdown, applies\nthe filter, and returns the reloaded list with the whole filtered set on\none page.\n\nThis filters by *project role* (the panel's Role field). It is not the\nstatus filter — see {@link clickSidebarAll} and friends for that — and it\ndoes not change anybody's role: {@link selectRole} sets the role of a\nmember about to be added, and\n{@link MemberTableRowComp.clickManageRoles} edits an existing member's.\n\nThe panel is a `GET` form onto the members path, so applying navigates\nand the role lands in the URL as `role_id=<id>`. Pagination is *not*\ncarried across that navigation, so the response is the default 20-row\nfirst page — this widens it again before returning, so a caller counting\nrows or asserting a member's absence sees the complete filtered set.",
+          "aliases": [
+            "applyRoleFilter",
+            "selectRoleFilter",
+            "roleFilter",
+            "filterMembersByRole"
+          ],
+          "prerequisites": "The Members page is open and `role` is one of the project's givable role names",
+          "observableState": "The members table reloads showing only members holding that role, on a single page; the URL carries `role_id`"
         },
         {
           "name": "clearFilter",

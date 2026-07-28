@@ -1,20 +1,20 @@
 {
   "app": "openproject",
   "poRoot": "src/po/openproject",
-  "generatedAt": "2026-07-22T16:28:44.936Z",
+  "generatedAt": "2026-07-28T09:34:02.152Z",
   "schemaVersion": 2,
   "totals": {
     "modules": 6,
     "classes": 27,
-    "methods": 120
+    "methods": 121
   },
   "coverage": {
-    "methods": 120,
-    "withDescription": 120,
-    "withAliases": 89,
-    "withPrerequisites": 89,
-    "withObservableState": 89,
-    "fullyAnnotated": 89
+    "methods": 121,
+    "withDescription": 121,
+    "withAliases": 90,
+    "withPrerequisites": 90,
+    "withObservableState": 90,
+    "fullyAnnotated": 90
   },
   "modules": [
     {
@@ -194,7 +194,7 @@
       "module": "members",
       "file": "members.json",
       "classCount": 3,
-      "methodCount": 31,
+      "methodCount": 32,
       "classes": [
         {
           "name": "MembersPage",
@@ -205,7 +205,7 @@
             "MemberListPage",
             "TeamPage"
           ],
-          "methodCount": 16
+          "methodCount": 17
         },
         {
           "name": "MemberTableComp",

@@ -26,7 +26,9 @@ export class MembersPage extends BasePage<MembersPage> {
     private readonly roleSelect: Locator;
     private readonly submitAddMemberButton: Locator;
     // Filter panel locators
+    private readonly filterPanel: Locator;
     private readonly filterNameInput: Locator;
+    private readonly filterRoleSelect: Locator;
     private readonly filterApplyButton: Locator;
     private readonly filterClearButton: Locator;
 
@@ -76,10 +78,34 @@ export class MembersPage extends BasePage<MembersPage> {
             .getByRole('button', { name: 'Add' })
             .describe('Add member submit button');
 
-        // Filter panel
+        // Filter panel. The whole panel is the `<fieldset
+        // class="simple-filters--container">` rendered by
+        // `individual_principal_base_filter_component.html.erb`; its
+        // `<legend>Filters</legend>` makes it a `group` named "Filters", and it
+        // is the only fieldset on the page. Collapsing is done by adding a
+        // `collapsed` class (members-form.controller.ts), which zeroes the
+        // element's box — so the panel's own visibility is the reliable
+        // open/closed signal.
+        this.filterPanel = page
+            .getByRole('group', { name: 'Filters' })
+            .describe('Members filter panel');
         this.filterNameInput = page
             .getByRole('textbox', { name: /Name/ })
             .describe('Name filter input');
+        // `<select name="role_id" id="role_id">` with
+        // `<label for="role_id">Role:</label>` — a plain Rails
+        // `collection_select`, so `selectOption` works. Options are the
+        // project's givable roles by name ("Member", "Reader",
+        // "Project admin"), valued by role id, plus a leading blank.
+        // Scoped to the panel so it can never collide with the add-member
+        // form's role dropdown.
+        this.filterRoleSelect = this.filterPanel
+            .getByLabel('Role:')
+            .describe('Role filter dropdown');
+        // `submit_tag t(:button_apply)` in
+        // `individual_principal_base_filter_component.html.erb` — an
+        // `<input type="submit">`, so the role is `button`. (Its neighbour
+        // Clear *is* an `<a>`; the two are easy to mix up.)
         this.filterApplyButton = page
             .getByRole('button', { name: 'Apply' })
             .describe('Apply filter button');
@@ -269,13 +295,26 @@ export class MembersPage extends BasePage<MembersPage> {
 
     /**
      * Opens the filter panel and waits for its Apply button, making the filter
-     * fields usable.
+     * fields usable. Idempotent — the Filter control is a *toggle*, and the
+     * panel's open state is persisted in `localStorage` ("showFilter") and so
+     * survives page loads within a test, which means an unconditional click can
+     * just as easily close it.
      *
      * @aliases showFilterPanel, clickFilter, toggleFilterPanel
      * @prerequisites The Members page is open
-     * @observable-state The filter panel opens, exposing the Status, Role, and Name filter fields
+     * @observable-state The filter panel is visible, exposing the Status, Role, Work package shares, and Name filter fields
      */
     async openFilter(): Promise<void> {
+        if (await this.filterPanel.isVisible()) {
+            return;
+        }
+        // A member-name hover card left open over the sub-header swallows this
+        // click: the retry loop reports `.op-user-hover-card` from
+        // `#hover-card-overlay` intercepting pointer events, and it keeps
+        // itself open while the pointer is over the card, so retrying on the
+        // same spot never clears it. Parking the pointer away from any member
+        // link dismisses it first.
+        await this.page.mouse.move(0, 0);
         await this.filterButton.click();
         await this.filterApplyButton.waitFor();
     }
@@ -293,6 +332,44 @@ export class MembersPage extends BasePage<MembersPage> {
         await this.filterNameInput.fill(name);
         await this.filterApplyButton.click();
         await this.page.waitForLoadState('load');
+    }
+
+    /**
+     * Filters the members list by a project role: opens the filter panel if it
+     * is not already open, picks the role in the panel's Role dropdown, applies
+     * the filter, and returns the reloaded list with the whole filtered set on
+     * one page.
+     *
+     * This filters by *project role* (the panel's Role field). It is not the
+     * status filter — see {@link clickSidebarAll} and friends for that — and it
+     * does not change anybody's role: {@link selectRole} sets the role of a
+     * member about to be added, and
+     * {@link MemberTableRowComp.clickManageRoles} edits an existing member's.
+     *
+     * The panel is a `GET` form onto the members path, so applying navigates
+     * and the role lands in the URL as `role_id=<id>`. Pagination is *not*
+     * carried across that navigation, so the response is the default 20-row
+     * first page — this widens it again before returning, so a caller counting
+     * rows or asserting a member's absence sees the complete filtered set.
+     *
+     * @aliases applyRoleFilter, selectRoleFilter, roleFilter, filterMembersByRole
+     * @prerequisites The Members page is open and `role` is one of the project's givable role names
+     * @observable-state The members table reloads showing only members holding that role, on a single page; the URL carries `role_id`
+     * @param role - The role to filter by, e.g. "Member", "Reader", "Project admin".
+     * @returns The reloaded `MembersPage` showing the filtered list.
+     */
+    async filterByRole(role: string): Promise<MembersPage> {
+        await this.openFilter();
+        await this.filterRoleSelect.selectOption({ label: role });
+        await this.filterApplyButton.click();
+        // Waiting on a *non-empty* `role_id` does double duty: it marks the
+        // form navigation (a plain `waitForLoadState('load')` would resolve
+        // against the document that is still on screen), and it fails fast if
+        // the option never took — a blank selection submits `role_id=` and
+        // quietly returns the unfiltered list, which downstream looks like a
+        // broken filter rather than a broken selection.
+        await this.page.waitForURL(/[?&]role_id=\d+/);
+        return await this.showAllOnOnePage();
     }
 
     /**
