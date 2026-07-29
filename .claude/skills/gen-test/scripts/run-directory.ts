@@ -41,7 +41,14 @@ export interface RunRecord {
   specKind: 'requirement' | 'test-case' | 'markdown';
   sourceFile: string;
   specPath: string;
+  /** Directory under `src/po/openproject/`, and the `pom-catalog` file stem. */
   module: string;
+  /**
+   * Directory under `tests/ui/`. Separate from `module` because the two trees
+   * disagree: boards are `src/po/openproject/board` but `tests/ui/boards`.
+   * Optional only so run records written before this field are still readable.
+   */
+  testDirectory?: string;
   suggestedTestFile: string;
   /** Set by test-creator via `pipeline:set` when it deviates from the suggestion. */
   testFile?: string;

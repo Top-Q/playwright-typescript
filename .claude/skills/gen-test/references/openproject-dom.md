@@ -90,3 +90,19 @@ checkout, [`environment.md`](environment.md).
   account per run on the instance.
 - **The sidebar status links carry no `status=` param** in the default "All" view, so
   `waitForURL(/status=all/)` never resolves. Wait for the URL to *change* instead.
+- **The add-member role dropdown has no blank option**, so the browser preselects the
+  first givable role ("Member"). A user cannot leave it empty; only
+  `selectOption([])` reaches that state.
+- **A role-less add shows no error at all — do not go looking for one.**
+  `MembersController#create` answers the invalid branch with `render "index"` at **200,
+  not a redirect**, and Turbo (drive on, default form mode, no `data-turbo="false"` on
+  this form) discards non-redirect form responses. Verified live: the response body
+  *does* contain `.flash-error` "Roles need to be assigned.", but after the click the
+  DOM is untouched — no banner, no toast, form still open, URL unchanged. The message
+  is `flash.now`, so it does not survive a reload either.
+  Rejections that **redirect** do render normally: no user selected → "Please choose at
+  least one user or group.", and editing an existing member's roles down to none
+  (`#update`) → "Roles need to be assigned.". Read those with
+  `#primerized-flash-messages .flash-error`; the banner carries **no ARIA role**, so
+  `getByRole('alert')` matches zero elements, and the `data-test-selector` the Primer
+  component sets is absent from the deployed build.

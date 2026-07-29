@@ -35,7 +35,8 @@ Every `/gen-test` stage runs in its own subagent with its own context. Subagents
   "specKind": "test-case",              // "requirement" | "test-case" | "markdown"
   "sourceFile": "requirements/graph/FR-MEM-001.yaml",
   "specPath": ".pipeline/runs/<run-id>/spec.md",
-  "module": "members",                  // maps to src/po/openproject/<module> and tests/ui/<module>
+  "module": "members",                  // src/po/openproject/<module>, pom-catalog/openproject/<module>.json
+  "testDirectory": "members",           // tests/ui/<testDirectory> — not always the same string
   "suggestedTestFile": "tests/ui/members/invite-a-new-user-by-email.spec.ts",
   "testCaseIds": ["TC-MEM-001-02"],
   "branch": "test-gen/tc-mem-001-02",
@@ -47,6 +48,12 @@ Every `/gen-test` stage runs in its own subagent with its own context. Subagents
   ]
 }
 ```
+
+`module` and `testDirectory` are two fields because the repository's two trees do not agree:
+boards live in `src/po/openproject/board` but `tests/ui/boards`. `module` is the one to use
+for page objects and for the catalog file; `testDirectory` only ever names where the spec
+goes. Both are resolved from the requirement's `module:` by a table in `run-init.ts` —
+if a new module is missing from it, preflight's `module` check says so.
 
 `stages` is the run's timeline, appended to by `npm run pipeline:stage` (and by `pipeline:test-run` for each attempt). `status` is derived from the last entry, never set independently: a failed stage fails the run, `finalize` completes it, anything else means still in flight.
 

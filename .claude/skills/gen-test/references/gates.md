@@ -102,6 +102,8 @@ Read the check list, not just the exit code:
 - **A red gate** — stop and report. Generating a test on a broken baseline produces failures that cannot be attributed to the new code, which wastes the entire run.
 - **`gate:gaps` red** — a previous run aborted mid-flight and left gaps behind. Surface the list and let the user decide whether to revert them; it is not yours to clean up.
 - **`git` warn** — HEAD is already a `test-gen/` branch, so this run's diff will sit on top of another run's. Usually you want the base branch first.
+- **`module` warn** — the spec's module resolved to a directory that does not exist under `src/po/openproject/`. Correct and expected for a genuinely new module (stage 2.5 will map it). For a module you know has page objects, it means `run-init.ts`'s module table is missing an entry, and the run would otherwise reach test-creator with an empty catalog and gap out every step.
+- **`leaks` warn** — a previous session left a `playwright test` run alive. Clear it with `npm run pipeline:cleanup -- --kill` before the browser stages need a port.
 
 `--skip-gates` exists for debugging the pipeline itself and skips the only part that proves the baseline. `--no-branch` runs on the current branch. Neither belongs in a normal run.
 
@@ -140,6 +142,10 @@ npm run pipeline:cleanup             # close sessions; report leaked test proces
 npm run pipeline:cleanup -- --kill   # …and terminate them
 ```
 
-Sessions are closed by default. Leaked `playwright test --debug=cli` runs are only *reported* unless you pass `--kill`, because matching a command line and terminating what it hits is not something a script should decide on its own. A leaked debug run holds a browser and a port, and the next stage dies with `browser.bind: Server is already started` — a failure that looks like the new stage's fault.
+Sessions are closed by default. Leaked `playwright test` runs are only *reported* unless you pass `--kill`, because matching a command line and terminating what it hits is not something a script should decide on its own. A leaked run holds a browser and a port, and the next stage dies with `browser.bind: Server is already started` — a failure that looks like the new stage's fault.
+
+Detection is **not** keyed to `--debug=cli`. That flag names one way of starting a run rather than a property of one, so runs leaked by any other recipe were invisible — and cleanup then printed "nothing left holding a browser" and exited 0 with four of them alive, the oldest for five days. What is matched instead is the Playwright *runner*, executing tests, out of this checkout (`leaked-runs.ts`); `test-server` and `@playwright/mcp` are excluded by name because they are long-lived tooling, not runs. One leaked `npx playwright test` is four processes, so cleanup counts and kills tree **roots** and re-reads the process table afterwards rather than assuming the kill worked.
+
+`preflight` reports the same thing as a **warn**, because a leak inherited from an earlier session is a precondition the end of *this* run cannot fix.
 
 Exit 1 means something is still held. The branch is **not** cleaned up — it stays for the user to inspect, merge, or delete.

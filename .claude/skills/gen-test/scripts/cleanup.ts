@@ -3,12 +3,16 @@
  * cleanup — releases the browser resources a /gen-test run holds.
  *
  * Every browser-using stage ends with the same two instructions: close the
- * playwright-cli sessions, and stop any background `playwright test --debug=cli`
- * you started. They are repeated in the skill and in three agent definitions,
- * which is how the instruction gets followed three times out of four — and a
- * leaked debug session holds a browser and a port, so the next stage dies with
+ * playwright-cli sessions, and stop any background `playwright test` you
+ * started. They are repeated in the skill and in three agent definitions, which
+ * is how the instruction gets followed three times out of four — and a leaked
+ * run holds a browser and a port, so the next stage dies with
  * `browser.bind: Server is already started` and the failure looks like the new
  * stage's fault.
+ *
+ * Detection lives in `leaked-runs.ts`, and is deliberately not keyed to the
+ * `--debug=cli` flag: that matched one recipe for starting a run rather than a
+ * run, and missed every leak that came from any other.
  *
  * Sessions are closed by default: that is what `playwright-cli close-all` is
  * for, and it affects nothing but the tool's own browsers. **Processes are only
@@ -20,15 +24,17 @@
 import { parseArgs } from 'node:util';
 import { spawnSync } from 'node:child_process';
 import { requireFlagsSurvived } from './cli-args';
+import { describeRun, findLeakedTestRuns } from './leaked-runs';
 
 const HELP = `
 Usage: cleanup [options]
 
-Closes playwright-cli sessions and reports leaked --debug=cli test processes.
+Closes playwright-cli sessions and reports leaked playwright test runs
+belonging to this checkout.
 
 Options:
   -h, --help       Show this help message
-      --kill       Also terminate the leaked --debug=cli processes found
+      --kill       Also terminate the leaked test runs found
       --dry-run    Report what is open; close nothing
       --json       Emit machine-readable JSON
 
@@ -97,49 +103,25 @@ if (listed.code === 127) {
   }
 }
 
-// ------------------------------------------------- leaked debug processes
+// ------------------------------------------------- leaked test processes
 
-/**
- * Test runs started as `playwright test … --debug=cli` and never stopped.
- *
- * The flag alone is not a safe marker: any shell that *typed* the command still
- * carries the string on its own command line, and so does the query process
- * itself — searching for it naively reports the searcher. What is wanted is a
- * node process running Playwright, so both conditions are required.
- */
-function findDebugProcesses(): number[] {
-  const MARKER = '--debug=cli';
-  if (process.platform === 'win32') {
-    const query = shell(
-      'powershell -NoProfile -Command "Get-CimInstance Win32_Process ' +
-        "-Filter \\\"Name = 'node.exe'\\\" | " +
-        `Where-Object { $_.CommandLine -like '*${MARKER}*' ` +
-        "-and $_.CommandLine -like '*playwright*' } | " +
-        'Select-Object -ExpandProperty ProcessId"',
-    );
-    if (query.code !== 0) {
-      result.notes.push('could not enumerate processes; check for a stray --debug=cli run by hand');
-      return [];
-    }
-    return query.out
-      .split(/\r?\n/)
-      .map((line) => Number(line.trim()))
-      .filter((pid) => Number.isInteger(pid) && pid > 0 && pid !== process.pid);
-  }
-
-  const listing = shell('ps -eo pid,args');
-  if (listing.code !== 0) return [];
-  return listing.out
-    .split(/\r?\n/)
-    .filter((line) => line.includes(MARKER) && line.includes('playwright') && !line.includes('ps -eo'))
-    .map((line) => Number(line.trim().split(/\s+/)[0]))
-    .filter((pid) => Number.isInteger(pid) && pid > 0 && pid !== process.pid);
+const repoRoot = process.cwd();
+const leaked = findLeakedTestRuns(repoRoot);
+if (!leaked.enumerated) {
+  result.notes.push('could not enumerate processes; check for a stray playwright test run by hand');
+}
+result.processes = leaked.runs.map((run) => run.pid);
+for (const run of leaked.runs) {
+  result.notes.push(`leaked ${run.root ? 'run ' : 'child '}${describeRun(run)}`);
 }
 
-result.processes = findDebugProcesses();
+// Only the roots are terminated: `/T` takes each tree with it, so killing a
+// descendant as well would just report a failure for a process that is already
+// gone.
+const roots = leaked.runs.filter((run) => run.root).map((run) => run.pid);
 
-if (result.processes.length > 0 && values.kill && !values['dry-run']) {
-  for (const pid of result.processes) {
+if (roots.length > 0 && values.kill && !values['dry-run']) {
+  for (const pid of roots) {
     try {
       if (process.platform === 'win32') {
         // /T because the test process owns browser children; killing only the
@@ -160,7 +142,13 @@ if (result.processes.length > 0 && values.kill && !values['dry-run']) {
   }
 }
 
-const remaining = result.processes.filter((pid) => !result.killed.includes(pid));
+// What survived is a fact to be read back, not inferred from what was killed:
+// terminating a root takes its whole tree, so subtracting the killed pids from
+// the matched ones would report descendants as remaining after they had died.
+const remaining =
+  values.kill && !values['dry-run'] && result.killed.length > 0
+    ? findLeakedTestRuns(repoRoot).runs.map((run) => run.pid)
+    : result.processes.filter((pid) => !result.killed.includes(pid));
 const clean = result.closed !== false && (remaining.length === 0 || values['dry-run']);
 
 if (values.json) {
@@ -173,8 +161,10 @@ if (values.json) {
   if (values['dry-run']) console.log('cleanup: --dry-run, nothing was closed');
   if (result.killed.length > 0) console.log(`cleanup: killed ${result.killed.join(', ')}`);
   if (remaining.length > 0) {
+    const runs = roots.length > 0 ? roots.length : remaining.length;
     console.error(
-      `cleanup: ${remaining.length} --debug=cli process(es) still running: ${remaining.join(', ')}` +
+      `cleanup: ${runs} leaked test run(s) still going, ` +
+        `${remaining.length} process(es): ${remaining.join(', ')}` +
         (values.kill ? '' : '\n  pass --kill to terminate them, or stop them yourself'),
     );
   }

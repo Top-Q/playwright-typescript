@@ -23,10 +23,12 @@
 
 import { parseArgs } from 'node:util';
 import { spawnSync } from 'node:child_process';
+import * as fs from 'fs';
 import * as path from 'path';
 import { requireFlagsSurvived } from './cli-args';
 import { PipelineError, RunRecord, makeRunId } from './run-directory';
 import { initRun } from './run-init';
+import { describeRun, findLeakedTestRuns } from './leaked-runs';
 
 const HELP = `
 Usage: preflight --spec <ref> [options]
@@ -196,11 +198,72 @@ function probePlaywrightCli(): void {
   else record('playwright-cli', 'fail', 'not on PATH — the browser stages cannot investigate');
 }
 
+// ----------------------------------------------------------------- module
+
+/**
+ * Where the spec's module actually landed in the repository.
+ *
+ * A `module` naming no existing directory is not automatically wrong — that is
+ * precisely the `bare` case stage 2.5 exists for — so this warns rather than
+ * fails. What it prevents is the silent version: a *covered* module resolving to
+ * a directory that does not exist, which reaches test-creator as an empty
+ * catalog, gaps out every step, and spends an investigation pass rebuilding page
+ * objects that were there all along.
+ */
+function probeModule(runRecord: RunRecord): void {
+  const poDir = path.join(repoRoot, 'src/po/openproject', runRecord.module);
+  const catalog = path.join(repoRoot, 'pom-catalog/openproject', `${runRecord.module}.json`);
+  const testDir = runRecord.testDirectory ?? runRecord.module;
+
+  if (fs.existsSync(poDir) && fs.existsSync(catalog)) {
+    record('module', 'ok', `${runRecord.module} — page objects and catalog present`);
+  } else if (fs.existsSync(poDir)) {
+    record('module', 'warn', `${runRecord.module} has page objects but no ${runRecord.module}.json`);
+  } else {
+    record(
+      'module',
+      'warn',
+      `no src/po/openproject/${runRecord.module} — a new module (stage 2.5 will map it), ` +
+        'or the module mapping in run-init.ts needs an entry',
+    );
+  }
+  record('tests', 'ok', `tests/ui/${testDir}`);
+}
+
+// ------------------------------------------------------------ leaked runs
+
+/**
+ * Playwright runs left alive by an earlier session.
+ *
+ * Reported here as well as at cleanup because a leak inherited from a previous
+ * session holds a browser and a port before this run starts, and the end of this
+ * run cannot undo that. It warns rather than fails: the run may well succeed,
+ * and terminating somebody else's process is `cleanup --kill`'s decision to
+ * offer, not preflight's to make.
+ */
+function probeLeakedRuns(): void {
+  const leaked = findLeakedTestRuns(repoRoot);
+  if (!leaked.enumerated) {
+    record('leaks', 'warn', 'could not enumerate processes');
+  } else if (leaked.runs.length === 0) {
+    record('leaks', 'ok', 'no playwright test runs left over');
+  } else {
+    record(
+      'leaks',
+      'warn',
+      `${leaked.runs.length} leaked test run(s) from an earlier session — ` +
+        'run `npm run pipeline:cleanup -- --kill`:\n    ' +
+        leaked.runs.map(describeRun).join('\n    '),
+    );
+  }
+}
+
 // ----------------------------------------------------------------- main
 
 async function main(): Promise<number> {
   await probeApp(values['app-url']);
   probePlaywrightCli();
+  probeLeakedRuns();
 
   const blocked = checks.some((check) => check.status === 'fail');
 
@@ -225,6 +288,7 @@ async function main(): Promise<number> {
       runId = initialised.record.runId;
       runDir = initialised.runDir;
       record('run', 'ok', runDir);
+      probeModule(initialised.record);
     } catch (error) {
       record('run', 'fail', error instanceof PipelineError ? error.message : String(error));
     }

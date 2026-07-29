@@ -67,10 +67,49 @@ interface Requirement {
 const FR_ID = /^FR-[A-Z]+-\d+$/;
 const TC_ID = /^TC-(?<fr>[A-Z]+-\d+)-(?<index>\d+)$/;
 
-/** `members-roles` -> `members`; the PO/test directory the module maps onto. */
-function moduleDirectory(module: string | undefined): string {
-  if (!module) return 'misc';
-  return module.split(/[-_/]/)[0].toLowerCase();
+/** Where a spec's `module:` lands in the repository. */
+export interface ModuleDirs {
+  /** `src/po/openproject/<po>/` and `pom-catalog/openproject/<po>.json`. */
+  po: string;
+  /** `tests/ui/<tests>/`. */
+  tests: string;
+}
+
+/**
+ * The `module:` value in a requirement names a business area. The repository
+ * names two directories, and they do not always agree — `boards` lives in
+ * `src/po/openproject/board` but `tests/ui/boards` — so no single derived
+ * string can serve both.
+ *
+ * This replaces `module.split(/[-_/]/)[0]`, which took everything before the
+ * first hyphen. That produced the right answer for exactly one of the four
+ * modules in `requirements/graph/`: `members-roles` -> `members`. `work-packages`
+ * became `work` and `boards` stayed plural, so 23 of 34 requirements resolved to
+ * a directory and a catalog file that do not exist — and a well-covered module
+ * then presents as bare, sending the run through investigation and scaffolding to
+ * rebuild page objects it already had.
+ *
+ * A table is wrong in a way somebody notices: preflight checks the resolved
+ * directory and says so, rather than the mismatch surfacing three stages later.
+ */
+const MODULE_MAP: Record<string, ModuleDirs> = {
+  'members-roles': { po: 'members', tests: 'members' },
+  'work-packages': { po: 'workpackage', tests: 'workpackage' },
+  boards: { po: 'board', tests: 'boards' },
+  projects: { po: 'projects', tests: 'projects' },
+};
+
+export function moduleDirectories(module: string | undefined): ModuleDirs {
+  if (!module?.trim()) return { po: 'misc', tests: 'misc' };
+  const key = module.trim().toLowerCase();
+  const mapped = MODULE_MAP[key];
+  if (mapped) return mapped;
+  // An unmapped value is a module nobody has added yet, or a markdown spec named
+  // after its file. Keep it whole rather than guessing a shorter name: preflight
+  // reports that the directory does not exist, which is the honest signal, and
+  // for a genuinely new module that is exactly what stage 2.5 is for.
+  const fallback = key.replace(/[^a-z0-9]+/g, '');
+  return { po: fallback, tests: fallback };
 }
 
 function readRequirement(repoRoot: string, graph: string, frId: string): {
@@ -149,7 +188,7 @@ export function initRun(options: InitOptions): InitResult {
   if (!specRef) throw new PipelineError('a spec reference is required');
 
   let specMarkdown: string;
-  let module: string;
+  let dirs: ModuleDirs;
   let sourceFile: string;
   let specKind: RunRecord['specKind'];
   let testCaseIds: string[] = [];
@@ -159,7 +198,7 @@ export function initRun(options: InitOptions): InitResult {
     specKind = 'requirement';
     const { requirement, file } = readRequirement(repoRoot, graph, specRef);
     sourceFile = file;
-    module = moduleDirectory(requirement.module);
+    dirs = moduleDirectories(requirement.module);
     const cases = requirement.test_cases ?? [];
     if (cases.length === 0) throw new PipelineError(`${specRef} declares no test_cases`);
     testCaseIds = cases.map((testCase, index) => testCase.id ?? `${specRef}-${index + 1}`);
@@ -169,7 +208,7 @@ export function initRun(options: InitOptions): InitResult {
       '',
       `> ${requirement.text?.trim().replace(/\s+/g, ' ') ?? ''}`,
       '',
-      `Source: \`${file}\` · Module: \`${module}\` · ${cases.length} test case(s)`,
+      `Source: \`${file}\` · Module: \`${dirs.po}\` · ${cases.length} test case(s)`,
       '',
       '---',
       '',
@@ -180,7 +219,7 @@ export function initRun(options: InitOptions): InitResult {
     const frId = `FR-${TC_ID.exec(specRef)?.groups?.fr ?? ''}`;
     const { requirement, file } = readRequirement(repoRoot, graph, frId);
     sourceFile = file;
-    module = moduleDirectory(requirement.module);
+    dirs = moduleDirectories(requirement.module);
     const testCase = (requirement.test_cases ?? []).find((candidate) => candidate.id === specRef);
     if (!testCase) throw new PipelineError(`${frId} contains no test case with id ${specRef}`);
     testCaseIds = [specRef];
@@ -188,7 +227,7 @@ export function initRun(options: InitOptions): InitResult {
     specMarkdown = [
       `# ${specRef}`,
       '',
-      `Source: \`${file}\` · Module: \`${module}\``,
+      `Source: \`${file}\` · Module: \`${dirs.po}\``,
       '',
       '---',
       '',
@@ -204,7 +243,7 @@ export function initRun(options: InitOptions): InitResult {
     }
     sourceFile = toPosix(path.relative(repoRoot, file));
     specMarkdown = fs.readFileSync(file, 'utf8');
-    module = moduleDirectory(path.basename(file, path.extname(file)));
+    dirs = moduleDirectories(path.basename(file, path.extname(file)));
     slug = kebab(path.basename(file, path.extname(file)));
   }
 
@@ -222,8 +261,9 @@ export function initRun(options: InitOptions): InitResult {
     specKind,
     sourceFile,
     specPath: toPosix(path.relative(repoRoot, specPath)),
-    module,
-    suggestedTestFile: `tests/ui/${module}/${slug}.spec.ts`,
+    module: dirs.po,
+    testDirectory: dirs.tests,
+    suggestedTestFile: `tests/ui/${dirs.tests}/${slug}.spec.ts`,
     testCaseIds,
     branch: options.branch ?? null,
     createdAt: now.toISOString(),
