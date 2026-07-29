@@ -2,7 +2,7 @@
   "module": "workpackage",
   "file": "workpackage.json",
   "app": "openproject",
-  "generatedAt": "2026-07-28T09:34:02.152Z",
+  "generatedAt": "2026-07-29T10:20:20.472Z",
   "schemaVersion": 2,
   "classes": [
     {
@@ -106,7 +106,7 @@
       "name": "WorkPackageDetailsPage",
       "file": "src/po/openproject/workpackage/workPackageDetailsPage.ts",
       "kind": "page",
-      "description": "# Work Package Details Page\n\nThis class represents the split-view work package details page rendered\nafter a work package is created or selected. The URL pattern is\n`/projects/<projectId>/work_packages/details/<workPackageId>/overview`.\n\nThe details panel is displayed on the right side, while the underlying\nwork packages table remains visible on the left. The page exposes a\n\"Close details view\" button that hides the side panel and returns the\nuser to the full work packages list view.",
+      "description": "# Work Package Details Page\n\nThis class represents the split-view work package details page rendered\nafter a work package is created or selected. The URL pattern is\n`/projects/<projectId>/work_packages/details/<workPackageId>/overview`.\n\nThe details panel is displayed on the right side, while the underlying\nwork packages table remains visible on the left. The page exposes a\n\"Close details view\" button that hides the side panel and returns the\nuser to the full work packages list view.\n\nAttributes are edited inline: the displayed value is a `role=\"button\"`\nelement inside `.inline-edit--container.<attribute>`, clicking it swaps in an\neditor, and **the change is persisted as soon as a value is chosen** — the\ndetails view has no Save control for attribute edits. Because the table on\nthe left renders the same attribute containers, every field locator here is\nscoped to the `.work-packages--details` panel.",
       "aliases": [
         "WorkPackageOverviewPage",
         "WorkPackageSplitView"
@@ -123,6 +123,47 @@
           ],
           "prerequisites": "The work package details view is open",
           "observableState": "The browser navigates to `/projects/<id>/work_packages` and the full table is shown"
+        },
+        {
+          "name": "setAssignee",
+          "signature": "setAssignee(memberName: string): Promise<void>",
+          "description": "Assigns the work package to a project member.\n\nOpens the Assignee inline editor, types the member's name into its\nautocompleter and picks the matching entry. Selecting the entry is what\nsaves the work package — the method waits for the resulting\n`PATCH /api/v3/work_packages/<id>` to return and for the editor to collapse\nback to the display field, so it does not return before the change reached\nthe server.",
+          "aliases": [
+            "assignTo",
+            "setAssignedTo",
+            "assignWorkPackage",
+            "selectAssignee",
+            "setResponsible"
+          ],
+          "prerequisites": "The work package details view is open and the member is assignable in this project",
+          "observableState": "The Assignee field shows the member and the change is persisted; a reload still shows it"
+        },
+        {
+          "name": "getAssignee",
+          "signature": "getAssignee(): Promise<string>",
+          "description": "Returns the Assignee currently shown on the work package, or an empty\nstring when it is unassigned (the field then renders the \"-\" placeholder).",
+          "aliases": [
+            "getAssignedTo",
+            "assignee",
+            "readAssignee",
+            "getAssigneeName"
+          ],
+          "prerequisites": "The work package details view is open",
+          "observableState": "None — read-only query"
+        },
+        {
+          "name": "reloadFromServer",
+          "signature": "reloadFromServer(): Promise<WorkPackageDetailsPage>",
+          "description": "Reloads the work package details view from the server and waits for it to\ncome back.\n\nAttribute edits in this view are persisted the moment a value is chosen —\nthere is no Save control — so this is how a test confirms a change was\nactually stored rather than only reflected in the editor: everything read\nafter it is server state.",
+          "aliases": [
+            "reload",
+            "refresh",
+            "reloadWorkPackage",
+            "readFromServer",
+            "confirmSaved"
+          ],
+          "prerequisites": "The work package details view is open",
+          "observableState": "The browser reloads the same details URL and the panel re-renders with the stored attribute values"
         }
       ]
     },
@@ -130,7 +171,7 @@
       "name": "WorkPackagesPage",
       "file": "src/po/openproject/workpackage/workPackagesPage.ts",
       "kind": "page",
-      "description": "# Work Packages Page\n\nThis class represents the work packages list page in the OpenProject\napplication, at `/projects/<projectId>/work_packages`.\n\nThe page renders an Angular-driven table of work packages, with toolbar\ncontrols for creating, filtering and viewing work packages. Each row\nexposes a context menu link that lets the user open the details view,\nduplicate, delete, log time, etc.\n\nNotable behaviours:\n- The \"Create new work package\" toolbar button opens a dropdown menu of\n  work package types (Task, Milestone, Phase, etc.). The dropdown items\n  live in an Angular overlay outside the regular DOM tree.\n- The filter panel is hidden by default; clicking \"Activate Filter\"\n  reveals a \"Filter by text\" textbox that quick-filters the table.\n- After saving a new work package the URL changes to the details view\n  (`/work_packages/details/<id>/overview`).",
+      "description": "# Work Packages Page\n\nThis class represents the work packages list page in the OpenProject\napplication, at `/projects/<projectId>/work_packages`.\n\nThe page renders an Angular-driven table of work packages, with toolbar\ncontrols for creating, filtering and viewing work packages. Each row\nexposes a context menu link that lets the user open the details view,\nduplicate, delete, log time, etc.\n\nNotable behaviours:\n- The \"Create new work package\" toolbar button opens a dropdown menu of\n  work package types (Task, Milestone, Phase, etc.). The dropdown items\n  live in an Angular overlay outside the regular DOM tree.\n- The filter panel is hidden by default; clicking \"Activate Filter\"\n  reveals a \"Filter by text\" textbox that quick-filters the table.\n- The same panel carries an \"Add filter\" autocompleter, through which\n  attribute filters such as Assignee are added. Each added filter renders as\n  `li#filter_<name>` with an operator `select#operators-<name>` and a value\n  `ng-select#values-<name>`.\n- After saving a new work package the URL changes to the details view\n  (`/work_packages/details/<id>/overview`).",
       "aliases": [
         "WorkPackageListPage",
         "TasksPage",
@@ -207,6 +248,35 @@
           ],
           "prerequisites": "The work packages list page is open",
           "observableState": "Side effect — activates the filter panel if inactive and leaves the text filter set to `name`"
+        },
+        {
+          "name": "openWorkPackageByName",
+          "signature": "openWorkPackageByName(name: string): Promise<WorkPackageDetailsPage>",
+          "description": "Opens the split-view details of the work package with the given subject.\n\nThe table paginates at 20 rows, so the subject is first applied as the\nquick text filter to bring the row into view; the row's \"Open details view\"\nicon link is then clicked. Throws if no matching row is found.",
+          "aliases": [
+            "openWorkPackage",
+            "openWorkPackageDetails",
+            "clickWorkPackage",
+            "selectWorkPackage",
+            "viewWorkPackage",
+            "openDetails"
+          ],
+          "prerequisites": "The work packages list page is open and a work package with this subject exists",
+          "observableState": "The filter is set to `name` and the URL changes to `/work_packages/details/<id>/overview`, showing the details panel beside the table"
+        },
+        {
+          "name": "filterByAssignee",
+          "signature": "filterByAssignee(memberName: string): Promise<void>",
+          "description": "Restricts the table to the work packages assigned to a given member — the\n\"assigned items\" view of that member.\n\nAdds the Assignee filter to the filter panel if it is not present yet, then\npicks the member in its value autocompleter and waits for the table query\nto complete. The panel's default Status filter (\"open\") stays in place, so\nclosed work packages are not listed. The filter combines with\n{@link fillFilterByText}, which is how {@link isWorkPackageVisible} can then\nconfirm a single subject is among the member's items.",
+          "aliases": [
+            "filterByAssignee",
+            "showAssignedTo",
+            "assignedItems",
+            "filterByUser",
+            "myWorkPackages"
+          ],
+          "prerequisites": "The work packages list page is open and the member is assignable in this project",
+          "observableState": "The filter panel shows an Assignee filter set to the member, and the table lists only that member's open work packages"
         },
         {
           "name": "openDeleteDialogForWorkPackage",

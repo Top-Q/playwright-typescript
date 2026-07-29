@@ -2,7 +2,7 @@
   "module": "general",
   "file": "general.json",
   "app": "openproject",
-  "generatedAt": "2026-07-28T09:34:02.152Z",
+  "generatedAt": "2026-07-29T10:20:20.472Z",
   "schemaVersion": 2,
   "classes": [
     {
@@ -59,48 +59,69 @@
       "name": "MainMenuComp",
       "file": "src/po/openproject/general/mainMenuComp.ts",
       "kind": "component",
-      "description": "Represents the main menu component in OpenProject on the left of the page.\nAllows navigation to different sections like Boards, Time and Costs, Meetings, and Members.",
+      "description": "Represents the main menu component in OpenProject on the left of the page.\nAllows navigation to different sections like Boards, Time and Costs, Meetings, and Members.\n\nSome modules replace the project menu with their own submenu once opened —\nthe work packages list, for instance, swaps the project entries for its saved\nqueries and adds a \"Go back one menu level\" link. Every navigation method\ntherefore returns the menu to its project root first, so navigation works\nfrom anywhere in the project.",
       "aliases": [],
       "methods": [
         {
           "name": "clickBoardsLink",
           "signature": "clickBoardsLink(): Promise<BoardsPage>",
-          "description": "Click on the 'Boards' menu item and returns a BoardsPage.\nIt will also change the menu to the boards menu.",
-          "aliases": [],
-          "prerequisites": "",
-          "observableState": ""
+          "description": "Click on the 'Boards' menu item and returns a BoardsPage.\nIt will also change the menu to the boards menu. The menu is returned to\nthe project level first, so this works from inside another module too.",
+          "aliases": [
+            "openBoards",
+            "goToBoards",
+            "navigateToBoards"
+          ],
+          "prerequisites": "A project is open",
+          "observableState": "The browser navigates to the project's boards list and the menu switches to the boards submenu"
         },
         {
           "name": "clickTimeAndCostsLink",
           "signature": "clickTimeAndCostsLink(): Promise<CostReportsPage>",
-          "description": "Click on the 'Time and costs' menu item and returns a CostReportsPage.",
-          "aliases": [],
-          "prerequisites": "",
-          "observableState": ""
+          "description": "Click on the 'Time and costs' menu item and returns a CostReportsPage.\nThe menu is returned to the project level first, so this works from inside\nanother module too.",
+          "aliases": [
+            "openTimeAndCosts",
+            "goToCostReports",
+            "navigateToTimeAndCosts"
+          ],
+          "prerequisites": "A project is open",
+          "observableState": "The browser navigates to the project's cost reports page"
         },
         {
           "name": "clickMeetingsLink",
           "signature": "clickMeetingsLink(): Promise<MeetingsPage>",
-          "description": "Click on the 'Meetings' menu item and returns a MeetingsPage.",
-          "aliases": [],
-          "prerequisites": "",
-          "observableState": ""
+          "description": "Click on the 'Meetings' menu item and returns a MeetingsPage.\nThe menu is returned to the project level first, so this works from inside\nanother module too.",
+          "aliases": [
+            "openMeetings",
+            "goToMeetings",
+            "navigateToMeetings"
+          ],
+          "prerequisites": "A project is open",
+          "observableState": "The browser navigates to the project's meetings list"
         },
         {
           "name": "clickMembersLink",
           "signature": "clickMembersLink(): Promise<MembersPage>",
-          "description": "Click on the 'Members' menu item and returns a MembersPage.",
-          "aliases": [],
-          "prerequisites": "",
-          "observableState": ""
+          "description": "Click on the 'Members' menu item and returns a MembersPage.\nThe menu is returned to the project level first, so this works from inside\nanother module too — inside the work packages module, for instance, the\nproject entries are replaced by that module's saved queries.",
+          "aliases": [
+            "openMembers",
+            "goToMembers",
+            "navigateToMembers"
+          ],
+          "prerequisites": "A project is open",
+          "observableState": "The browser navigates to the project's members list"
         },
         {
           "name": "clickWorkPackagesLink",
           "signature": "clickWorkPackagesLink(): Promise<WorkPackagesPage>",
-          "description": "Click on the 'Work packages' menu item and returns a WorkPackagesPage.\n\nNavigates to the work packages list for the currently selected project.",
-          "aliases": [],
-          "prerequisites": "",
-          "observableState": ""
+          "description": "Click on the 'Work packages' menu item and returns a WorkPackagesPage.\n\nNavigates to the work packages list for the currently selected project.\nThe menu is returned to the project level first, so this works from inside\nanother module too.",
+          "aliases": [
+            "openWorkPackages",
+            "goToWorkPackages",
+            "navigateToWorkPackages",
+            "openTasks"
+          ],
+          "prerequisites": "A project is open",
+          "observableState": "The browser navigates to the project's work packages list and the menu switches to the work packages submenu"
         }
       ]
     },

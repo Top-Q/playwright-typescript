@@ -1,20 +1,20 @@
 {
   "app": "openproject",
   "poRoot": "src/po/openproject",
-  "generatedAt": "2026-07-28T09:34:02.152Z",
+  "generatedAt": "2026-07-29T10:20:20.472Z",
   "schemaVersion": 2,
   "totals": {
     "modules": 6,
     "classes": 27,
-    "methods": 121
+    "methods": 126
   },
   "coverage": {
-    "methods": 121,
-    "withDescription": 121,
-    "withAliases": 90,
-    "withPrerequisites": 90,
-    "withObservableState": 90,
-    "fullyAnnotated": 90
+    "methods": 126,
+    "withDescription": 126,
+    "withAliases": 100,
+    "withPrerequisites": 100,
+    "withObservableState": 100,
+    "fullyAnnotated": 100
   },
   "modules": [
     {
@@ -262,7 +262,7 @@
       "module": "workpackage",
       "file": "workpackage.json",
       "classCount": 5,
-      "methodCount": 16,
+      "methodCount": 21,
       "classes": [
         {
           "name": "DeleteWorkPackageDialogComp",
@@ -292,7 +292,7 @@
             "WorkPackageOverviewPage",
             "WorkPackageSplitView"
           ],
-          "methodCount": 1
+          "methodCount": 4
         },
         {
           "name": "WorkPackagesPage",
@@ -303,7 +303,7 @@
             "TasksPage",
             "WorkPackagesTablePage"
           ],
-          "methodCount": 8
+          "methodCount": 10
         },
         {
           "name": "WorkPackageTypeMenuComp",
