@@ -7,9 +7,13 @@
  * the step body is a single throw carrying an id and a plain-English
  * requirement.
  *
- *     await test.step('When the user changes the role to Reader', async () => {
+ *     await test.step('When the user changes the role to Reader', () => {
  *         throw new Error('GAP-3: change this member row role to a given value');
  *     });
+ *
+ * The body is synchronous because `require-await` is an error in this repo, and
+ * the marker is one line because this scanner matches it per line — a
+ * Prettier-wrapped throw is invisible here and scores zero gaps.
  *
  * po-builder then designs the API, implements it, and replaces the throw with
  * real calls. A gap therefore carries no method name, signature or return type
@@ -20,12 +24,22 @@
  *
  *   count  how many gaps remain. Expected to be `n` after stage 1 and 0 after
  *          stage 3. This is completeness.
- *   ratio  gaps as a fraction of the test's steps. A high ratio means the
+ *   ratio  gaps as a fraction of the spec's steps. A high ratio means the
  *          creator had almost no existing infrastructure to design against, so
  *          the "test" is a restatement of the spec. That is not the creator
  *          failing — it is the module needing investigation before generating
  *          against it is worth attempting, which is why it gets its own exit
  *          code rather than being lumped in with a count mismatch.
+ *
+ * The ratio's denominator comes from `spec.md` under `--run`, and only falls
+ * back to counting `test.step()` calls when there is no run record to read (or
+ * the spec is free-form markdown with no Gherkin lines). That fallback is the
+ * old behaviour, and it has a flaw the spec-line count does not: the agent being
+ * measured writes the test, so it also writes the denominator. A single
+ * legitimate non-spec step — a cleanup — moves a run across the threshold. Seen
+ * on 2026-07-29: 4 gaps over 7 `test.step()` calls routed to po-builder at 0.57,
+ * where the same run over 6 Gherkin lines is 0.67 and routes to investigation.
+ * `spec.md` is written by run-init before any agent runs, so it cannot be gamed.
  *
  * Gaps are legal in two places: a test file (the normal case) and a page-object
  * method (po-builder admitting it could not implement something). One marker
@@ -46,7 +60,13 @@ import { parseArgs } from 'node:util';
 import * as fs from 'fs';
 import * as path from 'path';
 import { requireFlagsSurvived } from './cli-args';
-import { PipelineError, readRun, resolveRunDir, resolveTestFile } from './run-directory';
+import {
+  PipelineError,
+  countSpecSteps,
+  readRun,
+  resolveRunDir,
+  resolveTestFile,
+} from './run-directory';
 
 /** The gate's threshold for "this test is mostly deferred", in one place. */
 const DEFAULT_RATIO_MAX = 0.6;
@@ -63,9 +83,12 @@ Options:
       --expect <n>      Required gap count; exits 1 on any other count (default: 0).
                         With --expect 0 the declared ids are expected to be gone,
                         so only "undeclared" and "duplicated" are checked
-      --ratio-max <r>   Exit 2 if gaps/steps exceeds r (needs --file)
-      --run <run-id>    Take the file, the expected count and the declared ids
-                        from a run directory ("latest" for the newest run)
+      --ratio-max <r>   Exit 2 if gaps/steps exceeds r (needs --file). The
+                        denominator is spec.md's Gherkin lines under --run, and
+                        the file's test.step() calls otherwise
+      --run <run-id>    Take the file, the expected count, the declared ids and
+                        the ratio's denominator from a run directory ("latest"
+                        for the newest run)
       --out <dir>       Runs root, with --run (default: .pipeline/runs)
       --json            Emit machine-readable JSON instead of a text report
       --quiet           Suppress the success line
@@ -127,6 +150,12 @@ let declaredIds: string[] | undefined;
 let declaredMustAppear = true;
 let expected = values.expect === undefined ? 0 : Number(values.expect);
 let ratioMax = values['ratio-max'] === undefined ? undefined : Number(values['ratio-max']);
+/**
+ * Gherkin lines in the run's spec.md. The ratio's denominator when it is
+ * available, because unlike the `test.step()` count it is not written by the
+ * agent the ratio is measuring.
+ */
+let specSteps: number | undefined;
 
 if (values.run !== undefined) {
   try {
@@ -159,6 +188,7 @@ if (values.run !== undefined) {
     // what they always meant, so they stay on.
     declaredMustAppear = expected > 0;
     ratioMax ??= DEFAULT_RATIO_MAX;
+    specSteps = countSpecSteps(runDir);
   } catch (error) {
     if (error instanceof PipelineError) fail(error.message);
     throw error;
@@ -268,9 +298,16 @@ for (const absolute of scanTargets()) {
 
 const count = hits.length;
 const countMatched = count === expected;
+/**
+ * Spec lines when the run record has them, the file's own `test.step()` count
+ * otherwise. Reported alongside the ratio so a surprising routing decision can
+ * be read back without re-deriving it.
+ */
+const ratioBasis: 'spec' | 'test.step' = specSteps === undefined ? 'test.step' : 'spec';
+const denominator = specSteps ?? steps;
 // Zero steps means the file is not a test — report the ratio as 0 rather than
 // dividing by zero and routing the run to investigation over a parse quirk.
-const ratio = steps === 0 ? 0 : count / steps;
+const ratio = denominator === 0 ? 0 : count / denominator;
 const ratioExceeded = ratioMax !== undefined && ratio > ratioMax;
 
 /**
@@ -309,7 +346,19 @@ const idsMatched =
 if (values.json) {
   console.log(
     JSON.stringify(
-      { expected, count, steps, ratio, ratioMax, declaredIds, ids: idComparison, gaps: hits },
+      {
+        expected,
+        count,
+        steps,
+        specSteps,
+        ratioBasis,
+        denominator,
+        ratio,
+        ratioMax,
+        declaredIds,
+        ids: idComparison,
+        gaps: hits,
+      },
       null,
       2,
     ),
@@ -363,7 +412,9 @@ if (!idsMatched && idComparison !== undefined) {
 if (ratioExceeded) {
   if (!values.json) {
     console.error(
-      `\ncheck-gaps: ${count}/${steps} steps are gaps (${ratio.toFixed(2)} > ${ratioMax}).` +
+      `\ncheck-gaps: ${count}/${denominator} ${ratioBasis === 'spec' ? 'spec step(s)' : 'test.step() call(s)'}` +
+        ` are gaps (${ratio.toFixed(2)} > ${ratioMax}).` +
+        (ratioBasis === 'spec' ? ` The test has ${steps} test.step() call(s).` : '') +
         `\nThe catalog covered too little of this spec for the test to be a design rather than` +
         `\na restatement of it. Investigate the module and regenerate the catalog before` +
         `\ngenerating against it.`,
@@ -382,9 +433,16 @@ if (!values.quiet && !values.json) {
     console.log(`check-gaps: ${count} gap(s), as expected`);
   } else {
     console.log(
-      `check-gaps: ${count} gap(s) across ${steps} step(s)` +
+      `check-gaps: ${count} gap(s) across ${denominator} ` +
+        `${ratioBasis === 'spec' ? 'spec step(s)' : 'test.step() call(s)'}` +
         ` (ratio ${ratio.toFixed(2)}), as expected`,
     );
+    if (ratioBasis === 'spec' && steps !== denominator) {
+      // The two counts differing is normal and fine — a cleanup step is not a
+      // spec line — but it is the thing that used to decide the routing
+      // silently, so it is said out loud rather than left to be re-derived.
+      console.log(`  (the test has ${steps} test.step() call(s); the ratio uses the spec)`);
+    }
   }
   if (idComparison !== undefined) {
     const declaredCount = declaredIds?.length ?? 0;

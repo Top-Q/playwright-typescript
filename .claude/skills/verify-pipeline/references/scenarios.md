@@ -25,23 +25,30 @@ node -e "const i=require('./pom-catalog/openproject/index.json'); i.modules.forE
 ls tests/ui/*                      # which specs already exist
 ```
 
-**Default fixture: `TC-MEM-009-01`** — filter the Members list by Role.
+**Default fixture: `TC-WP-006-01`** — assign a Work Package to a current Project Member.
 
-Members is the best-covered module (3 classes, ~40 methods). `MembersPage` has
-`openFilter`, `filterByName`, `clearFilter` and the sidebar filters, so navigation and
-table reading resolve from the catalog — but nothing addresses the Role or Status filter
-controls. That should yield a small number of real gaps against a mostly-buildable test,
-which is exactly the shape the pipeline was designed for.
+`workpackage` has 5 classes and (as of 2026-07-29) 21 methods covering create, text-filter,
+open, delete and the assignee vocabulary this fixture's own run added. Pick a WP test case
+whose subject matter sits next to that: status transitions (`FR-WP-003`/`FR-WP-004`),
+sorting (`FR-WP-011`), bulk edit (`FR-WP-012`), attachments (`FR-WP-007`) and the Activity
+log (`FR-WP-009`) are all uncovered as of that date, while navigation and creation resolve
+from the catalog.
 
-Fallbacks, if members has since grown to cover it: `TC-MEM-004-01` (edit a member's role
-in place), then any `TC-BRD-*` or `TC-WP-*` meeting the rule.
+**The members fixtures are spent.** `TC-MEM-009-01` (the original default) has a committed
+test at `tests/ui/members/filter-members-list-by-role.spec.ts`, and `TC-MEM-004-01` (the
+original fallback) is now *fully* covered — `MemberTableRowComp` gained `clickManageRoles`,
+`toggleRole`, `isRoleChecked` and `clickChangeButton`, so it yields zero gaps and never
+exercises po-builder. Both fail the selection rule, in opposite directions. Expect this
+document to go stale the same way: **re-run the two commands above and check `tests/ui/`
+before trusting any named fixture here.** A scenario that has been run once is a scenario
+that has been consumed.
 
 **What is under test:** stages 1 → 2 → 3 → 4 → 5 → (6) → 7 → 8, with 2.5 *not* taken.
 
 | # | Expectation | How you know |
 |---|---|---|
 | 1 | Stage 1 produces a test whose steps mostly resolve to existing methods | `plan.md` — count rows resolving to a method vs to `GAP-` |
-| 2 | Stage 2 exits **0**, ratio comfortably under 0.6 | `gate:gaps --json` — record the exact ratio |
+| 2 | Stage 2 exits **0**, ratio comfortably under 0.6 | `gate:gaps --json` — record `ratio`, and also `specSteps`, `steps` and `ratioBasis`. The ratio divides by the spec's Gherkin lines; `steps` (the test's `test.step()` calls) is reported alongside. A large gap between the two is worth a look at `plan.md` even when the gate is green |
 | 3 | Stage 2.5 is **not** entered | no `investigation.md` in the run dir |
 | 4 | test-creator touched only the test file | scope probe P1 — any `src/po/**` change is a mandate breach |
 | 5 | Gaps are real, not discovery failures | probe P4 — no gap satisfiable by a method already in the catalog |

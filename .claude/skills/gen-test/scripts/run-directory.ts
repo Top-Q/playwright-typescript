@@ -69,18 +69,20 @@ export function relativeToRepo(repoRoot: string, target: string): string {
 }
 
 export function kebab(text: string): string {
-  return (
-    text
-      .toLowerCase()
-      // Parentheticals are cross-references ("(BR-MEM-01)"), not part of the name.
-      .replace(/\([^)]*\)/g, ' ')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-      .slice(0, 60)
-      // Truncation can leave a trailing separator or a half word; drop both.
-      .replace(/-+[a-z0-9]{0,2}$/, '')
-      .replace(/-+$/, '')
-  );
+  const full = text
+    .toLowerCase()
+    // Parentheticals are cross-references ("(BR-MEM-01)"), not part of the name.
+    .replace(/\([^)]*\)/g, ' ')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  const sliced = full.slice(0, 60);
+  // Truncation can leave a trailing separator or a half word; drop both — but
+  // only when something was actually cut. Applied unconditionally it also ate
+  // the meaningful tail of a short string: `TC-WP-006-01` became `tc-wp-006`,
+  // so a run id named the requirement rather than the test case, and two test
+  // cases of one FR were distinguishable only by timestamp.
+  const trimmed = sliced.length < full.length ? sliced.replace(/-+[a-z0-9]{0,2}$/, '') : sliced;
+  return trimmed.replace(/-+$/, '');
 }
 
 /**
@@ -151,6 +153,41 @@ export function appendStage(runDir: string, entry: StageEntry): RunRecord {
         : 'in-progress';
   writeRun(runDir, record);
   return record;
+}
+
+/**
+ * A Gherkin line in spec.md, as `run-init` renders one: a keyword at the start
+ * of the line followed by the sentence. Bullets and headings cannot match, so
+ * the surrounding prose of a free-form markdown spec is not counted.
+ */
+const GHERKIN_LINE = /^(Given|When|Then|And|But)\s+\S/;
+
+/**
+ * Counts the Gherkin lines in a run's `spec.md` — the denominator of the ratio
+ * gate.
+ *
+ * The ratio previously divided by the number of `test.step()` calls in the
+ * generated file, which meant the agent being measured also chose the
+ * denominator: one legitimate non-spec step (a cleanup) is enough to move a run
+ * from "investigate this module" to "hand it all to po-builder". A run observed
+ * on 2026-07-29 routed on 4/7 = 0.57 where the spec-line count gave 4/6 = 0.67,
+ * over the threshold, and the creator had to flag it in prose for anyone to
+ * notice.
+ *
+ * spec.md is written by `run-init` from the requirement graph before any agent
+ * runs, so nothing downstream can inflate it.
+ *
+ * @returns The count, or `undefined` when the spec has no Gherkin lines at all
+ *   — a free-form markdown spec — so the caller can fall back.
+ */
+export function countSpecSteps(runDir: string): number | undefined {
+  const file = path.join(runDir, 'spec.md');
+  if (!fs.existsSync(file)) return undefined;
+  const count = fs
+    .readFileSync(file, 'utf8')
+    .split(/\r?\n/)
+    .filter((line) => GHERKIN_LINE.test(line.trim())).length;
+  return count > 0 ? count : undefined;
 }
 
 /**

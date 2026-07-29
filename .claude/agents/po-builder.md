@@ -129,6 +129,9 @@ A locator that matches two elements passes lint and fails at runtime. OpenProjec
 
 - Write `build-report.md`: one row per gap giving the API you chose, the locator, **and its evidence** (source file path, or snapshot file + ref). A row without evidence means you guessed.
 - Confirm no `GAP-` marker survives in the test file — each one must have become a real call.
+- **Check the alias closure on every gap you implemented.** For each gap, at least one term in its `searched` list must appear in the `@aliases` (or the name) of the method you shipped for it. Do this by reading the two lists side by side, not from memory.
+
+  A method whose intent lives only in its description is not discoverable the way `@aliases` are, and the next run will search those exact words, find nothing, and re-declare your gap. Real example: GAP-3 searched `save, clickSave, submit, persist, update, confirm, apply`; the method shipped as `reloadFromServer` with aliases `reload, refresh, reloadWorkPackage, readFromServer, confirmSaved` — not one of them. If your API name legitimately does not match the searched vocabulary (it often will not; the creator was guessing at an API it could not see), that is exactly what `@aliases` is for. Add the searched terms. If you decide a searched term would be actively misleading as an alias, say so in the build report's **API notes** rather than dropping it silently.
 - `npm run catalog` to regenerate.
 - `npx eslint <every file you touched>` — fix all errors.
 - **Stop any background `--debug=cli` run you started**: `npm run pipeline:cleanup -- --kill` closes the sessions and terminates the leaked runs. A leaked session breaks the next stage.

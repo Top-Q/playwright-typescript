@@ -115,6 +115,18 @@ A gap is a **requirement without an API**. The creator has never seen the page, 
 
 Each `id` must appear exactly once in the test file as `throw new Error('GAP-1: …')`. `npm run gate:gaps -- --run latest` compares the two **by id**, not merely by count: an id declared and never written, written and never declared, or written twice, each fails the run.
 
+**Two mechanical constraints on how a gap is written.** Both were discovered by a creator mid-run and cost it a repair pass; neither is negotiable:
+
+```typescript
+// The step body is SYNCHRONOUS - no `async`.
+await test.step('When the user changes the role to Reader', () => {
+    throw new Error('GAP-3: change this member row role to a given value');
+});
+```
+
+- **The body must not be `async`.** `require-await` and `@typescript-eslint/require-await` are both **errors** in this repo, and an `async` body containing only a throw trips both — so the canonical-looking `async () => { throw … }` cannot pass `gate:lint`. `test.step` accepts a synchronous body. po-builder makes it `async` again when it fills the step in.
+- **The marker must fit on one line.** `check-gaps` matches `throw new Error('GAP-n: …')` per line, so a Prettier-wrapped throw is invisible to the gate and the run scores zero gaps. Keep the whole marker inside 100 columns including indent, which means the in-test text is terser than `requirement` in `gaps.json`. That is fine — po-builder works from `gaps.json`, not from the throw.
+
 An empty array is a valid and good outcome: it means the test was built entirely from existing infrastructure, and the orchestrator skips the po-builder stage.
 
 ### `investigation.md` — written by `module-investigator`, read by `po-builder`

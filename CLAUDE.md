@@ -74,6 +74,35 @@ Tests simulate an **admin** user logged into the **Demo Project**.
 - All async functions must use `await`
 - **After generating or modifying any code, always run `npx eslint <file>` and fix all errors before finishing**
 
+### When VS Code shows `error typed value` but `eslint .` is clean
+
+A freshly generated test can light up with `Unsafe call of a(n) error type typed value` /
+`Unsafe assignment of an error typed value` while `npx eslint <file>` reports zero. There are
+two different causes and they need different responses, so **diagnose before believing either
+side**.
+
+Read which methods are flagged:
+
+- **Only methods added in this session are flagged, and pre-existing methods on the *same
+  object* are clean** → the **ESLint server's TypeScript program is stale**. It is still
+  linting against the version of the page object from before the methods existed. VS Code's
+  own TS server is fine (there will be no `ts`-source diagnostics on the file, only
+  `eslint`-source ones), which is what localises it to the ESLint server process.
+  **Fix: Command Palette → "ESLint: Restart ESLint Server"** (restarting the *TS* server does
+  not help — it is not the one complaining). Reloading the window also works.
+- **Every symbol imported through the barrel is flagged, including ones you did not touch** →
+  the circular-import artifact in rule 4. Fix it at the source: that module's files must
+  import `BasePage`/`BaseComponent` from `'../basePage'`, not from `internals.ts`.
+
+**Confirming which one you have takes one command.** Type-aware linting is on for `.ts`
+(`recommendedTypeChecked` + `projectService`), so if you doubt the CLI is really type-checking
+a path, drop a known-unsafe call (`const bad: any = {}; bad();`) into a scratch file there and
+confirm `no-unsafe-call` fires. If it fires and your real code is still clean, the CLI is
+right and the editor is stale.
+
+**`npm run gate:lint` and `npm run gate:types` are the authority either way.** Never "fix" a
+stale-server diagnostic with casts or by importing around the barrel.
+
 ## Test Isolation
 
 Tests must be runnable in isolation and not depend on side effects from other tests. Never assume test execution order. If a test deletes an entity, it must first create that entity within the same test.
@@ -154,10 +183,12 @@ Why the split: one agent doing discovery, browser investigation, PO authoring, a
 A **gap** is a test step the creator could not build from the catalog. It is the whole step body, and it names a requirement rather than an API:
 
 ```typescript
-await test.step('When the user changes the role to Reader', async () => {
+await test.step('When the user changes the role to Reader', () => {
     throw new Error('GAP-3: change this member row role to a given value');
 });
 ```
+
+The body is **synchronous** (`require-await` is an error here, so `async` with only a throw fails `gate:lint`) and the marker is **one line** (`check-gaps` matches it per line, so a Prettier-wrapped throw scores zero gaps).
 
 test-creator does not name the method, choose parameters, or edit anything under `src/po/` — it has never seen the page, and a wrong signature costs more than a missing one because it propagates into the test body. po-builder decides the API and replaces the throw.
 

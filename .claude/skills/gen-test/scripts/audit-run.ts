@@ -410,6 +410,8 @@ record(
 );
 
 let finalExit: string | undefined;
+/** Per-attempt exit codes, in attempt order; `undefined` where none was written. */
+const attemptExits: (string | undefined)[] = [];
 for (const attempt of attempts) {
   const codePath = path.join(testRunDir, attempt, 'exit-code');
   const stdoutPath = path.join(testRunDir, attempt, 'stdout.txt');
@@ -423,7 +425,9 @@ for (const attempt of attempts) {
       'the healer reads both; one is missing',
     );
   }
-  if (fs.existsSync(codePath)) finalExit = fs.readFileSync(codePath, 'utf8').trim();
+  const code = fs.existsSync(codePath) ? fs.readFileSync(codePath, 'utf8').trim() : undefined;
+  attemptExits.push(code);
+  if (code !== undefined) finalExit = code;
 }
 
 if (finalExit !== undefined) {
@@ -440,23 +444,41 @@ if (finalExit !== undefined) {
 
 const heal = read('heal-report.md');
 const healIterations = heal === undefined ? 0 : (heal.match(/^##\s+Iteration/gim) ?? []).length;
-if (attempts.length <= 1) {
-  record('heal.present', 'heal-report.md', 'heal-report.md exists', 'skip', 'the test passed first time');
+/**
+ * Attempts that failed *and* were followed by another attempt — the only ones a
+ * heal iteration can be owed for. Counting `attempts - 1` instead assumed the
+ * first attempt always fails, so any run whose test passed and was then re-run
+ * for some other reason (a flake re-check, a deliberate fault injection) scored
+ * a spurious warn. An attempt with no `exit-code` is not counted as a failure;
+ * `run.attempt.<n>` already fails for the missing file.
+ */
+const healedFailures = attemptExits.filter(
+  (code, index) => code !== undefined && code !== '0' && index < attemptExits.length - 1,
+).length;
+if (healedFailures === 0) {
+  record(
+    'heal.present',
+    'heal-report.md',
+    'heal-report.md exists',
+    'skip',
+    attempts.length <= 1 ? 'the test passed first time' : 'no failing attempt was followed by a re-run',
+  );
 } else if (heal === undefined) {
   record(
     'heal.present',
     'heal-report.md',
     'heal-report.md exists',
     'fail',
-    `${attempts.length} attempts but no heal report`,
+    `${healedFailures} failed attempt(s) were re-run but there is no heal report`,
   );
 } else {
   record(
     'heal.iterations',
     'heal-report.md',
     'one section per heal iteration',
-    healIterations >= attempts.length - 1 ? 'pass' : 'warn',
-    `${healIterations} section(s) for ${attempts.length - 1} re-run(s)`,
+    healIterations >= healedFailures ? 'pass' : 'warn',
+    `${healIterations} section(s) for ${healedFailures} healed failure(s)` +
+      ` across ${attempts.length} attempt(s)`,
   );
 }
 

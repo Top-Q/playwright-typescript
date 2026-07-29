@@ -40,7 +40,7 @@ Flags that take a value fail loudly when they are eaten — the value arrives as
 
 ## `--run`: the gate reads the run record
 
-`--run <id>` (or `--run latest`) takes the scope from the run directory instead of the command line: the test file from `run.json`, the expected count from the length of `gaps.json`, and `--ratio-max` defaults to 0.6. Nothing is transcribed by hand, so nothing can be transcribed wrongly.
+`--run <id>` (or `--run latest`) takes the scope from the run directory instead of the command line: the test file from `run.json`, the expected count from the length of `gaps.json`, the ratio's denominator from `spec.md`, and `--ratio-max` defaults to 0.6. Nothing is transcribed by hand, so nothing can be transcribed wrongly.
 
 It also enables a check the count alone cannot make: that the gap **ids** in the test are the ids the creator declared. Four ids matching four entries by number and not by name used to pass clean, which left po-builder working from a worklist that did not describe the test. Three ways it now fails, all exit 1:
 
@@ -52,11 +52,21 @@ An explicit `--expect` still wins over the derived count. That is how stage 4 as
 
 ## The ratio gate
 
-`--ratio-max` compares gaps against the test's `test.step()` count. It answers a different question from the count: not *did the creator record its work* but *did the creator have anything to work with*.
+`--ratio-max` compares gaps against the spec's step count. It answers a different question from the count: not *did the creator record its work* but *did the creator have anything to work with*.
 
 A ratio near 1.0 means nearly every step was deferred — the "test" is the spec restated in TypeScript. That is not the creator failing. It means the POM catalog covers this module so thinly that there was no vocabulary to design against, and pushing on would hand po-builder a whole module to invent in one pass, which is the monolithic agent this pipeline exists to avoid.
 
 So it exits **2**, distinct from the exit 1 of a real mismatch, and the orchestrator branches on it rather than aborting. Threshold 0.6 is a starting point, not a discovered constant — adjust once a few runs have been observed.
+
+### The denominator is the spec, not the test
+
+Under `--run` the denominator is the number of **Gherkin lines in `spec.md`**. It falls back to counting `test.step()` calls only when there is no run record, or when the spec is free-form markdown with no Gherkin lines at all.
+
+That distinction is load-bearing, and it was learned the hard way. Dividing by `test.step()` calls lets the agent being measured choose its own denominator: the creator writes the test, so it writes the step count. A run on 2026-07-29 (`tc-wp-006`) declared 4 gaps and wrote 7 steps — the 6 spec lines plus one cleanup step — and routed to po-builder at **0.57**. Over the spec's own 6 lines it is **0.67**, over the threshold, and should have gone to stage 2.5. The cleanup step was entirely legitimate; that is the point. One honest non-spec step was enough to flip the routing, and the only thing that surfaced it was the creator volunteering the arithmetic in `plan.md`. A gate that depends on the measured agent disclosing the problem is not a gate.
+
+`spec.md` is written by `run-init` from the requirement graph before any agent runs, so nothing downstream can inflate it.
+
+Both numbers are reported. `--json` carries `specSteps`, `steps`, `denominator` and `ratioBasis`; the text output says which basis it used and names the other count when they differ. If they differ a lot, read `plan.md` — the creator is either adding scaffolding steps or collapsing several spec lines into one.
 
 This replaces measuring module coverage separately at preflight: a module with no page objects produces a ratio near 1.0 by construction, so one number covers both cases.
 

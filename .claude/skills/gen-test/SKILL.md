@@ -62,7 +62,9 @@ npm run gate:lint
 npm run gate:gaps -- --run latest
 ```
 
-The gap gate reads the run record: the test file from `run.json`, the expected count from `gaps.json`, ratio threshold 0.6. You do not count gaps or transcribe a file path.
+The gap gate reads the run record: the test file from `run.json`, the expected count from `gaps.json`, the ratio's denominator from `spec.md`'s Gherkin lines, ratio threshold 0.6. You do not count gaps or transcribe a file path.
+
+The denominator is the **spec's** steps, not the test's `test.step()` calls, because the creator writes the test and would otherwise be choosing the number it is judged by — one extra cleanup step is enough to flip the routing. Both counts are printed; if they differ a lot, read `plan.md`.
 
 Do **not** run `npm run catalog` here. test-creator touches only the test file, so a catalog change at this point means it exceeded its scope — worth reporting, not silently absorbing.
 

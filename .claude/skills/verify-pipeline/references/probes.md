@@ -18,6 +18,18 @@ git status --short
 git diff --name-only
 ```
 
+**Snapshot the test file at the stage-1 boundary**, before running anything else. P5's
+assertion count needs it and there is no other way to get it later:
+
+```powershell
+Copy-Item <testFile> .pipeline/pipeline-tests/<test-id>/stage1-test.snapshot.ts
+```
+
+The pipeline never commits, so there is no sha to `git show`, and a brand-new test file is
+untracked so it is absent from `git diff <base>` too. Miss this copy and the single most
+serious finding this skill can produce — an assertion deleted to turn a failing run green —
+has nothing to check against.
+
 Diff against the allowed set for that stage:
 
 | After stage | May change | A change outside it means |
@@ -137,16 +149,22 @@ Each hit is a specific documented violation:
 - `return new XPage(this.page)` without a chained `.waitForLoad()` — the navigation rule.
   Check each hit in context; the regex cannot see the next line.
 
-Then the assertion count, which catches the subtler cheat:
+Then the assertion count, which catches the subtler cheat. It compares the final file
+against **the snapshot P1 told you to take at the stage-1 boundary** — not against git,
+which cannot see it:
 
-```bash
-git show <sha-after-stage-1>:<testFile> | grep -c "expect("
-grep -c "expect(" <testFile>
+```powershell
+(Select-String -Path .pipeline/pipeline-tests/<test-id>/stage1-test.snapshot.ts -Pattern 'expect\(' -AllMatches).Count
+(Select-String -Path <testFile> -Pattern 'expect\(' -AllMatches).Count
 ```
 
 A drop between stage 1 and the final file means an assertion was removed after the test
 started failing. That is the single most serious finding this skill can produce, because
 the run still ends green and every gate stays quiet.
+
+A *rise* is normal and expected: po-builder adds the assertions the gap steps were deferring.
+Read the added ones anyway — an assertion added on something trivially true (a URL the page
+object's `waitForLoad()` already waited for) inflates the count without testing anything.
 
 ---
 
@@ -228,3 +246,54 @@ A stage whose claims survive its gate every time is a stage you can trust with a
 job. A stage whose claims regularly do not is one whose prompt needs an explicit
 verification step before it may report success — which is a concrete, actionable finding
 about a specific file.
+
+---
+
+## P11 — Alias closure: will the next run find what this one built?
+
+P4 asks whether a gap was false *this* run. P11 asks whether it will be false *next* run.
+
+po-builder is told to turn a gap's `searched` terms into `@aliases` on the method it ships,
+precisely so the next creator searching those words finds it. When that does not happen, the
+next run searches the same terms, finds nothing, and re-declares the same gap — a defect
+whose cause and consequence land in **different runs**, which is why it needs a probe rather
+than a review.
+
+Report **per searched term**, not per gap. A gap-level "reachable: yes" hides which words
+work, and the whole failure mode is one specific word not working.
+
+```bash
+node -e "
+const gaps=require('./.pipeline/runs/<run-id>/gaps.json');
+const cat=require('./pom-catalog/openproject/<module>.json');
+const methods=[]; for (const c of cat.classes||[]) for (const m of c.methods||[]) methods.push(m);
+for (const g of gaps) {
+  console.log('== '+g.id+'  '+(g.requirement||''));
+  for (const term of (g.searched||[])) {
+    const t=term.toLowerCase();
+    const byAlias=methods.filter(m=>[m.name,...(m.aliases||[])].join(' ').toLowerCase().includes(t)).map(m=>m.name);
+    const byDesc =methods.filter(m=>(m.description||'').toLowerCase().includes(t)).map(m=>m.name);
+    console.log('   '+term.padEnd(18)+' alias: '+(byAlias.join(',')||'-')+'   desc: '+(byDesc.join(',')||'-'));
+  }
+}"
+```
+
+Then read it against `build-report.md`, which says **which method was shipped for which gap**.
+The question is not "does some method match" but "does *the method built for this gap* match":
+
+| Result | Means |
+|---|---|
+| The gap's own method is reachable by an alias | Working as intended. |
+| Only *other* methods match the terms | The worse case, and the one a gap-level check misses. The next creator searches, gets a plausible wrong hit, and either declares a false gap anyway or — worse — calls the wrong method. |
+| Reachable only via the description | Weak. It works, since the catalog indexes descriptions, but it rests on prose nobody maintains as a search key. `should-fix` against the page object's JSDoc. |
+| Reachable by neither | The gap will be re-declared verbatim next run. |
+
+**The matching is substring, so read the hits, do not just count them.** `confirmSaved`
+contains both `confirm` and `save`, so a method named for reloading scores as reachable by
+the vocabulary of saving. That is a real hit for a grepping creator and a misleading one for
+a human — which is precisely why this probe prints names rather than a tally.
+
+This probe exists because a `test-reviewer` found an instance of the middle row unaided
+(`reloadFromServer`, run `tc-wp-006`, 2026-07-29) and no probe in this file would have. Per
+P6's last row, that is the reviewer telling you the probe catalogue is incomplete — so it
+was extended.
