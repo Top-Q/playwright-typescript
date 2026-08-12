@@ -19,15 +19,6 @@ export default [
       // project service — which fails gate:lint with a parsing error rather than
       // anything about the repository.
       '.pipeline/**',
-      // Vendored Playwright trace-viewer sources used by the playwright-trace
-      // skill. Not project code: they import '@isomorphic/*' path aliases that
-      // this project's tsconfig does not define, so they cannot be type-checked
-      // here and must not be linted as if they were ours.
-      //
-      // Scoped to that one skill rather than all of `.claude/`, because the
-      // /gen-test pipeline's scripts live in `.claude/skills/gen-test/scripts/`
-      // and are ours: they must stay under the same gates they enforce.
-      '.claude/skills/playwright-trace/**',
       // Catalog test fixtures deliberately contain unused members and
       // await-less async methods to exercise the extractor; not real code.
       'tests/unit/fixtures/**',
