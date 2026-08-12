@@ -88,3 +88,18 @@ Override `waitForLoad()` to wait for a key element that confirms the page/compon
 When creating page objects for an entirely new module, follow the module scaffold checklist.
 
 See: [references/module-scaffold.md](references/module-scaffold.md)
+
+### 12. Every public method carries catalog metadata
+
+`@aliases`, `@prerequisites` and `@observable-state` on every public page-object method. Without them
+the POM catalog cannot be searched by intent, and the next agent rewrites the method you just added.
+
+See: [references/pom-metadata.md](references/pom-metadata.md)
+
+### 13. Search the catalog before writing a method, regenerate it after
+
+`pom-catalog/` indexes every existing page object and method. Search it by `@aliases`, not just by
+exact name (CLAUDE.md rule 25), then run `npm run catalog` once you have changed anything under `src/po/` —
+`gate:catalog` fails on a stale catalog.
+
+See: [references/pom-catalog.md](references/pom-catalog.md)

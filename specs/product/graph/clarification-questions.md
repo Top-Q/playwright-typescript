@@ -36,7 +36,7 @@ FR-WP-004 says Status transitions are restricted to those defined in the active 
 **Source:** FR-BRD-003 (Sec 6.3), BR-BRD-02 (Sec 6.4)
 **Affected test case:** `TC-BRD-003-05`
 
-FR-BRD-003 allows deleting a Basic Board list ("column"). BR-BRD-02 confirms the underlying Work Package is never deleted when removed from a Board. What's unspecified is the behavior when the *list itself* is deleted while it still contains cards: are the cards silently dropped from the Board (Work Packages unaffected, per BR-BRD-02), or does the system require the list to be emptied/cards relocated first?
+FR-BRD-003 allows deleting a Basic Board list ("column"). BR-BRD-02 confirms the underlying Work Package is never deleted when removed from a Board. What's unspecified is the behavior when the _list itself_ is deleted while it still contains cards: are the cards silently dropped from the Board (Work Packages unaffected, per BR-BRD-02), or does the system require the list to be emptied/cards relocated first?
 
 **Question:** Should deleting a non-empty list be blocked until it's emptied, or allowed with cards simply removed from the Board (while the underlying Work Packages remain untouched)?
 
@@ -60,7 +60,7 @@ FR-WP-008 explicitly rejects circular parent/child relations between Work Packag
 **Source:** FR-WP-004 (Sec 5.3), Sec 5.4 representative workflow, Sec 5.6 sample acceptance criteria
 **Affected test case:** `TC-WP-004-02`
 
-The representative workflow diagram (Sec 5.4) doesn't list a direct New → Closed transition — only New → In Progress → Closed or New → Rejected. But the document's own sample acceptance criteria (Sec 5.6) hedges: *"the system either allows it if the workflow permits or shows only valid transitions in the dropdown"* — i.e., the doc itself doesn't commit to an answer.
+The representative workflow diagram (Sec 5.4) doesn't list a direct New → Closed transition — only New → In Progress → Closed or New → Rejected. But the document's own sample acceptance criteria (Sec 5.6) hedges: _"the system either allows it if the workflow permits or shows only valid transitions in the dropdown"_ — i.e., the doc itself doesn't commit to an answer.
 
 **Question:** Is direct New → Closed a valid transition for the default Task workflow, or should the Status selector only ever show 'In Progress' or 'Rejected' from 'New'? (This also determines whether `TC-WP-004-02`'s current wording needs to become a hard pass/fail assertion instead of a conditional one.)
 
@@ -80,11 +80,11 @@ FR-WP-007 specifies attachments are supported "up to a configured maximum size (
 
 ## Summary Table
 
-| ID | Module | FR(s) | One-line issue |
-|----|--------|-------|-----------------|
-| CQ-01 | Projects | FR-PRJ-007 | PM unarchive permission conflicts with RBAC matrix |
-| CQ-02 | Boards / Work Packages | FR-BRD-002, FR-WP-004 | Board drag-and-drop vs. workflow restrictions |
-| CQ-03 | Boards | FR-BRD-003 | Deleting a non-empty Board list — card handling undefined |
-| CQ-04 | Projects / Work Packages | FR-PRJ-005, FR-WP-008 | Circular Project hierarchy not addressed |
-| CQ-05 | Work Packages | FR-WP-004 | Direct New→Closed transition — doc hedges |
-| CQ-06 | Work Packages | FR-WP-007 | 100MB attachment limit — inclusive or exclusive |
+| ID    | Module                   | FR(s)                 | One-line issue                                            |
+| ----- | ------------------------ | --------------------- | --------------------------------------------------------- |
+| CQ-01 | Projects                 | FR-PRJ-007            | PM unarchive permission conflicts with RBAC matrix        |
+| CQ-02 | Boards / Work Packages   | FR-BRD-002, FR-WP-004 | Board drag-and-drop vs. workflow restrictions             |
+| CQ-03 | Boards                   | FR-BRD-003            | Deleting a non-empty Board list — card handling undefined |
+| CQ-04 | Projects / Work Packages | FR-PRJ-005, FR-WP-008 | Circular Project hierarchy not addressed                  |
+| CQ-05 | Work Packages            | FR-WP-004             | Direct New→Closed transition — doc hedges                 |
+| CQ-06 | Work Packages            | FR-WP-007             | 100MB attachment limit — inclusive or exclusive           |

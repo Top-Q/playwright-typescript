@@ -20,7 +20,7 @@ One agent doing discovery, browser investigation, PO authoring, test writing, an
 Two load-bearing constraints, both on test-creator:
 
 - **No browser access.** It designs the test from the POM catalog alone, so it cannot resolve a design question by poking at the DOM. Test design and DOM archaeology never compete for the same context window.
-- **No page-object authoring.** Every step it cannot build becomes a *gap* — a throw carrying a plain-English requirement and no API. An agent that has never seen the page is in no position to name a method or fix a signature, and a wrong signature is worse than a missing one: it propagates into the test body and every stage after.
+- **No page-object authoring.** Every step it cannot build becomes a _gap_ — a throw carrying a plain-English requirement and no API. An agent that has never seen the page is in no position to name a method or fix a signature, and a wrong signature is worse than a missing one: it propagates into the test body and every stage after.
 
 po-builder, which has seen the page, designs those APIs and implements them.
 
@@ -87,7 +87,7 @@ Instead:
 3. `npm run catalog` — the new vocabulary has to be in the catalog or stage 1 cannot see it.
 4. Re-run stage 1 and stage 2.
 
-Both are agents, not work you do yourself. Scaffolding page objects in *your* context
+Both are agents, not work you do yourself. Scaffolding page objects in _your_ context
 would put module archaeology into the one context that has to survive all eight stages.
 
 **Budget: one investigation pass.** If the ratio is still over the threshold afterwards, stop and report. A module that needs investigating twice needs a human.
@@ -113,7 +113,7 @@ npm run gate:lint
 npm run pipeline:test-run
 ```
 
-It resolves the test file from `run.json`, allocates the next `test-run/<n>/`, writes `stdout.txt` and `exit-code`, and exits with the test's own exit code. Do not invoke Playwright by hand — the env-var prefix the old command used is a parse error in PowerShell, and without it a *passing* run opens the HTML report and hangs.
+It resolves the test file from `run.json`, allocates the next `test-run/<n>/`, writes `stdout.txt` and `exit-code`, and exits with the test's own exit code. Do not invoke Playwright by hand — the env-var prefix the old command used is a parse error in PowerShell, and without it a _passing_ run opens the HTML report and hangs.
 
 ### Stage 6 — heal loop, max 3 iterations
 
@@ -140,6 +140,7 @@ Then report to the user: the test file, whether it passes, what infrastructure w
 
 - **On PowerShell, type `npm.cmd run …` for every command in this file.** `npm` resolves to `npm.ps1`, a PowerShell script whose parameter binder eats `--` and every `--flag`, so `npm run gate:gaps -- --run latest` arrives as `check-gaps.ts latest`. Value flags fail loudly, boolean flags (`--kill`, `--json`, `--skip-gates`) vanish silently. See [references/gates.md](references/gates.md).
 - **Never commit, push, or delete the branch.** The branch is left in place for the user; cleanup is their call.
+- **Agent definitions in `.claude/agents/` are read once, at session start.** If a stage fails with `Agent type '<name>' not found` — listing only the built-in agents — the definition was added or edited after this session began. Tell the user to restart Claude Code; nothing you can do in-session fixes it.
 - **Use the pipeline scripts rather than reconstructing what they do.** `pipeline:preflight`, `pipeline:test-run`, `pipeline:cleanup` and `gate:gaps -- --run` exist because each of them was a sequence of shell commands that had to be retyped correctly every run, and was not: a `/dev/null` that means nothing on Windows, an env-var prefix that PowerShell cannot parse, a gap count transcribed by eye.
 - **Do not skip a red gate.** If you find yourself wanting to, the honest move is to stop and report.
 - **Do not let a stage's self-report substitute for a gate.** An agent saying "all gaps implemented" is a claim; `gate:gaps` is the evidence.

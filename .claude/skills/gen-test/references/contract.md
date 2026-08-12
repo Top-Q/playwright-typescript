@@ -33,7 +33,7 @@ Every `/gen-test` stage runs in its own subagent with its own context. Subagents
   "runId": "tc-mem-001-02-2026-07-22-09-46-16",
   "specRef": "TC-MEM-001-02",
   "specKind": "test-case",              // "requirement" | "test-case" | "markdown"
-  "sourceFile": "requirements/graph/FR-MEM-001.yaml",
+  "sourceFile": "specs/product/graph/FR-MEM-001.yaml",
   "specPath": ".pipeline/runs/<run-id>/spec.md",
   "module": "members",                  // src/po/openproject/<module>, pom-catalog/openproject/<module>.json
   "testDirectory": "members",           // tests/ui/<testDirectory> — not always the same string

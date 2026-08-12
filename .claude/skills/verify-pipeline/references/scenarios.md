@@ -91,7 +91,7 @@ before the first `-`, `_` or `/` and lowercasing it (`members-roles` → `member
 resolve it that way, not by eye.
 
 ```bash
-grep -h "^module:" requirements/graph/*.yaml | sort -u
+grep -h "^module:" specs/product/graph/*.yaml | sort -u
 ls src/po/openproject/
 ```
 

@@ -39,7 +39,7 @@ Options:
   -h, --help            Show this help message
       --spec <ref>      Required. FR id, TC id, or path to a markdown spec
       --app-url <url>   UI base URL to probe (default: http://localhost:8090)
-      --graph <dir>     Requirements graph directory (default: requirements/graph)
+      --graph <dir>     Requirements graph directory (default: specs/product/graph)
       --out <dir>       Runs root (default: .pipeline/runs)
       --branch <name>   Branch name to create (default: test-gen/<run-id>)
       --no-branch       Do not create a branch
@@ -63,7 +63,7 @@ const { values } = parseArgs({
     help: { type: 'boolean', short: 'h', default: false },
     spec: { type: 'string' },
     'app-url': { type: 'string', default: 'http://localhost:8090' },
-    graph: { type: 'string', default: 'requirements/graph' },
+    graph: { type: 'string', default: 'specs/product/graph' },
     out: { type: 'string', default: '.pipeline/runs' },
     branch: { type: 'string' },
     'no-branch': { type: 'boolean', default: false },

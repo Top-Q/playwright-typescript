@@ -141,7 +141,7 @@ await expect(page.getByRole('navigation')).toMatchAriaSnapshot(`
 
 ## 1. Planning
 
-Goal: produce a spec file (e.g. `specs/<feature>.plan.md`) that enumerates the scenarios to test. **Always** write the spec to a file.
+Goal: produce a spec file (e.g. `specs/product/<feature>.plan.md`) that enumerates the scenarios to test. **Always** write the spec to a file.
 
 ### 1.1 Prerequisite: workspace
 
@@ -233,7 +233,7 @@ Map out:
 
 ### 1.4 Write the spec file
 
-Save under `specs/<feature>.plan.md`. Use this structure:
+Save under `specs/product/<feature>.plan.md`. Use this structure:
 
 ```markdown
 # <Feature> Test Plan
@@ -284,7 +284,7 @@ Goal: take a spec file and produce Playwright test files. Optionally update the 
 
 ### 2.1 Inputs
 
-- **Spec file**, e.g. `specs/basic-operations.plan.md`.
+- **Spec file**, e.g. `specs/product/basic-operations.plan.md`.
 - **Target**: either a single scenario (e.g. `1.2`), a whole group (`1`), or all.
 - **Seed file**, read from the `**Seed:**` line of the scenario's group.
 
@@ -316,7 +316,7 @@ For each `- expect:` bullet, add an explicit assertion. See [How generation work
 Collect the generated code and write the test file at the path given in the spec:
 
 ```ts
-// spec: specs/basic-operations.plan.md
+// spec: specs/product/basic-operations.plan.md
 // seed: tests/seed.spec.ts
 import { test, expect } from './fixtures';   // or '@playwright/test' if no fixtures file
 
