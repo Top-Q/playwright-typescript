@@ -2,7 +2,7 @@
   "module": "members",
   "file": "members.json",
   "app": "openproject",
-  "generatedAt": "2026-07-22T06:18:01.379Z",
+  "generatedAt": "2026-08-12T15:16:28.027Z",
   "schemaVersion": 2,
   "classes": [
     {
@@ -41,19 +41,6 @@
           "observableState": "The inline add member form is visible, exposing the user search field and role dropdown"
         },
         {
-          "name": "addMember",
-          "signature": "addMember(userNameOrEmail: string, role: string = 'Member'): Promise<void>",
-          "description": "Adds a member to the project by searching for a user name, or inviting by\nemail when no matching user exists. Opens the add member form first if it\nis not already open, so it can be called directly.\n\nWaits for the POST to complete and then reloads the page, so the members\ntable reliably reflects the new member on return.",
-          "aliases": [
-            "addMemberToProject",
-            "inviteUser",
-            "createMember",
-            "addUser"
-          ],
-          "prerequisites": "The Members page is open and the named user (or email) can be granted the role",
-          "observableState": "The member is added and appears as a new row in the members table; the page reloads and shows a success flash"
-        },
-        {
           "name": "isAddMemberFormVisible",
           "signature": "isAddMemberFormVisible(): Promise<boolean>",
           "description": "Checks whether the inline add member form is currently visible.",
@@ -77,16 +64,80 @@
           "observableState": "The add member form is hidden and no member is added"
         },
         {
+          "name": "selectMemberToAdd",
+          "signature": "selectMemberToAdd(nameOrEmail: string): Promise<void>",
+          "description": "Selects the principal to add in the inline add member form: types the\ngiven name or email into the user search field and picks the matching\nentry from the autocompleter. When the value is an email address with no\nexisting account, the autocompleter offers an \"invite by email\" entry —\nthis selects that entry, which is what turns the submission into an\nexternal invite.",
+          "aliases": [
+            "enterExternalEmail",
+            "inviteByEmail",
+            "searchForUser",
+            "selectPrincipal"
+          ],
+          "prerequisites": "The inline add member form is open — call {@link openAddMemberForm} first",
+          "observableState": "The chosen user or email is selected in the add form's search field; nothing is persisted until the form is submitted"
+        },
+        {
+          "name": "selectRole",
+          "signature": "selectRole(role: string): Promise<void>",
+          "description": "Selects a role in the inline add member form's role dropdown. This sets\nthe role for the member about to be added; it does not change the role of\nan existing member (use {@link MemberTableRowComp.clickManageRoles} for\nthat).",
+          "aliases": [
+            "chooseRole",
+            "setMemberRole",
+            "pickRole",
+            "selectMemberRole"
+          ],
+          "prerequisites": "The inline add member form is open — call {@link openAddMemberForm} first",
+          "observableState": "The role dropdown shows the given role as selected; nothing is persisted until the form is submitted"
+        },
+        {
+          "name": "submitAddMemberForm",
+          "signature": "submitAddMemberForm(): Promise<MembersPage>",
+          "description": "Clicks \"Add\" to submit the inline add member form, waits for the create\nrequest to complete, and returns the reloaded Members page so the members\ntable reliably reflects the new member.\n\nSubmitting posts the form and the server redirects to the members list\nwith `?status=all`, so this is a full page load rather than a Turbo swap.",
+          "aliases": [
+            "clickAdd",
+            "confirmAddMember",
+            "saveMember",
+            "submitInvite"
+          ],
+          "prerequisites": "A principal and a role have been chosen in the open add member form",
+          "observableState": "The member is created, the add form closes, and a new row appears in the members table"
+        },
+        {
+          "name": "addMember",
+          "signature": "addMember(userNameOrEmail: string, role: string = 'Member'): Promise<void>",
+          "description": "Adds a member end to end: opens the add form if needed, selects the user\nor email, assigns the role, and submits. Use this when a test only needs\na member to exist; drive {@link selectMemberToAdd}, {@link selectRole}\nand {@link submitAddMemberForm} separately when it needs to observe or\nassert on the intermediate form state.",
+          "aliases": [
+            "addMemberToProject",
+            "inviteUser",
+            "createMember",
+            "addUser"
+          ],
+          "prerequisites": "The Members page is open and the named user (or email) can be granted the role",
+          "observableState": "The member is added and appears as a new row in the members table"
+        },
+        {
+          "name": "showAllOnOnePage",
+          "signature": "showAllOnOnePage(): Promise<MembersPage>",
+          "description": "Reloads the current members view with a page size large enough to hold\nthe whole list, so row lookups do not depend on which page a member\nhappens to land on. Preserves the active `status` view.\n\nThe members list paginates at 20 by default. `MemberTableComp` can only\nsee rendered rows, so without this a lookup for a member on page 2\nreports it missing — a false negative that looks exactly like the member\nnever having been created.",
+          "aliases": [
+            "disablePagination",
+            "showEveryMember",
+            "expandPageSize"
+          ],
+          "prerequisites": "The Members page is open",
+          "observableState": "The members table renders up to 100 rows of the current status view on a single page"
+        },
+        {
           "name": "openFilter",
           "signature": "openFilter(): Promise<void>",
-          "description": "Opens the filter panel and waits for its Apply button, making the filter\nfields usable.",
+          "description": "Opens the filter panel and waits for its Apply button, making the filter\nfields usable. Idempotent — the Filter control is a *toggle*, and the\npanel's open state is persisted in `localStorage` (\"showFilter\") and so\nsurvives page loads within a test, which means an unconditional click can\njust as easily close it.",
           "aliases": [
             "showFilterPanel",
             "clickFilter",
             "toggleFilterPanel"
           ],
           "prerequisites": "The Members page is open",
-          "observableState": "The filter panel opens, exposing the Status, Role, and Name filter fields"
+          "observableState": "The filter panel is visible, exposing the Status, Role, Work package shares, and Name filter fields"
         },
         {
           "name": "filterByName",
@@ -99,6 +150,19 @@
           ],
           "prerequisites": "The filter panel is open — call {@link openFilter} first",
           "observableState": "The members table reloads showing only members matching the name"
+        },
+        {
+          "name": "filterByRole",
+          "signature": "filterByRole(role: string): Promise<MembersPage>",
+          "description": "Filters the members list by a project role: opens the filter panel if it\nis not already open, picks the role in the panel's Role dropdown, applies\nthe filter, and returns the reloaded list with the whole filtered set on\none page.\n\nThis filters by *project role* (the panel's Role field). It is not the\nstatus filter — see {@link clickSidebarAll} and friends for that — and it\ndoes not change anybody's role: {@link selectRole} sets the role of a\nmember about to be added, and\n{@link MemberTableRowComp.clickManageRoles} edits an existing member's.\n\nThe panel is a `GET` form onto the members path, so applying navigates\nand the role lands in the URL as `role_id=<id>`. Pagination is *not*\ncarried across that navigation, so the response is the default 20-row\nfirst page — this widens it again before returning, so a caller counting\nrows or asserting a member's absence sees the complete filtered set.",
+          "aliases": [
+            "applyRoleFilter",
+            "selectRoleFilter",
+            "roleFilter",
+            "filterMembersByRole"
+          ],
+          "prerequisites": "The Members page is open and `role` is one of the project's givable role names",
+          "observableState": "The members table reloads showing only members holding that role, on a single page; the URL carries `role_id`"
         },
         {
           "name": "clearFilter",
@@ -120,7 +184,7 @@
             "showAllMembers",
             "viewAll"
           ],
-          "prerequisites": "The Members page is open",
+          "prerequisites": "The Members page is open and the current view is not already \"All\"",
           "observableState": "The table reloads showing every member regardless of status"
         },
         {
@@ -278,10 +342,12 @@
         {
           "name": "getStatus",
           "signature": "getStatus(): Promise<string>",
-          "description": "Returns the member's status — typically \"active\", \"locked\", or \"invited\".",
+          "description": "Returns the text of the row's Status cell — \"active\" for a member whose\naccount is usable, \"invited\" while a sent invitation is still pending\nregistration/activation, \"locked\" for a blocked account.\n\nThe rendered casing is not guaranteed, so compare case-insensitively.",
           "aliases": [
             "getMemberStatus",
-            "status"
+            "status",
+            "getInvitationStatus",
+            "getAccountStatus"
           ],
           "prerequisites": "This member row is displayed",
           "observableState": "None — read-only query"

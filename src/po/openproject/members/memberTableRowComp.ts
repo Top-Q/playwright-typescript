@@ -82,12 +82,16 @@ export class MemberTableRowComp extends BaseComponent<MemberTableRowComp> {
     }
 
     /**
-     * Returns the member's status — typically "active", "locked", or "invited".
+     * Returns the text of the row's Status cell — "active" for a member whose
+     * account is usable, "invited" while a sent invitation is still pending
+     * registration/activation, "locked" for a blocked account.
      *
-     * @aliases getMemberStatus, status
+     * The rendered casing is not guaranteed, so compare case-insensitively.
+     *
+     * @aliases getMemberStatus, status, getInvitationStatus, getAccountStatus
      * @prerequisites This member row is displayed
      * @observable-state None — read-only query
-     * @returns The status cell's text content.
+     * @returns The Status cell's text content.
      */
     async getStatus(): Promise<string> {
         return await this.statusCell.innerText();

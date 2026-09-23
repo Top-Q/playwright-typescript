@@ -1,0 +1,479 @@
+{
+  "module": "projects",
+  "file": "projects.json",
+  "app": "openproject",
+  "generatedAt": "2026-08-13T12:03:57.609Z",
+  "schemaVersion": 2,
+  "classes": [
+    {
+      "name": "DeleteProjectDialogComp",
+      "file": "src/po/openproject/projects/deleteProjectDialogComp.ts",
+      "kind": "component",
+      "description": "Represents the \"Delete project\" confirmation dialog, opened from Project\nsettings → More → Delete.\n\nIt is a checkbox-gated destructive confirm: \"Delete permanently\" is\n**disabled until** the \"I understand that this deletion cannot be reversed\"\ncheckbox is ticked. That makes it the one place in this module where a\ndisabled-button assertion is meaningful — the create form's Create button\nnever is.\n\nThe dialog is an `alertdialog` with id `delete-project-dialog`, rendered on\nthe body rather than inside `#content`, so it is located from the page.",
+      "aliases": [
+        "ConfirmDeleteProjectDialog",
+        "DeleteProjectConfirmation",
+        "ProjectDeletionDialog"
+      ],
+      "methods": [
+        {
+          "name": "checkConfirmationCheckbox",
+          "signature": "checkConfirmationCheckbox(): Promise<void>",
+          "description": "Ticks \"I understand that this deletion cannot be reversed\", which is\nwhat enables the confirm button. Idempotent.",
+          "aliases": [
+            "confirmUnderstanding",
+            "tickCheckbox",
+            "acceptIrreversible",
+            "checkConfirmation"
+          ],
+          "prerequisites": "The delete confirmation dialog is open",
+          "observableState": "The checkbox is ticked and \"Delete permanently\" becomes enabled; nothing is deleted yet"
+        },
+        {
+          "name": "isDeletePermanentlyButtonEnabled",
+          "signature": "isDeletePermanentlyButtonEnabled(): Promise<boolean>",
+          "description": "Reports whether \"Delete permanently\" is currently enabled — false until\nthe confirmation checkbox is ticked.",
+          "aliases": [
+            "isDeleteEnabled",
+            "isConfirmEnabled",
+            "canDelete",
+            "isDeleteButtonDisabled",
+            "isEnabled"
+          ],
+          "prerequisites": "The delete confirmation dialog is open",
+          "observableState": "None — read-only query"
+        },
+        {
+          "name": "clickDeletePermanentlyButton",
+          "signature": "clickDeletePermanentlyButton(): Promise<ProjectsPage>",
+          "description": "Confirms the deletion and waits for the redirect to the global projects\nlist.",
+          "aliases": [
+            "confirmDelete",
+            "clickDeletePermanently",
+            "acceptDeletion",
+            "deleteNow"
+          ],
+          "prerequisites": "The confirmation checkbox has been ticked — call {@link checkConfirmationCheckbox} first",
+          "observableState": "The project and all its data are permanently deleted and the browser lands on /projects without it"
+        },
+        {
+          "name": "clickCancelButton",
+          "signature": "clickCancelButton(): Promise<void>",
+          "description": "Dismisses the dialog without deleting anything.",
+          "aliases": [
+            "cancel",
+            "dismissDialog",
+            "abortDeletion",
+            "closeDialog"
+          ],
+          "prerequisites": "The delete confirmation dialog is open",
+          "observableState": "The dialog closes and the project is untouched"
+        }
+      ]
+    },
+    {
+      "name": "NewProjectPage",
+      "file": "src/po/openproject/projects/newProjectPage.ts",
+      "kind": "page",
+      "description": "Represents the \"New project\" form at /projects/new.\n\nThe form is deliberately small in OpenProject 16: a required **Name**, an\noptional **Subproject of** autocompleter, an optional **Use template**\nautocompleter, and the Create / Cancel controls. Project attributes marked\nrequired by an administrator would add further fields.\n\nTwo things about this page regularly surprise callers:\n\n- **There is no Identifier field here.** The identifier (the project's URL\n  slug) is generated server-side on create by `acts_as_url`\n  (`app/models/project.rb`), and is only editable *afterwards*, on the\n  \"Change the project's identifier\" page — see {@link ProjectIdentifierPage}.\n  To read the identifier a create just generated, use\n  {@link OverviewPage.getProjectIdentifier}, which takes it from the URL the\n  create redirects to. There is no \"Advanced settings\" disclosure on this\n  page.\n- **Create is never disabled.** It is rendered with `disabled: false`\n  (`app/forms/projects/submit_or_cancel.rb`) even with the Name empty; an\n  empty submit is rejected server-side and re-renders the form inline, with\n  no flash banner. {@link isCreateButtonEnabled} therefore reports `true`\n  throughout on this instance.\n\nReached either from the projects list ({@link ProjectsPage.clickNewProjectButton},\nalways a *top-level* project) or from the header quick-add menu\n(`GlobalHeaderComp.clickNewProjectMenuItem`, which pre-fills \"Subproject of\"\nwith the current project when one is open).",
+      "aliases": [
+        "CreateProjectPage",
+        "ProjectFormPage",
+        "NewProjectFormPage",
+        "AddProjectPage"
+      ],
+      "methods": [
+        {
+          "name": "getNameInput",
+          "signature": "getNameInput(): Locator",
+          "description": "Returns the Name field, for a test that needs to assert on it directly\n(its value, or `aria-invalid` after a rejected submit).",
+          "aliases": [
+            "getNameField",
+            "nameTextBox",
+            "getProjectNameInput"
+          ],
+          "prerequisites": "The New project form is open",
+          "observableState": "None — returns a locator without interacting"
+        },
+        {
+          "name": "getCreateButton",
+          "signature": "getCreateButton(): Locator",
+          "description": "Returns the Create button, for a test that needs to assert on the control\nitself rather than click it.",
+          "aliases": [
+            "getCreateButton",
+            "getSubmitButton",
+            "createButton"
+          ],
+          "prerequisites": "The New project form is open",
+          "observableState": "None — returns a locator without interacting"
+        },
+        {
+          "name": "fillName",
+          "signature": "fillName(name: string): Promise<void>",
+          "description": "Types a project name into the Name field, replacing anything already\nthere. Nothing is persisted until {@link clickCreateButton}.",
+          "aliases": [
+            "enterName",
+            "setName",
+            "fillProjectName",
+            "setProjectName",
+            "fillTitle",
+            "enterProjectName"
+          ],
+          "prerequisites": "The New project form is open",
+          "observableState": "The Name field holds the given text; no project exists yet"
+        },
+        {
+          "name": "isCreateButtonEnabled",
+          "signature": "isCreateButtonEnabled(): Promise<boolean>",
+          "description": "Reports whether the Create button is enabled.\n\nOn OpenProject 16 this is `true` from the outset — the button is\nrendered with `disabled: false` regardless of the form's contents, and an\ninvalid submission is rejected by the server rather than by the control.\nAsserting that it \"becomes enabled\" after typing a name therefore proves\nnothing; assert on the created project instead.",
+          "aliases": [
+            "isCreateEnabled",
+            "isSaveEnabled",
+            "isSubmitEnabled",
+            "canSubmit",
+            "isEnabled",
+            "isCreateButtonDisabled"
+          ],
+          "prerequisites": "The New project form is open",
+          "observableState": "None — read-only query"
+        },
+        {
+          "name": "clickCreateButton",
+          "signature": "clickCreateButton(): Promise<OverviewPage>",
+          "description": "Submits the form and returns the new project's overview page.\n\nA successful create redirects to `/projects/<generated-identifier>`, so\nthis waits for that URL rather than for a load state: a rejected submit\n(an empty or duplicate-identifier name) re-renders the form inside\n`turbo-frame#projects-new-component` with the URL unchanged and no flash\nbanner, and this call then fails fast instead of handing back an\noverview page for a project that was never created.\n\nThe project it creates is top-level unless the form was opened with a\nparent (see the class notes). Whatever it creates must be cleaned up by\nthe test that created it — see\n{@link ProjectSettingsGeneralPage.deleteProject}.",
+          "aliases": [
+            "clickCreate",
+            "submitForm",
+            "createProject",
+            "saveProject",
+            "clickSave",
+            "submitNewProject"
+          ],
+          "prerequisites": "A name has been entered — call {@link fillName} first",
+          "observableState": "The project is created with a server-generated identifier and the browser lands on its overview page"
+        },
+        {
+          "name": "clickCancelLink",
+          "signature": "clickCancelLink(): Promise<ProjectsPage>",
+          "description": "Abandons the form via Cancel, returning to the global projects list.",
+          "aliases": [
+            "clickCancel",
+            "abortCreate",
+            "discardNewProject"
+          ],
+          "prerequisites": "The New project form is open",
+          "observableState": "No project is created and the browser navigates to /projects"
+        }
+      ]
+    },
+    {
+      "name": "ProjectIdentifierPage",
+      "file": "src/po/openproject/projects/projectIdentifierPage.ts",
+      "kind": "page",
+      "description": "Represents the \"Change the project's identifier\" page at\n/projects/:identifier/identifier.\n\nThis is the **only** place a project's identifier can be edited in\nOpenProject 16 — the create form has no identifier field at all, the value\nbeing generated server-side from the name on create. The field arrives\npre-filled with the current identifier, so this page also doubles as the\nplainest way to read it.\n\nThe rules the field enforces (`app/models/project.rb`): 1–100 characters,\nonly `a-z`, `0-9`, `-` and `_`, must not be all digits, must be unique, and\nmust not be one of the reserved words `new`, `menu`, `queries`,\n`export_list_modal`.\n\nChanging an identifier changes every URL of the project, so a test that\nchanges it must use the new value afterwards.",
+      "aliases": [
+        "ChangeIdentifierPage",
+        "ProjectSlugPage",
+        "EditIdentifierPage"
+      ],
+      "methods": [
+        {
+          "name": "getIdentifierInput",
+          "signature": "getIdentifierInput(): Locator",
+          "description": "Returns the identifier field, for a test that needs to assert on the\ncontrol itself (its value, or the validation state after a rejected\nupdate).",
+          "aliases": [
+            "getIdentifierField",
+            "identifierTextBox",
+            "getIdentifierInput"
+          ],
+          "prerequisites": "The change-identifier page is open",
+          "observableState": "None — returns a locator without interacting"
+        },
+        {
+          "name": "getIdentifier",
+          "signature": "getIdentifier(): Promise<string>",
+          "description": "Returns the identifier currently held in the field. On arrival that is\nthe project's stored identifier — the slug the server generated from the\nproject name when it was created.",
+          "aliases": [
+            "getIdentifier",
+            "readIdentifier",
+            "getSlug",
+            "getProjectIdentifier",
+            "getIdentifierValue",
+            "getValue"
+          ],
+          "prerequisites": "The change-identifier page is open",
+          "observableState": "None — read-only query"
+        },
+        {
+          "name": "fillIdentifier",
+          "signature": "fillIdentifier(identifier: string): Promise<void>",
+          "description": "Replaces the identifier in the field. Nothing is saved until\n{@link clickUpdateButton}.",
+          "aliases": [
+            "setIdentifier",
+            "enterIdentifier",
+            "editIdentifier",
+            "fillSlug",
+            "changeIdentifier"
+          ],
+          "prerequisites": "The change-identifier page is open",
+          "observableState": "The field holds the new value; the project is unchanged until Update is clicked"
+        },
+        {
+          "name": "clickUpdateButton",
+          "signature": "clickUpdateButton(): Promise<ProjectSettingsGeneralPage>",
+          "description": "Saves the identifier and returns the project settings page it redirects\nto.\n\n`Projects::IdentifierController#update` redirects to the project's\nsettings page on success and re-renders this page with 422 on failure,\nso waiting for that URL fails fast on a rejected value instead of\nreporting a change that did not happen.",
+          "aliases": [
+            "clickUpdate",
+            "saveIdentifier",
+            "submitIdentifier",
+            "confirmIdentifier",
+            "clickSave",
+            "apply"
+          ],
+          "prerequisites": "A valid identifier has been entered — call {@link fillIdentifier} first",
+          "observableState": "The identifier is persisted, every URL of the project changes, and the browser lands on the project settings page"
+        },
+        {
+          "name": "clickCancelLink",
+          "signature": "clickCancelLink(): Promise<ProjectSettingsGeneralPage>",
+          "description": "Leaves the page without saving, returning to the project settings page.",
+          "aliases": [
+            "clickCancel",
+            "discardIdentifierChange",
+            "abortIdentifierChange"
+          ],
+          "prerequisites": "The change-identifier page is open",
+          "observableState": "The identifier is unchanged and the browser navigates to the project settings page"
+        }
+      ]
+    },
+    {
+      "name": "ProjectRowComp",
+      "file": "src/po/openproject/projects/projectRowComp.ts",
+      "kind": "component",
+      "description": "Represents a single project row in the global projects table\n(`table#project-table`).\n\nThe row's name cell holds a link to the project, and that link's href is\n`/projects/<identifier>` — which makes the row the one place in the UI where\na project's **name and its generated identifier** can be read side by side\nwithout leaving the list. (The favourite control in the same row links by\nnumeric id instead, so do not read the identifier from it.)",
+      "aliases": [
+        "ProjectRow",
+        "ProjectsTableRow",
+        "ProjectListRow"
+      ],
+      "methods": [
+        {
+          "name": "getName",
+          "signature": "getName(): Promise<string>",
+          "description": "Returns the project's name as displayed in the Name column.",
+          "aliases": [
+            "getProjectName",
+            "name",
+            "getName"
+          ],
+          "prerequisites": "This project row is displayed",
+          "observableState": "None — read-only query"
+        },
+        {
+          "name": "getIdentifier",
+          "signature": "getIdentifier(): Promise<string>",
+          "description": "Returns the project's identifier — its URL slug — taken from the name\nlink's href.\n\nThis is the value the server generated from the name on create\n(lower case, spaces and punctuation folded to `-`), and the same value\nthe \"Change the project's identifier\" page edits.",
+          "aliases": [
+            "getIdentifier",
+            "getSlug",
+            "getProjectIdentifier",
+            "readIdentifier",
+            "getProjectSlug"
+          ],
+          "prerequisites": "This project row is displayed",
+          "observableState": "None — read-only query"
+        },
+        {
+          "name": "clickName",
+          "signature": "clickName(): Promise<OverviewPage>",
+          "description": "Opens this project by clicking its name.",
+          "aliases": [
+            "clickProject",
+            "openProject",
+            "clickName",
+            "goToProject"
+          ],
+          "prerequisites": "This project row is displayed",
+          "observableState": "The browser navigates to the project's overview page"
+        }
+      ]
+    },
+    {
+      "name": "ProjectSettingsGeneralPage",
+      "file": "src/po/openproject/projects/projectSettingsGeneralPage.ts",
+      "kind": "page",
+      "description": "Represents Project settings → Information at\n/projects/:identifier/settings/general.\n\nBesides the project's own attributes (Name, Description, ...) this page\ncarries the project-level actions in its page header: \"New subproject\",\n\"Change identifier\", and a \"More\" menu holding Copy, Make public, Archive,\nSet as template and Delete.\n\nIt is where a test that created a project comes to remove it again\n({@link deleteProject}), and the way in to the identifier editor\n({@link clickChangeIdentifierLink}).",
+      "aliases": [
+        "ProjectSettingsPage",
+        "ProjectInformationPage",
+        "SettingsGeneralPage",
+        "ProjectGeneralSettingsPage"
+      ],
+      "methods": [
+        {
+          "name": "openForProject",
+          "signature": "openForProject(projectIdentifier: string): Promise<ProjectSettingsGeneralPage>",
+          "description": "Navigates straight to a project's settings page by identifier.\n\nThe UI route is the project sidebar's \"Project settings\" entry; this\ndeep link exists because the common caller is a test cleaning up a\nproject it just created, which knows the identifier and has no interest\nin walking the menu to reach it.",
+          "aliases": [
+            "openSettings",
+            "gotoSettings",
+            "openProjectSettings",
+            "navigateToSettings",
+            "openForProject"
+          ],
+          "prerequisites": "A project with this identifier exists and the user may administer it",
+          "observableState": "The browser navigates to that project's settings page"
+        },
+        {
+          "name": "clickChangeIdentifierLink",
+          "signature": "clickChangeIdentifierLink(): Promise<ProjectIdentifierPage>",
+          "description": "Opens the \"Change the project's identifier\" page.",
+          "aliases": [
+            "clickChangeIdentifier",
+            "openIdentifierPage",
+            "editIdentifier",
+            "changeIdentifier",
+            "openChangeIdentifier"
+          ],
+          "prerequisites": "The project settings page is open",
+          "observableState": "The browser navigates to the change-identifier page, its field pre-filled with the current identifier"
+        },
+        {
+          "name": "openMoreMenu",
+          "signature": "openMoreMenu(): Promise<void>",
+          "description": "Opens the \"More\" action menu in the page header.",
+          "aliases": [
+            "openMoreMenu",
+            "clickMore",
+            "openActionMenu",
+            "openProjectActions"
+          ],
+          "prerequisites": "The project settings page is open",
+          "observableState": "The action menu opens, offering Copy, Make public, Archive, Set as template and Delete"
+        },
+        {
+          "name": "clickDeleteInMoreMenu",
+          "signature": "clickDeleteInMoreMenu(): Promise<DeleteProjectDialogComp>",
+          "description": "Opens the delete-project confirmation dialog through the \"More\" menu.\nNothing is deleted until the dialog is confirmed.",
+          "aliases": [
+            "clickDelete",
+            "openDeleteDialog",
+            "clickDeleteProject",
+            "removeProject"
+          ],
+          "prerequisites": "The project settings page is open",
+          "observableState": "The confirmation dialog opens; the project still exists"
+        },
+        {
+          "name": "deleteProject",
+          "signature": "deleteProject(): Promise<ProjectsPage>",
+          "description": "Deletes this project end to end: opens the \"More\" menu, chooses Delete,\nticks the irreversibility checkbox and confirms.\n\nThis is the cleanup call for a test that created a project (rule 20).\nDeletion is permanent and takes every work package, meeting and board in\nthe project with it.",
+          "aliases": [
+            "deleteProject",
+            "removeProject",
+            "destroyProject",
+            "cleanupProject",
+            "deletePermanently"
+          ],
+          "prerequisites": "The project settings page is open for the project to delete",
+          "observableState": "The project and all its data are permanently deleted and the browser lands on the global projects list"
+        }
+      ]
+    },
+    {
+      "name": "ProjectsPage",
+      "file": "src/po/openproject/projects/projectsPage.ts",
+      "kind": "page",
+      "description": "Represents the global projects list at /projects — the application-wide list\nof every project the current user can see, not a page inside a project.\n\nThe page is assembled from several turbo-frames (`projects-index-page-header`,\n`projects-index-sub-header`, `filter-button`, `projects-table`,\n`projects_sidemenu`); filtering and sorting replace a frame rather than the\ndocument, so waiting on a load state after them is a no-op.\n\nIts sub-header carries the project name filter and the \"+ Project\" action,\nwhich is the entry point for creating a **top-level** project.",
+      "aliases": [
+        "ProjectListPage",
+        "GlobalProjectsPage",
+        "AllProjectsPage",
+        "ProjectsIndexPage"
+      ],
+      "methods": [
+        {
+          "name": "clickNewProjectButton",
+          "signature": "clickNewProjectButton(): Promise<NewProjectPage>",
+          "description": "Opens the New project form via the sub-header's \"+ Project\" action.\n\nThis route always yields a **top-level** project — unlike the header\nquick-add menu, which passes `parent_id` when a project is open and so\nsilently creates a subproject.",
+          "aliases": [
+            "clickNewProject",
+            "createProject",
+            "addProject",
+            "openNewProjectForm",
+            "clickAddProject",
+            "newProject"
+          ],
+          "prerequisites": "The projects list is open and the user may create projects",
+          "observableState": "The browser navigates to /projects/new with no parent pre-selected"
+        },
+        {
+          "name": "filterByName",
+          "signature": "filterByName(name: string): Promise<ProjectsPage>",
+          "description": "Filters the list by project name (the filter also matches identifiers)\nand waits for the filtered result.\n\nThe field applies itself as you type, pushing the filter into the URL as\n`filters=name_and_identifier ~ \"<text>\"`; the wait is on that parameter\ncarrying this text, so it does not resolve against a filter left over\nfrom a previous call.\n\nDo not pass an empty string to clear the filter: every filter value\ncontains the empty string, so the wait resolves immediately and the\ntable read afterwards may still be the previous result. Navigate to\n/projects again for an unfiltered list.",
+          "aliases": [
+            "searchByName",
+            "filterProjects",
+            "searchProjects",
+            "filterByProjectName",
+            "applyNameFilter"
+          ],
+          "prerequisites": "The projects list is open",
+          "observableState": "The table reloads showing only projects whose name or identifier contains the text"
+        },
+        {
+          "name": "getNumberOfRows",
+          "signature": "getNumberOfRows(): Promise<number>",
+          "description": "Returns the number of project rows currently listed, ignoring the\n\"There is currently nothing to display.\" placeholder row.",
+          "aliases": [
+            "getProjectCount",
+            "countProjects",
+            "getNumberOfProjects",
+            "getRowCount"
+          ],
+          "prerequisites": "The projects list is open",
+          "observableState": "None — read-only query"
+        },
+        {
+          "name": "getProjectNames",
+          "signature": "getProjectNames(): Promise<string[]>",
+          "description": "Returns the names of the projects currently listed. Only the rows on the\ncurrent page and under the current filter are visible to this.",
+          "aliases": [
+            "getProjectNames",
+            "listProjects",
+            "getAllProjectNames"
+          ],
+          "prerequisites": "The projects list is open",
+          "observableState": "None — read-only query"
+        },
+        {
+          "name": "getProjectRowByName",
+          "signature": "getProjectRowByName(name: string): ProjectRowComp",
+          "description": "Returns the row for a project, matched on the name cell's exact text.\nThe row is a lazy locator — it is not resolved until a method on it is\ncalled — so this does not throw for a project that is not listed;\n{@link hasProjectWithName} answers that.",
+          "aliases": [
+            "getProjectRow",
+            "findProjectByName",
+            "getRowForProject",
+            "projectRow"
+          ],
+          "prerequisites": "The projects list is open",
+          "observableState": "None — returns a component wrapper without interacting"
+        },
+        {
+          "name": "hasProjectWithName",
+          "signature": "hasProjectWithName(name: string): Promise<boolean>",
+          "description": "Reports whether a project with this exact name is listed. Only inspects\nthe rows currently rendered, so an active filter or a sidebar view other\nthan \"Active projects\" can hide an existing project.",
+          "aliases": [
+            "projectExists",
+            "hasProject",
+            "isProjectListed",
+            "containsProject"
+          ],
+          "prerequisites": "The projects list is open",
+          "observableState": "None — read-only query"
+        }
+      ]
+    }
+  ]
+}

@@ -1,160 +1,188 @@
 # OpenProject Playwright E2E Automation
 
-## Domain Context
+## The application under test
 
-OpenProject is a web-based project management platform with modules such as:
+OpenProject: **projects** contain **work packages** organised on **boards**, with **members** and
+**roles** controlling permissions and an **administration** area for configuration. Those module names
+are the vocabulary everything else uses — `src/po/openproject/<module>/`, `tests/ui/<module>/` and the
+spec ids (`TC-WP-…`, `TC-MEM-…`).
 
-- **Projects** containing boards, timelines, and work packages.
-- **Work Packages** (tasks, milestones) with workflows, statuses, and assignments.
-- **Boards** for agile task management.
-- **Members** and **Roles** to manage permissions.
-- **Administration** for system configuration.
+Tests run as **admin** against the **Demo project**.
 
-Tests simulate an **admin** user logged into the **Demo Project**.
+| Surface                                           | URL                     |
+| ------------------------------------------------- | ----------------------- |
+| **UI** — everything a browser drives              | `http://localhost:8090` |
+| **API** — `OpenProjectClient`, tests, `/api/docs` | `http://localhost:8080` |
 
-- UI: `http://localhost:8090`
-- API: `http://localhost:8080` (docs at `http://localhost:8080/api/docs`)
+`.env`'s unqualified `OPENPROJECT_BASE_URL` is the **API** one, which has misled before.
+
+Two documents describe the app itself rather than this repo, and both apply whether you are writing a
+locator by hand or running the pipeline:
+
+- [`docs/app-under-test/environment.md`](docs/app-under-test/environment.md) — addresses,
+  credentials, the Rails source checkout and the version check that makes it trustworthy.
+- [`docs/app-under-test/openproject-dom.md`](docs/app-under-test/openproject-dom.md) — what
+  OpenProject actually renders. Every entry was paid for by a failed run. **Read it before writing a
+  locator**, not after one fails.
 
 ## Project Structure
 
 ```
 <project-root>/
-├── src/po/openproject/           # Page objects and components
-│   ├── basePage.ts               # Abstract base for all pages
-│   ├── baseComponent.ts          # Abstract base for all components
-│   ├── general/                  # Login, home, overview, main menu, project selection
-│   ├── workpackage/              # Work package pages and components
-│   └── board/                    # Board pages and components
-├── src/api/                      # Fluent API client (OpenProjectClient)
-├── tests/
-│   ├── ui/                       # UI test specs + fixtures.ts
-│   └── api/                      # API test specs + fixtures.ts
-├── internals.ts                  # Central barrel export — ALL imports go through here
-├── playwright.config.ts
-├── eslint.config.mjs             # ESLint v9 flat config
-└── .env                          # Environment variables (base URL, API key, project ID)
+├── src/po/openproject/     # Page objects and components (basePage.ts, baseComponent.ts, per-module dirs)
+├── src/api/                # Fluent API client (OpenProjectClient)
+├── tests/ui/, tests/api/   # Test specs + fixtures.ts
+├── pom-catalog/            # Generated index of every page object and method
+├── specs/                  # Specifications for the app under test — see specs/README.md
+├── .claude/skills/         # Skills, each self-contained: SKILL.md + references/ + scripts/
+├── scripts/                # Repo tooling not owned by a skill (POM catalog generator)
+└── internals.ts            # Central barrel export — ALL PO/component imports go through here
 ```
 
 ## Naming Conventions
 
-| Category | Convention | Example |
-|----------|-----------|---------|
-| Page Object classes | PascalCase | `WorkPackagesPage` |
-| Page Object files | camelCase | `workPackagesPage.ts` |
-| Component classes | PascalCase + `Comp` suffix | `MainMenuComp` |
-| Test files | kebab-case + `.spec.ts` | `work-packages-crud.spec.ts` |
-| Test tags | `@` prefix | `@ui`, `@api`, `@regression`, `@task` |
+| Category            | Convention                 | Example                               |
+| ------------------- | -------------------------- | ------------------------------------- |
+| Page Object classes | PascalCase                 | `WorkPackagesPage`                    |
+| Page Object files   | camelCase                  | `workPackagesPage.ts`                 |
+| Component classes   | PascalCase + `Comp` suffix | `MainMenuComp`                        |
+| Test files          | kebab-case + `.spec.ts`    | `work-packages-crud.spec.ts`          |
+| Test tags           | `@` prefix                 | `@ui`, `@api`, `@regression`, `@task` |
 
-## Architecture Rules (always apply)
+## Rules
 
-1. All page objects extend `BasePage<T>` with own type as generic parameter
-2. All components extend `BaseComponent<T>`, scoped to `rootComponent` locator
-3. Assertions belong in tests only — page objects never import `expect`
-4. All PO/component imports go through `internals.ts` — every new PO/component must be exported there. Standalone utilities (e.g. `dumpDom`) are imported directly from their source file to avoid barrel re-export type resolution issues in the IDE.
-5. Use Playwright fixtures for test setup (not `beforeEach`)
-6. Use `test.step()` with Given/When/Then BDD structure
-7. Locators use `.describe()` for trace clarity
-8. Locators are `private readonly`, exposed via getter methods
-9. Prefer `getByRole()` > `getByLabel()` > `getByText()` > `getByTestId()` > CSS
-10. Navigation methods return the destination page object (fluent pattern)
-11. Every page/component implements `waitForLoad()`
-12. Every public page-object method carries `@aliases`, `@prerequisites`, and `@observable-state` JSDoc tags (see [POM Catalog](#pom-catalog)). Regenerate the catalog after adding or changing methods.
+Binding on every session, and the single authority: other files cite these **by number**, and the
+`architecture` skill's references explain how to satisfy them rather than restating them.
+**Rules 1–12 keep their historical numbers** — renumbering silently breaks every citation.
 
-## Coding Standards
+Each rule names what actually enforces it. **`review only` means no program checks it** and a human
+or the `test-reviewer` agent is the only thing standing between the rule and a violation — those are
+the ones that break first, and they are candidates for a future gate rather than suggestions.
 
-- **Read class and method comments** in page objects before using them
-- TypeScript strict mode — no `any` or `unknown` for page objects
-- ESLint v9 + Prettier enforced
-- No floating promises (`@typescript-eslint/no-floating-promises: error`)
-- All async functions must use `await`
-- **After generating or modifying any code, always run `npx eslint <file>` and fix all errors before finishing**
+### Architecture
 
-## Test Isolation
+| #   | Rule                                                                                                                                                                                                   | Enforced by            |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------- |
+| 1   | All page objects extend `BasePage<T>` with their own type as the generic parameter.                                                                                                                    | `gate:types`           |
+| 2   | All components extend `BaseComponent<T>`, scoped to a `rootComponent` locator.                                                                                                                         | `gate:types`           |
+| 3   | Assertions belong in tests only — page objects never import `expect`.                                                                                                                                  | review only            |
+| 4   | All PO/component imports go through `internals.ts`, and every new PO/component is exported there. Standalone utilities are imported directly from their source, to avoid barrel type-resolution churn. | `gate:types`, partial  |
+| 5   | Test setup uses Playwright fixtures, not `beforeEach`.                                                                                                                                                 | review only            |
+| 6   | Tests are structured with `test.step()` and Given/When/Then bodies.                                                                                                                                    | review only            |
+| 7   | Locators carry `.describe()` for trace clarity.                                                                                                                                                        | review only            |
+| 8   | Locators are `private readonly`, exposed through getter methods.                                                                                                                                       | review only            |
+| 9   | Locator preference order: `getByRole()` > `getByLabel()` > `getByText()` > `getByTestId()` > CSS.                                                                                                      | review only            |
+| 10  | Navigation methods return the destination page object, awaited through `waitForLoad()` (the fluent pattern).                                                                                           | review only            |
+| 11  | Every page and component implements `waitForLoad()`.                                                                                                                                                   | review only            |
+| 12  | Every public page-object method carries `@aliases`, `@prerequisites` and `@observable-state`.                                                                                                          | `catalog:report` only¹ |
 
-Tests must be runnable in isolation and not depend on side effects from other tests. Never assume test execution order. If a test deletes an entity, it must first create that entity within the same test.
+¹ `gate:catalog` proves the catalog matches the source, **not** that the tags are present. Rule 12 is
+what makes intent-level search work, so this is the widest hole in the current gate set.
 
-## Debugging Utilities
+**Rule 3** is what keeps a page object reusable across a positive and a negative test — an `expect`
+inside one decides the outcome for every caller. **Rule 9** is what keeps locators surviving a CSS
+refactor, and why [`openproject-dom.md`](docs/app-under-test/openproject-dom.md) exists: here,
+accessible names contain icon-font glyphs, so the naive `getByRole` is sometimes wrong.
 
-### `dumpDom(page, options?)`
+### Code quality
 
-Import from `internals.ts`. Captures three artifacts to `test-results/debug-dumps/<timestamp>-<label>/`:
+| #   | Rule                                                                                                  | Enforced by  |
+| --- | ----------------------------------------------------------------------------------------------------- | ------------ |
+| 13  | TypeScript strict mode. No `any` or `unknown` in page objects.                                        | `gate:types` |
+| 14  | No floating promises. Every async call is awaited.                                                    | `gate:lint`  |
+| 15  | ESLint v9 and Prettier are authoritative on style; the editor is not.                                 | `gate:lint`  |
+| 16  | Read the class and method comments in a page object before calling it.                                | review only  |
+| 17  | Run `npx eslint <file>` on everything you touch, before you finish.                                   | `gate:lint`  |
+| 18  | Never silence a diagnostic with a cast, a disable comment, or an import that bypasses `internals.ts`. | review only  |
 
-| File | Use for |
-|------|---------|
-| `aria.yml` | Writing `getByRole()` locators and `toMatchAriaSnapshot()` assertions |
-| `content.html` | Finding IDs, classes, and data attributes |
-| `screenshot.png` | Visual confirmation of page state |
+**`gate:lint` and `gate:types` are the authority.** When the editor and the CLI disagree, the CLI
+wins and the editor is stale; the diagnostic recipe is in
+[`architecture/references/module-scaffold.md`](.claude/skills/architecture/references/module-scaffold.md).
 
-**Parameters:**
+### Test integrity
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `label` | `'dump'` | Folder name suffix |
-| `sleepMs` | `0` | Wait before capturing (ms) |
-| `waitForNetworkIdle` | `false` | Wait for network idle before capturing |
-| `outputDir` | `'test-results/debug-dumps'` | Output folder |
+| #   | Rule                                                                                                                                       | Enforced by |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------ | ----------- |
+| 19  | Every test runs in isolation. No test depends on another's side effects, and no test assumes execution order.                              | review only |
+| 20  | A test that deletes an entity creates that entity itself, in the same test.                                                                | review only |
+| 21  | Never weaken a test to make it pass. Deleting an assertion, loosening a matcher, or adding a sleep to close out a red run is a failed run. | review only |
+| 22  | A known product bug is `test.fixme()` with a comment naming the decision or issue — never a silent skip and never a deleted assertion.     | review only |
 
-**Usage:** Drop anywhere in a test or page object — the test **resumes automatically**.
+Rule 21 has no escape hatch and needs none: a red run you cannot honestly fix is a result, and
+reporting it is finishing the job.
 
-```typescript
-// Minimal — snapshot current state
-await dumpDom(page);
+### Evidence
 
-// After an action — wait for dynamic content to settle
-await someButton.click();
-await dumpDom(page, { waitForNetworkIdle: true, label: 'after-click' });
+| #   | Rule                                                                                                                                                                               | Enforced by                        |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| 23  | A locator ships only with evidence: a cited path in the application's source, or an ARIA snapshot ref from the live DOM. A plausible guess is not evidence.                        | `pipeline:audit` — pipeline only   |
+| 24  | _Relocated 2026-09-06 to [`gen-test/SKILL.md`](.claude/skills/gen-test/SKILL.md) — an orchestration principle, not a rule about this repository. Number retained; never reuse it._ | —                                  |
+| 25  | Check what already exists before building it. The POM catalog is searched — by `@aliases`, not just by exact name — before a new method is written.                                | `plan.md` gap rows — pipeline only |
 
-// With a short animation delay
-await dumpDom(page, { sleepMs: 500, label: 'modal-open' });
-```
+Rule 23 is why this repo keeps a Rails checkout of the app under test, and why
+[`openproject-dom.md`](docs/app-under-test/openproject-dom.md) is worth reading before you guess.
 
-Remove `dumpDom` calls after investigation is complete.
+Both limits stated honestly: `pipeline:audit` reads _shape_, so it proves a citation is present, never
+that it is correct — and 23 and 25 are checked **only inside `/gen-test`**. Writing a page object by
+hand, nothing enforces either one but you.
 
-## POM Catalog
+### Changing a rule
 
-A committed, greppable index of every page object and its methods, so agents (and humans) discover what already exists before writing new page objects — avoiding duplicate methods and reinvented locators. **Consult it first when writing a test.**
+Edit it here, in a commit that says which of these it does: **add** one (next free number is **29** —
+never reuse a retired one), **amend** one (edit in place, then fix every file that relied on the old
+wording), **retire** one (strike it with a one-line reason and the date, leaving the number
+occupied), **relocate** one (move the text to wherever it is actually operative — a skill, an agent —
+leaving a dated tombstone in its row so the number stays occupied and the citation still lands), or
+**add teeth** (move it from `review only` to a named gate — the highest-value change available, and
+it needs no other justification).
 
-- **Location:** `pom-catalog/<app>/` — `index.json` (class-level overview) plus one `<module>.json` per module holding the methods.
-- **Read order:** start with `index.json` to find the right class by name or `@aliases`, then open only the relevant `<module>.json` for its method signatures and metadata. The index deliberately carries no method-level data so it stays small as the project grows.
-- **Purpose:** it serves *test writing* (discovery). The catalog contains only public methods and only what you need to pick and call one — it is not a substitute for reading the page-object source when filling in or extending a class.
+A rule violated three times without consequence is not a rule: gate it or retire it.
 
-### Commands
+_Retired: rules 26–28 (spec discipline), 2026-08-12 — they required a written spec before adding a
+gate, script, agent or pipeline stage, and produced documents rather than code._
 
-| Command | Does |
-|---------|------|
-| `npm run catalog` | Regenerate the catalog from `src/po/`. Run after adding or changing any page-object method. |
-| `npm run catalog:check` | Fail (exit 1) if the committed catalog is stale — the freshness gate. |
-| `npm run catalog:report` | Print per-module metadata coverage. |
+## Before you finish
 
-### Method metadata tags
+- `npm run catalog` after changing anything under `src/po/` — `gate:catalog` fails on a stale
+  catalog, and the next agent cannot discover what you added.
+- `npm run gate:all` — catalog, types, lint. `npx eslint <file>` on everything you touched is the
+  minimum (rule 17).
+- `pom-catalog/` is the index of existing page objects. **Search it before writing a new method**
+  (rule 25), by `@aliases` rather than exact name. Details:
+  [`architecture/references/pom-catalog.md`](.claude/skills/architecture/references/pom-catalog.md).
 
-Write these on **every public page-object method**. They are what make the catalog searchable by intent rather than exact name.
+## Specifications
 
-| Tag | Answers | Example |
-|-----|---------|---------|
-| `@aliases` | Other names someone might search by (2–4, comma-separated) | `@aliases addMember, inviteUser, createMember` |
-| `@prerequisites` | What must be true before calling — state, not narrative | `@prerequisites The add-member form is open` |
-| `@observable-state` | What a test could assert after calling | `@observable-state A new row appears in the members table` |
+Everything under `specs/` specifies **the application under test**, not this repository. Read
+[`specs/README.md`](specs/README.md) before editing a requirement — it owns the format, says which
+directories are consumed, and says which reference material is superseded and must not be trusted.
 
-Classes additionally take a class-level `@aliases`. The leading comment text becomes the description; standard `@param` / `@returns` / `@deprecated` are recognized. Example:
+**Changes to this repository's own tooling need no specification document** — write the code. The
+gates and rules 1–25 govern it, and unlike a document they are executable.
 
-```typescript
-/**
- * Adds a member to the project by searching for a user name or email.
- *
- * @aliases addMemberToProject, inviteUser, createMember
- * @prerequisites The Members page is open
- * @observable-state A new row appears in the members table; a success flash is shown
- * @param userNameOrEmail - The name or email to search for.
- * @param role - The role to assign. Defaults to 'Member'.
- */
-async addMember(userNameOrEmail: string, role: string = 'Member'): Promise<void> { ... }
-```
+## Skills
 
-`waitForLoad()` and non-public methods are excluded from the catalog automatically — do not tag them for coverage.
+Each skill carries its own instructions, references and scripts; read the skill rather than a summary
+of it here. What the skill descriptions do not tell you is which one to reach for:
 
-## Skills & Commands
+- **`/gen-test <FR-id|TC-id|path>` is the normal way to create a UI test** — staged pipeline,
+  subagents, deterministic gates, its own branch. **write-web-test** / **write-api-test** are the
+  single-shot alternative, for when the pipeline is more machinery than the job needs.
+- To learn what the app actually renders, drive it with **playwright-cli**. To learn why a test
+  failed, read its trace with **playwright-trace** instead of re-running it (`playwright.config.ts`
+  sets `trace: 'on'`, so every action has a DOM snapshot and screenshot). **pause-test** is for the
+  state that exists only partway through a run.
+- `playwright-cli` and `playwright-trace` are **vendor-managed and must never be hand-edited**. How to
+  regenerate them, and the one local edit every refresh destroys:
+  [`.claude/skills/README.md`](.claude/skills/README.md).
 
-- **Write web test** skill — generate UI tests from business requirements
-- **Write api test** skill — generate API tests
-- `/heal-test <test name>` — run a test, diagnose failures, apply minimal fixes
+## Environment
+
+Windows. PowerShell and `C:\...` paths in every command, config file and script — no bash, no
+POSIX-only tooling.
+
+**Run npm scripts that take flags as `npm.cmd run …`, not `npm run …`.** `npm` resolves to `npm.ps1`,
+whose parameter binder eats `--` and every `--flag` before npm sees them. Value flags then fail
+loudly, but **boolean flags fail silently** (`-- --kill` becomes report-only), which is why this is a
+rule rather than a tip. The full explanation and the alternative quoting form are in
+[`gen-test/references/gates.md`](.claude/skills/gen-test/references/gates.md).

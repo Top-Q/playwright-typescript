@@ -178,19 +178,49 @@ export function catalogFiles(result: BuildResult): Map<string, string> {
 }
 
 /**
- * Writes the catalog, removing stale *.json first so a renamed or deleted
- * module leaves no orphan behind.
+ * Normalised for comparison: CRLF, which a `core.autocrlf=true` checkout writes
+ * over the committed LF, and `generatedAt`, which changes on every run whether
+ * or not anything else did.
  */
-export function writeCatalog(result: BuildResult, outDir: string): void {
+function comparable(text: string): string {
+  return text.replace(/\r\n/g, '\n').replace(/^\s*"generatedAt": ".*",$/gm, '');
+}
+
+/**
+ * Writes the catalog, removing orphaned *.json so a renamed or deleted module
+ * leaves nothing behind.
+ *
+ * A module file is rewritten only when its content actually changed. Writing all
+ * of them unconditionally re-stamped `generatedAt` everywhere, so a run that
+ * added one method to one module left seven modified files in the diff — six of
+ * them a timestamp and nothing else. `generatedAt` therefore reads as "when this
+ * module's catalog last changed", which is the more useful of the two meanings.
+ *
+ * @returns The names of the files actually written.
+ */
+export function writeCatalog(result: BuildResult, outDir: string): string[] {
   fs.mkdirSync(outDir, { recursive: true });
+  const expected = catalogFiles(result);
+
   for (const existing of fs.readdirSync(outDir)) {
-    if (existing.endsWith('.json')) {
+    if (existing.endsWith('.json') && !expected.has(existing)) {
       fs.rmSync(path.join(outDir, existing));
     }
   }
-  for (const [name, contents] of catalogFiles(result)) {
-    fs.writeFileSync(path.join(outDir, name), contents, 'utf8');
+
+  const written: string[] = [];
+  for (const [name, contents] of expected) {
+    const target = path.join(outDir, name);
+    if (
+      fs.existsSync(target) &&
+      comparable(fs.readFileSync(target, 'utf8')) === comparable(contents)
+    ) {
+      continue;
+    }
+    fs.writeFileSync(target, contents, 'utf8');
+    written.push(name);
   }
+  return written;
 }
 
 /**
@@ -202,13 +232,6 @@ export function diffCatalog(result: BuildResult, outDir: string): string[] {
   const differences: string[] = [];
   const expected = catalogFiles(result);
 
-  // Normalise line endings before comparing: a checkout under
-  // core.autocrlf=true rewrites the committed LF catalog to CRLF on disk, and
-  // the check must not fail just because of that. generatedAt is ignored too —
-  // it changes every run.
-  const normalise = (text: string): string =>
-    text.replace(/\r\n/g, '\n').replace(/^\s*"generatedAt": ".*",$/gm, '');
-
   for (const [name, contents] of expected) {
     const target = path.join(outDir, name);
     if (!fs.existsSync(target)) {
@@ -216,7 +239,7 @@ export function diffCatalog(result: BuildResult, outDir: string): string[] {
       continue;
     }
     const actual = fs.readFileSync(target, 'utf8');
-    if (normalise(actual) !== normalise(contents)) {
+    if (comparable(actual) !== comparable(contents)) {
       differences.push(`${name} (out of date)`);
     }
   }

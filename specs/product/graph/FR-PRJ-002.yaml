@@ -1,0 +1,82 @@
+id: FR-PRJ-002
+type: functional_requirement
+module: projects
+source:
+  document: openproject-demo-requirements.docx
+  section: '4.3'
+text: The Project Identifier shall be unique system-wide and URL-safe — lower case letters, numbers,
+  hyphens and underscores, at most 100 characters, and never all digits. It shall not take one of the
+  reserved values (new, menu, queries, export_list_modal). It shall be changeable after creation through
+  the Project's 'Change identifier' form.
+stories:
+- US-PRJ-01
+business_rules: []
+permission_rows: []
+data_fields:
+- Project.identifier
+test_cases:
+- id: TC-PRJ-002-01
+  type: negative
+  title: An Identifier already in use is rejected
+  preconditions:
+  - A Project exists with identifier 'demo-project'
+  - A second Project exists whose Identifier is to be changed
+  steps:
+  - Open the second Project's 'Change identifier' form
+  - Replace the Identifier with 'demo-project'
+  - Click Update
+  expected_result: The change is rejected with a validation error stating the Identifier has already been
+    taken; the Project keeps its previous Identifier.
+- id: TC-PRJ-002-02
+  type: negative
+  title: Non-URL-safe Identifier is rejected
+  preconditions:
+  - A Project exists with a saved Identifier
+  steps:
+  - Open the Project's 'Change identifier' form
+  - Enter an Identifier containing upper case letters, spaces or special characters (e.g. 'My Project!')
+  - Click Update
+  expected_result: The change is rejected with a validation error; the Project keeps its previous Identifier.
+    The form states the permitted form — 1 to 100 characters, lower case letters, numbers, dashes and
+    underscores only.
+- id: TC-PRJ-002-03
+  type: positive
+  title: Identifier can be changed after creation
+  preconditions:
+  - A Project exists with a saved Identifier
+  steps:
+  - Open Project settings -> Information and follow 'Change identifier'
+  - Replace the Identifier with a different valid, unused slug
+  - Click Update
+  expected_result: The Identifier is updated; the system redirects to /projects/<new-identifier>/settings/general
+    and the Project is addressed by the new slug thereafter. The previous slug no longer resolves.
+notes: |
+  Corrected 2026-08-13 against OpenProject 16 (deployed image openproject/openproject:16-slim; Rails
+  source stable/16, HEAD 53daf3c). Three changes, all evidence-driven:
+
+  - **"Immutable after creation" was false**, and TC-PRJ-002-03 asserted it. The Identifier is editable
+    at /projects/:id/identifier, reached from Project settings -> Information -> "Change identifier".
+    Verified live end to end during run tc-prj-001-01-2026-08-13-11-10-32: a project's identifier was
+    changed to <slug>-edited, Update was clicked, and the app redirected to
+    /projects/<slug>-edited/settings/general. TC-PRJ-002-03 is therefore inverted from negative to
+    positive rather than deleted, so the id keeps its meaning as "the immutability question".
+  - **BR-PRJ-01 was removed** from `business_rules` and from TC-PRJ-002-03's refs. It encoded the
+    immutability claim this file now contradicts. It has no definition anywhere under
+    `specs/product/graph/` — `grep -rn "BR-PRJ-01"` matched only references — but it *is* defined in
+    the source document, which read "A Project Identifier, once set, cannot be changed (referenced by
+    permanent URLs and API paths)". That sentence was corrected in the .docx in the same change, so
+    regenerating the graph will not reintroduce it. Do not reinstate the reference.
+  - **TC-PRJ-002-01 and -02 moved from the create form to the change-identifier form.** Both previously
+    said "manually enter an Identifier" while creating a Project; v16's create form has no Identifier
+    field, so neither was satisfiable. The uniqueness and format validations they describe are real, and
+    the change-identifier form is where a user can actually trigger them.
+
+  The character set was widened to match the validation actually in force
+  (app/models/project.rb: format /\A(?!^\d+\z)[a-z0-9\-_]+\z/, uniqueness, limit 100,
+  RESERVED_IDENTIFIERS = %w[new menu queries export_list_modal]). The previous text said "lowercase
+  letters, numbers, hyphens" and omitted underscores, which are permitted.
+
+  Not asserted, because this run did not verify it: what happens when a *generated* slug collides on
+  create. The source suggests stringex appends a numeric suffix rather than raising the
+  "already been taken" error, which is why TC-PRJ-002-01 tests the change path, where the validation
+  error is the observed behaviour. Verify the create-collision path before writing a test case for it.

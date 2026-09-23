@@ -139,12 +139,19 @@ if (values.check) {
   process.exit(0);
 }
 
-writeCatalog(result, outDir);
+const written = writeCatalog(result, outDir);
 
 if (!values.quiet) {
   const outRelative = path.relative(repoRoot, outDir).split(path.sep).join('/');
   console.log(
     `${app}: ${totals.modules} modules, ${totals.classes} classes, ${totals.methods} methods -> ${outRelative}`,
+  );
+  // Named rather than counted: the point of writing only what changed is that
+  // the list is short enough to read, and it tells you which module you touched.
+  console.log(
+    written.length === 0
+      ? 'no catalog files changed'
+      : `wrote ${written.length}/${totals.modules + 1}: ${written.join(', ')}`,
   );
   const pct =
     coverage.methods === 0

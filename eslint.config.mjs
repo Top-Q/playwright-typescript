@@ -14,11 +14,11 @@ export default [
       'coverage/**',
       'playwright-report/**',
       'test-results/**',
-      // Vendored Playwright trace-viewer sources used by the playwright-trace
-      // skill. Not project code: they import '@isomorphic/*' path aliases that
-      // this project's tsconfig does not define, so they cannot be type-checked
-      // here and must not be linted as if they were ours.
-      '.claude/**',
+      // Gitignored /gen-test run artifacts. Nothing in here is project code, and
+      // anything .ts-shaped that lands in a run directory is outside tsconfig's
+      // project service — which fails gate:lint with a parsing error rather than
+      // anything about the repository.
+      '.pipeline/**',
       // Catalog test fixtures deliberately contain unused members and
       // await-less async methods to exercise the extractor; not real code.
       'tests/unit/fixtures/**',

@@ -1,4 +1,8 @@
-import { BasePage } from '../../../../internals';
+// Imported from source, not from `internals.ts`: `internals` now exports
+// `globalHeaderComp`, which imports the projects module, which imports this
+// file — going through the barrel would close that cycle (see the circular-
+// import rule in CLAUDE.md).
+import { BasePage } from '../basePage';
 import { Locator, Page } from '@playwright/test';
 import { MainMenuComp } from './mainMenuComp';
 
@@ -42,6 +46,32 @@ export class OverviewPage extends BasePage<OverviewPage> {
      */
     mainMenu(): MainMenuComp {
         return new MainMenuComp(this.page);
+    }
+
+    /**
+     * Returns this project's identifier — its URL slug — read from the address
+     * of the page currently open (`/projects/<identifier>`).
+     *
+     * This is the cheapest observation of the identifier OpenProject generated
+     * from a project's name: creating a project redirects straight here, and
+     * the slug is in the URL of that redirect. The New project form itself has
+     * no identifier field to read (see `NewProjectPage`), and the stored value
+     * can otherwise only be seen on the change-identifier page.
+     *
+     * @aliases getIdentifier, getSlug, readIdentifier, getProjectSlug, identifierFromUrl, getProjectId
+     * @prerequisites A project page is open (any URL of the form /projects/:identifier/...)
+     * @observable-state None — read-only query
+     * @returns The project identifier from the current URL.
+     */
+    getProjectIdentifier(): string {
+        const pathname = new URL(this.page.url()).pathname;
+        const match = /\/projects\/([^/?#]+)/.exec(pathname);
+        if (match === null) {
+            throw new Error(
+                `The current URL is not a project URL, so it carries no project identifier: ${this.page.url()}`,
+            );
+        }
+        return match[1];
     }
 
     /**

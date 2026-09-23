@@ -2,9 +2,80 @@
   "module": "general",
   "file": "general.json",
   "app": "openproject",
-  "generatedAt": "2026-07-22T06:18:01.379Z",
+  "generatedAt": "2026-08-13T12:03:57.609Z",
   "schemaVersion": 2,
   "classes": [
+    {
+      "name": "GlobalHeaderComp",
+      "file": "src/po/openproject/general/globalHeaderComp.ts",
+      "kind": "component",
+      "description": "Represents the application header (the top banner), which is present on\nevery page whether or not a project is open.\n\nThis is the entry point for everything **global**: the quick-add (\"+\") menu\nand the \"Global modules\" menu. Project creation lives here rather than in\n`MainMenuComp` — that component is scoped to `.main-menu`, the project\nsidebar, which does not exist on /projects/new at all.\n\nIt is constructed directly from the page rather than handed out by a page\nobject, so that it stays usable from any page:\n\n```typescript\ntest('...', async ({ page, readyOverviewPage }) => {\n    void readyOverviewPage;\n    const projectsPage = await new GlobalHeaderComp(page).clickProjectsModuleLink();\n});\n```\n\nBoth of its menus render **outside** the banner element (a popover and a\n`dialog` on the body), so their contents are located from the page rather\nthan from the component root.",
+      "aliases": [
+        "HeaderComp",
+        "TopMenuComp",
+        "AppHeaderComp",
+        "QuickAddComp",
+        "GlobalMenuComp"
+      ],
+      "methods": [
+        {
+          "name": "openQuickAddMenu",
+          "signature": "openQuickAddMenu(): Promise<void>",
+          "description": "Opens the header's quick-add (\"+\") menu. Idempotent.",
+          "aliases": [
+            "openQuickAdd",
+            "clickQuickAdd",
+            "openAddMenu",
+            "clickPlusButton",
+            "openCreateMenu"
+          ],
+          "prerequisites": "Any page is open and the user is signed in",
+          "observableState": "The quick-add menu opens, offering \"New project\", \"Invite user\" and a work package type per project type"
+        },
+        {
+          "name": "clickNewProjectMenuItem",
+          "signature": "clickNewProjectMenuItem(): Promise<NewProjectPage>",
+          "description": "Opens the New project form from the quick-add menu, opening the menu\nfirst if it is closed.\n\n**This route is context-sensitive.** From inside a project the menu item\ncarries `?parent_id=<that project>` and the form opens with \"Subproject\nof\" pre-filled, so the project created is a *sub*project. For a\nguaranteed top-level project use\n{@link ProjectsPage.clickNewProjectButton} instead.",
+          "aliases": [
+            "clickNewProject",
+            "quickAddNewProject",
+            "createProject",
+            "addProject",
+            "openNewProjectForm",
+            "newProject"
+          ],
+          "prerequisites": "Any page is open and the user may create projects",
+          "observableState": "The browser navigates to /projects/new, with the parent pre-filled when a project was open"
+        },
+        {
+          "name": "openGlobalModulesMenu",
+          "signature": "openGlobalModulesMenu(): Promise<void>",
+          "description": "Opens the \"Global modules\" menu. Idempotent.",
+          "aliases": [
+            "openGlobalModules",
+            "clickGlobalModules",
+            "openModulesMenu",
+            "globalMenu"
+          ],
+          "prerequisites": "Any page is open and the user is signed in",
+          "observableState": "The global modules menu opens, listing Projects, Work packages, Gantt charts and the other global areas"
+        },
+        {
+          "name": "clickProjectsModuleLink",
+          "signature": "clickProjectsModuleLink(): Promise<ProjectsPage>",
+          "description": "Opens the global projects list via Global modules → Projects, opening\nthe menu first if it is closed.",
+          "aliases": [
+            "clickProjects",
+            "openProjectsList",
+            "goToProjects",
+            "navigateToProjects",
+            "viewAllProjects"
+          ],
+          "prerequisites": "Any page is open and the user is signed in",
+          "observableState": "The browser navigates to /projects, the application-wide project list"
+        }
+      ]
+    },
     {
       "name": "HomePage",
       "file": "src/po/openproject/general/homePage.ts",
@@ -59,48 +130,69 @@
       "name": "MainMenuComp",
       "file": "src/po/openproject/general/mainMenuComp.ts",
       "kind": "component",
-      "description": "Represents the main menu component in OpenProject on the left of the page.\nAllows navigation to different sections like Boards, Time and Costs, Meetings, and Members.",
+      "description": "Represents the main menu component in OpenProject on the left of the page.\nAllows navigation to different sections like Boards, Time and Costs, Meetings, and Members.\n\nSome modules replace the project menu with their own submenu once opened —\nthe work packages list, for instance, swaps the project entries for its saved\nqueries and adds a \"Go back one menu level\" link. Every navigation method\ntherefore returns the menu to its project root first, so navigation works\nfrom anywhere in the project.",
       "aliases": [],
       "methods": [
         {
           "name": "clickBoardsLink",
           "signature": "clickBoardsLink(): Promise<BoardsPage>",
-          "description": "Click on the 'Boards' menu item and returns a BoardsPage.\nIt will also change the menu to the boards menu.",
-          "aliases": [],
-          "prerequisites": "",
-          "observableState": ""
+          "description": "Click on the 'Boards' menu item and returns a BoardsPage.\nIt will also change the menu to the boards menu. The menu is returned to\nthe project level first, so this works from inside another module too.",
+          "aliases": [
+            "openBoards",
+            "goToBoards",
+            "navigateToBoards"
+          ],
+          "prerequisites": "A project is open",
+          "observableState": "The browser navigates to the project's boards list and the menu switches to the boards submenu"
         },
         {
           "name": "clickTimeAndCostsLink",
           "signature": "clickTimeAndCostsLink(): Promise<CostReportsPage>",
-          "description": "Click on the 'Time and costs' menu item and returns a CostReportsPage.",
-          "aliases": [],
-          "prerequisites": "",
-          "observableState": ""
+          "description": "Click on the 'Time and costs' menu item and returns a CostReportsPage.\nThe menu is returned to the project level first, so this works from inside\nanother module too.",
+          "aliases": [
+            "openTimeAndCosts",
+            "goToCostReports",
+            "navigateToTimeAndCosts"
+          ],
+          "prerequisites": "A project is open",
+          "observableState": "The browser navigates to the project's cost reports page"
         },
         {
           "name": "clickMeetingsLink",
           "signature": "clickMeetingsLink(): Promise<MeetingsPage>",
-          "description": "Click on the 'Meetings' menu item and returns a MeetingsPage.",
-          "aliases": [],
-          "prerequisites": "",
-          "observableState": ""
+          "description": "Click on the 'Meetings' menu item and returns a MeetingsPage.\nThe menu is returned to the project level first, so this works from inside\nanother module too.",
+          "aliases": [
+            "openMeetings",
+            "goToMeetings",
+            "navigateToMeetings"
+          ],
+          "prerequisites": "A project is open",
+          "observableState": "The browser navigates to the project's meetings list"
         },
         {
           "name": "clickMembersLink",
           "signature": "clickMembersLink(): Promise<MembersPage>",
-          "description": "Click on the 'Members' menu item and returns a MembersPage.",
-          "aliases": [],
-          "prerequisites": "",
-          "observableState": ""
+          "description": "Click on the 'Members' menu item and returns a MembersPage.\nThe menu is returned to the project level first, so this works from inside\nanother module too — inside the work packages module, for instance, the\nproject entries are replaced by that module's saved queries.",
+          "aliases": [
+            "openMembers",
+            "goToMembers",
+            "navigateToMembers"
+          ],
+          "prerequisites": "A project is open",
+          "observableState": "The browser navigates to the project's members list"
         },
         {
           "name": "clickWorkPackagesLink",
           "signature": "clickWorkPackagesLink(): Promise<WorkPackagesPage>",
-          "description": "Click on the 'Work packages' menu item and returns a WorkPackagesPage.\n\nNavigates to the work packages list for the currently selected project.",
-          "aliases": [],
-          "prerequisites": "",
-          "observableState": ""
+          "description": "Click on the 'Work packages' menu item and returns a WorkPackagesPage.\n\nNavigates to the work packages list for the currently selected project.\nThe menu is returned to the project level first, so this works from inside\nanother module too.",
+          "aliases": [
+            "openWorkPackages",
+            "goToWorkPackages",
+            "navigateToWorkPackages",
+            "openTasks"
+          ],
+          "prerequisites": "A project is open",
+          "observableState": "The browser navigates to the project's work packages list and the menu switches to the work packages submenu"
         }
       ]
     },
@@ -125,6 +217,21 @@
           ],
           "prerequisites": "A project overview page is open",
           "observableState": "None — returns a component wrapper without interacting"
+        },
+        {
+          "name": "getProjectIdentifier",
+          "signature": "getProjectIdentifier(): string",
+          "description": "Returns this project's identifier — its URL slug — read from the address\nof the page currently open (`/projects/<identifier>`).\n\nThis is the cheapest observation of the identifier OpenProject generated\nfrom a project's name: creating a project redirects straight here, and\nthe slug is in the URL of that redirect. The New project form itself has\nno identifier field to read (see `NewProjectPage`), and the stored value\ncan otherwise only be seen on the change-identifier page.",
+          "aliases": [
+            "getIdentifier",
+            "getSlug",
+            "readIdentifier",
+            "getProjectSlug",
+            "identifierFromUrl",
+            "getProjectId"
+          ],
+          "prerequisites": "A project page is open (any URL of the form /projects/:identifier/...)",
+          "observableState": "None — read-only query"
         },
         {
           "name": "isFilterActive",

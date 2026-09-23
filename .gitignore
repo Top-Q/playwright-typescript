@@ -144,9 +144,6 @@ vite.config.ts.timestamp-*
 /blob-report/
 /playwright/.cache/
 
-# dump-dom snapshots (generated artifacts, not source)
-dom-snapshots/
-
 # Playwright cli/mcp
 .playwright
 .playwright-mcp/
@@ -155,3 +152,6 @@ dom-snapshots/
 # Personal, per-machine Claude Code settings (not shared; team settings go in
 # .claude/settings.json). Contains local paths and a personal permission allowlist.
 .claude/settings.local.json
+
+# Test-generation pipeline run artifacts (/gen-test)
+.pipeline/

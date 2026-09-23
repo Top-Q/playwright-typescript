@@ -1,5 +1,10 @@
 # Locator Patterns & Best Practices
 
+> This file is the *strategy*. What OpenProject actually renders — the duplicate matches, the
+> accessible names carrying icon-font glyphs that defeat a naive `getByRole` — is in
+> [`docs/app-under-test/openproject-dom.md`](../../../../docs/app-under-test/openproject-dom.md).
+> Check it before committing a locator: CLAUDE.md rule 23 wants evidence, not a plausible guess.
+
 ## Preferred Locator Strategy (in order)
 
 1. `getByRole()` — most resilient, matches accessible roles

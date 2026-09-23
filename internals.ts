@@ -12,6 +12,15 @@ export * from './src/po/openproject/general/homePage';
 export * from './src/po/openproject/general/projectSelectionDropdownComp';
 export * from './src/po/openproject/general/mainMenuComp';
 export * from './src/po/openproject/general/overviewPage';
+export * from './src/po/openproject/general/globalHeaderComp';
+
+// Open Project - Projects (global project creation and administration)
+export * from './src/po/openproject/projects/projectsPage';
+export * from './src/po/openproject/projects/newProjectPage';
+export * from './src/po/openproject/projects/projectRowComp';
+export * from './src/po/openproject/projects/projectIdentifierPage';
+export * from './src/po/openproject/projects/projectSettingsGeneralPage';
+export * from './src/po/openproject/projects/deleteProjectDialogComp';
 
 // Open Project - Boards
 export * from './src/po/openproject/board/boardsPage';

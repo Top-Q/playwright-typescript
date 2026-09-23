@@ -5,86 +5,54 @@ description: Generates page objects, components, fixtures, and tests following t
 
 # Project Architecture Skill
 
-Use this skill when creating or modifying page objects, components, fixtures, or tests in this Playwright project.
+Use this skill when creating or modifying page objects, components, fixtures, or tests.
 
-## Project Structure
+## The rules live in CLAUDE.md
 
-```
-<project-root>/
-├── src/po/openproject/           # Page objects and components
-│   ├── basePage.ts               # Abstract base for all pages
-│   ├── baseComponent.ts          # Abstract base for all components
-│   ├── general/                  # Login, home, overview, main menu, project selection
-│   ├── workpackage/              # Work package pages and components
-│   └── board/                    # Board pages and components
-├── src/api/                      # Fluent API client
-├── tests/
-│   ├── ui/                       # UI tests + fixtures.ts
-│   │   └── <feature>/            # Feature subdirectories
-│   └── api/                      # API tests + fixtures.ts
-├── internals.ts                  # Central barrel export (all imports go through here)
-├── tsconfig.json
-└── playwright.config.ts
-```
+The numbered rules in [`CLAUDE.md`](../../../CLAUDE.md) are the authority, and the rest of the repo
+cites them by number. **This skill does not restate them** — a second copy drifts from the first, and
+then two files disagree about what the rule is. What it does is say where each pattern is written out
+in full.
 
-## Architecture Rules
+| CLAUDE.md rule                                         | Pattern to follow                                     |
+| ------------------------------------------------------ | ----------------------------------------------------- |
+| 1 — pages extend `BasePage<T>`                         | [page-objects.md](references/page-objects.md)         |
+| 2 — components extend `BaseComponent<T>`               | [components.md](references/components.md)             |
+| 5 — fixtures, not `beforeEach`                         | [fixtures.md](references/fixtures.md)                 |
+| 6 — `test.step()` with Given/When/Then                 | [test-structure.md](references/test-structure.md)     |
+| 9 — locator preference order                           | [locator-patterns.md](references/locator-patterns.md) |
+| 12 — `@aliases`/`@prerequisites`/`@observable-state`   | [pom-metadata.md](references/pom-metadata.md)         |
+| 25 — search the catalog first, regenerate it after     | [pom-catalog.md](references/pom-catalog.md)           |
+| 15, 18 — the CLI, not the editor, decides a diagnostic | [module-scaffold.md](references/module-scaffold.md)   |
 
-### 1. All page objects extend `BasePage<T>`
+An entirely new module is its own job: work through
+[module-scaffold.md](references/module-scaffold.md) top to bottom.
 
-Every page object must extend `BasePage` with its own type as the generic parameter. This enables type-safe fluent method chaining.
+The remaining rules (3, 4, 7, 8, 10, 11, 13, 14, 16, 17, 19–24) need no pattern file — they are
+stated completely in CLAUDE.md. Read them there.
 
-See: [references/page-objects.md](references/page-objects.md)
+## Where things go
 
-### 2. All components extend `BaseComponent<T>`
+`CLAUDE.md` has the project tree and the naming conventions. Two placement facts it does not spell
+out:
 
-Components represent reusable UI parts scoped to a root element (e.g., menus, dialogs, tables). They extend `BaseComponent` which adds a `rootComponent` locator.
+- Page objects and components live under `src/po/openproject/<module>/`, one directory per
+  OpenProject module (`general`, `workpackage`, `board`, `members`, `projects`, `meeting`,
+  `timeandcosts`). `basePage.ts` and `baseComponent.ts` sit at the root of that folder.
+- UI tests live under `tests/ui/<module>/`, beside the `tests/ui/fixtures.ts` they import `test`
+  from.
 
-See: [references/components.md](references/components.md)
+Every new page object and component is also exported from `internals.ts` (rule 4) — a class that is
+not exported there cannot be imported by a test.
 
-### 3. Assertions belong in tests, NOT in page objects
+## What the app under test actually does
 
-Page objects expose locator getters (e.g., `getHeading(): Locator`) so tests can assert against them. Page objects never import `expect`.
+A pattern tells you how to write a locator; it cannot tell you what OpenProject renders. Before
+writing one by hand, read
+[`docs/app-under-test/openproject-dom.md`](../../../docs/app-under-test/openproject-dom.md) — known
+duplicate matches, accessible names carrying icon-font glyphs, waiting and navigation quirks. Every
+entry there was paid for by a failed run, so reading it is cheaper than rediscovering any of it.
 
-### 4. All imports go through `internals.ts`
-
-Every new page object or component must be exported from `internals.ts`. All imports in page objects and tests use the relative path to `internals.ts` (e.g., `../../../internals` from POs, `../../internals` from tests).
-
-### 5. Use Playwright fixtures for test setup
-
-Authentication and navigation setup goes in `tests/ui/fixtures.ts` or `tests/api/fixtures.ts`, not in `beforeEach` hooks.
-
-See: [references/fixtures.md](references/fixtures.md)
-
-### 6. Use `test.step()` for structured test logging
-
-Tests use Given/When/Then step structure for readability and HTML report clarity.
-
-See: [references/test-structure.md](references/test-structure.md)
-
-### 7. Locators use `.describe()` for trace clarity
-
-All locators should have `.describe('Description')` appended for better debugging in traces and reports.
-
-### 8. Locators are `private readonly`
-
-Page objects expose locators through getter methods, not public properties. This maintains encapsulation.
-
-### 8b. Follow locator best practices
-
-Prefer `getByRole()` over CSS selectors. Scope locators to containers when the same text appears in multiple areas.
-
-See: [references/locator-patterns.md](references/locator-patterns.md)
-
-### 9. Navigation methods return the next page object
-
-Methods that cause navigation return an instance of the destination page (fluent pattern). Call `waitForLoad()` on the returned instance.
-
-### 10. Every page/component implements `waitForLoad()`
-
-Override `waitForLoad()` to wait for a key element that confirms the page/component is ready.
-
-### 11. Module Scaffolding
-
-When creating page objects for an entirely new module, follow the module scaffold checklist.
-
-See: [references/module-scaffold.md](references/module-scaffold.md)
+Addresses, credentials and the Rails source checkout (with the version check that makes it
+trustworthy) are in
+[`docs/app-under-test/environment.md`](../../../docs/app-under-test/environment.md).

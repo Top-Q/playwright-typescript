@@ -1,0 +1,734 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>E2E Automation Architecture — OpenProject</title>
+
+<style>
+  html { -webkit-text-size-adjust: 100%; }
+  :root {
+    /* light palette — cool grey ground with a teal structural accent */
+    --ground: #e9ecee;
+    --surface: #fbfbfa;
+    --surface-2: #f2f4f5;
+    --ink: #141b21;
+    --ink-2: #4e5c66;
+    --ink-3: #7b8892;
+    --rule: #d3d9dd;
+    --rule-soft: #e2e7ea;
+    --teal: #0d6a60;
+    --teal-soft: #d8e8e5;
+    --slate: #2d5578;
+    --slate-soft: #dbe4ed;
+    --wire: #a64f21;
+    --wire-soft: #f0e1d6;
+    --shadow: 0 1px 2px rgba(20, 27, 33, 0.06), 0 6px 18px rgba(20, 27, 33, 0.05);
+
+    --display: "Palatino Linotype", "Iowan Old Style", Palatino, "Book Antiqua", Georgia, serif;
+    --body: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, "Cascadia Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0f1418;
+      --surface: #171f25;
+      --surface-2: #1d262d;
+      --ink: #e4e9ec;
+      --ink-2: #a3b0b9;
+      --ink-3: #7d8a93;
+      --rule: #2b363e;
+      --rule-soft: #232d34;
+      --teal: #58b8a8;
+      --teal-soft: #16302e;
+      --slate: #8db0d4;
+      --slate-soft: #1a2836;
+      --wire: #d5865b;
+      --wire-soft: #33241b;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 20px rgba(0, 0, 0, 0.28);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0f1418;
+    --surface: #171f25;
+    --surface-2: #1d262d;
+    --ink: #e4e9ec;
+    --ink-2: #a3b0b9;
+    --ink-3: #7d8a93;
+    --rule: #2b363e;
+    --rule-soft: #232d34;
+    --teal: #58b8a8;
+    --teal-soft: #16302e;
+    --slate: #8db0d4;
+    --slate-soft: #1a2836;
+    --wire: #d5865b;
+    --wire-soft: #33241b;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 20px rgba(0, 0, 0, 0.28);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 56px 28px 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 56px;
+  }
+
+  /* ---------- header ---------- */
+
+  header { display: flex; flex-direction: column; gap: 18px; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--teal);
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: clamp(2.1rem, 5vw, 3.1rem);
+    line-height: 1.1;
+    letter-spacing: -0.015em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .standfirst {
+    margin: 0;
+    max-width: 62ch;
+    font-size: 1.06rem;
+    color: var(--ink-2);
+  }
+
+  .facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 28px;
+    padding-top: 8px;
+    border-top: 1px solid var(--rule);
+    margin-top: 6px;
+  }
+
+  .fact { display: flex; flex-direction: column; gap: 1px; }
+
+  .fact b {
+    font-family: var(--display);
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .fact span {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+
+  /* ---------- sections ---------- */
+
+  section { display: flex; flex-direction: column; gap: 20px; }
+
+  h2 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 1.55rem;
+    letter-spacing: -0.01em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .lede { margin: -8px 0 0; max-width: 64ch; color: var(--ink-2); }
+
+  /* ---------- layer stack ---------- */
+
+  .stack { display: flex; flex-direction: column; gap: 0; }
+
+  .layer {
+    display: grid;
+    grid-template-columns: 132px 1fr;
+    gap: 24px;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 20px 22px;
+    box-shadow: var(--shadow);
+  }
+
+  .layer-rail { display: flex; flex-direction: column; gap: 4px; }
+
+  .layer-no {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--ink-3);
+  }
+
+  .layer-name {
+    font-family: var(--display);
+    font-size: 1.16rem;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  .layer-role {
+    font-size: 12.5px;
+    color: var(--ink-3);
+    line-height: 1.45;
+  }
+
+  .layer-body { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+
+  .layer-body > p { margin: 0; color: var(--ink-2); font-size: 14.5px; max-width: 68ch; }
+
+  /* the boundary caption between two layers */
+  .seam {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 22px 9px 0;
+    margin-left: 154px;
+  }
+
+  .seam-arrow { color: var(--ink-3); font-size: 13px; line-height: 1; }
+
+  .seam-text {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--ink-3);
+  }
+
+  .seam-text code { font-family: var(--mono); color: var(--ink-2); }
+
+  /* ---------- chips ---------- */
+
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+
+  .chip {
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 3px 9px;
+    border-radius: 2px;
+    background: var(--surface-2);
+    border: 1px solid var(--rule-soft);
+    color: var(--ink-2);
+    white-space: nowrap;
+  }
+
+  .chip.po { border-color: var(--teal-soft); background: var(--teal-soft); color: var(--teal); }
+  .chip.api { border-color: var(--slate-soft); background: var(--slate-soft); color: var(--slate); }
+
+  .group-label {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-bottom: -5px;
+  }
+
+  /* ---------- test list ---------- */
+
+  ul.tests { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+
+  ul.tests li {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    font-size: 14.5px;
+    color: var(--ink-2);
+  }
+
+  ul.tests li::before {
+    content: "";
+    flex: none;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--teal);
+    transform: translateY(-2px);
+  }
+
+  ul.tests li.api-test::before { background: var(--slate); }
+
+  ul.tests .tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-3);
+  }
+
+  /* ---------- fork / transports ---------- */
+
+  .lanes { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+
+  .lane {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-top: 3px solid var(--teal);
+    border-radius: 3px;
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: var(--shadow);
+  }
+
+  .lane.http { border-top-color: var(--slate); }
+
+  .lane h3 {
+    font-family: var(--display);
+    font-size: 1.12rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .lane p { margin: 0; font-size: 14.5px; color: var(--ink-2); }
+
+  .lane dl {
+    margin: 4px 0 0;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 5px 14px;
+    font-size: 13px;
+    align-items: baseline;
+  }
+
+  .lane dt {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+
+  .lane dd { margin: 0; font-family: var(--mono); font-size: 12.5px; color: var(--ink-2); }
+
+  /* ---------- diagram ---------- */
+
+  .diagram-wrap {
+    overflow-x: auto;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 22px 20px 14px;
+    box-shadow: var(--shadow);
+  }
+
+  .diagram-wrap svg { display: block; min-width: 660px; width: 100%; height: auto; }
+
+  .caption {
+    font-size: 12.5px;
+    color: var(--ink-3);
+    margin: 10px 2px 0;
+    max-width: 70ch;
+  }
+
+  /* ---------- payoff ---------- */
+
+  .payoff { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 2px solid var(--teal);
+    border-radius: 3px;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .card h4 {
+    margin: 0;
+    font-family: var(--display);
+    font-size: 1.02rem;
+    font-weight: 600;
+  }
+
+  .card p { margin: 0; font-size: 14px; color: var(--ink-2); }
+
+  footer {
+    border-top: 1px solid var(--rule);
+    padding-top: 16px;
+    font-size: 12.5px;
+    color: var(--ink-3);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 22px;
+  }
+
+  footer code { font-family: var(--mono); color: var(--ink-2); }
+
+  @media (max-width: 760px) {
+    .layer { grid-template-columns: 1fr; gap: 14px; }
+    .seam { margin-left: 0; }
+    .lanes, .payoff { grid-template-columns: 1fr; }
+    .page { padding: 36px 18px 60px; gap: 44px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <header>
+    <div class="eyebrow">Test Automation · Architecture Overview</div>
+    <h1>How the OpenProject test suite is built</h1>
+    <p class="standfirst">
+      One layered stack drives the product the way a user does — through a real Chromium browser —
+      and a second, shorter path checks the same product through its HTTP API. Each layer has one
+      job, so a change in the application touches one layer, not every test.
+    </p>
+    <div class="facts">
+      <div class="fact"><b>5</b><span>Layers</span></div>
+      <div class="fact"><b>19</b><span>UI test cases</span></div>
+      <div class="fact"><b>23</b><span>Page objects &amp; components</span></div>
+      <div class="fact"><b>6</b><span>Product modules covered</span></div>
+      <div class="fact"><b>2</b><span>Transports — CDP &amp; HTTP</span></div>
+    </div>
+  </header>
+
+  <section>
+    <h2>The layers</h2>
+    <p class="lede">
+      Read top to bottom: each layer calls only the one beneath it. A test never sees a CSS
+      selector; a page object never decides whether something passed.
+    </p>
+
+    <div class="stack">
+      <!-- Layer 1 -->
+      <div class="layer">
+        <div class="layer-rail">
+          <div class="layer-no">LAYER 01</div>
+          <div class="layer-name">Test cases</div>
+          <div class="layer-role">Business intent, in business language</div>
+        </div>
+        <div class="layer-body">
+          <p>
+            Each test is written as Given / When / Then steps that a product owner can read. The
+            step names are what appears in the report when a run fails, so a failure is legible
+            without opening code.
+          </p>
+          <ul class="tests">
+            <li>Invite a new member via email and verify they appear in the members list <span class="tag">@ui @members</span></li>
+            <li>Change a member role from Member to Project admin <span class="tag">@ui @regression</span></li>
+            <li>Assign a work package to a current project member <span class="tag">@ui @workpackage</span></li>
+            <li>Create a one-time meeting and verify it appears on the meetings list <span class="tag">@ui @meetings</span></li>
+            <li>Delete work package (phase) <span class="tag">@ui @regression</span></li>
+            <li class="api-test">Create a work package via the REST API <span class="tag">@api</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="seam">
+        <span class="seam-arrow">▼</span>
+        <span class="seam-text">calls page objects · asserts with <code>expect()</code></span>
+      </div>
+
+      <!-- Layer 2 -->
+      <div class="layer">
+        <div class="layer-rail">
+          <div class="layer-no">LAYER 02</div>
+          <div class="layer-name">Fixtures</div>
+          <div class="layer-role">Preconditions, set up once and reused</div>
+        </div>
+        <div class="layer-body">
+          <p>
+            Shared setup lives in Playwright fixtures rather than being repeated in every test. A
+            test that needs a logged-in admin already inside the Demo project simply asks for
+            <span class="chip">readyOverviewPage</span> and starts at its first business step.
+            Fixtures also own teardown, so tests leave the system as they found it.
+          </p>
+        </div>
+      </div>
+
+      <div class="seam">
+        <span class="seam-arrow">▼</span>
+        <span class="seam-text">hands the test a ready page object</span>
+      </div>
+
+      <!-- Layer 3 -->
+      <div class="layer">
+        <div class="layer-rail">
+          <div class="layer-no">LAYER 03</div>
+          <div class="layer-name">Page objects &amp; components</div>
+          <div class="layer-role">The only place that knows the UI</div>
+        </div>
+        <div class="layer-body">
+          <p>
+            One class per screen, one component class per reusable region. All of them extend a
+            shared base that guarantees a <span class="chip">waitForLoad()</span> contract, and
+            navigation methods return the next page object — so a test reads as a chain of
+            screens. When OpenProject changes a screen, exactly one class changes.
+          </p>
+          <div class="group-label">Pages</div>
+          <div class="chips">
+            <span class="chip po">LoginPage</span>
+            <span class="chip po">OverviewPage</span>
+            <span class="chip po">MembersPage</span>
+            <span class="chip po">WorkPackagesPage</span>
+            <span class="chip po">WorkPackageDetailsPage</span>
+            <span class="chip po">BoardsPage</span>
+            <span class="chip po">MeetingsPage</span>
+            <span class="chip po">CostReportsPage</span>
+          </div>
+          <div class="group-label">Components</div>
+          <div class="chips">
+            <span class="chip">MainMenuComp</span>
+            <span class="chip">MemberTableComp</span>
+            <span class="chip">MemberTableRowComp</span>
+            <span class="chip">AgendaItemsComp</span>
+            <span class="chip">LogTimeDialogComp</span>
+            <span class="chip">WorkPackageTypeMenuComp</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="seam">
+        <span class="seam-arrow">▼</span>
+        <span class="seam-text">resolves an element by role, label or text</span>
+      </div>
+
+      <!-- Layer 4 -->
+      <div class="layer">
+        <div class="layer-rail">
+          <div class="layer-no">LAYER 04</div>
+          <div class="layer-name">Playwright engine</div>
+          <div class="layer-role">Locators, waiting, evidence</div>
+        </div>
+        <div class="layer-body">
+          <p>
+            Playwright resolves each locator at the moment of use and waits for the element to be
+            actionable, which removes the fixed sleeps that make older suites flaky. Every run
+            records a trace, a video and a screenshot per action, so a failure is diagnosed from
+            the recording instead of by re-running it.
+          </p>
+          <div class="chips">
+            <span class="chip">auto-waiting</span>
+            <span class="chip">trace: on</span>
+            <span class="chip">video: on</span>
+            <span class="chip">parallel workers</span>
+            <span class="chip">HTML report</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="seam">
+        <span class="seam-arrow">▼</span>
+        <span class="seam-text">two transports — the fork below</span>
+      </div>
+
+      <!-- Layer 5 -->
+      <div class="layer" style="border-bottom-width: 1px;">
+        <div class="layer-rail">
+          <div class="layer-no">LAYER 05</div>
+          <div class="layer-name">Transport</div>
+          <div class="layer-role">How the suite reaches the product</div>
+        </div>
+        <div class="layer-body">
+          <p>
+            The UI path speaks the Chrome DevTools Protocol to a real Chromium instance. The API
+            path speaks plain HTTPS to the same application's REST endpoint. Both end at the same
+            deployed OpenProject, which is what makes the two kinds of test comparable.
+          </p>
+          <div class="lanes">
+            <div class="lane">
+              <h3>Browser lane</h3>
+              <p>Drives the product through its interface, exactly as a person would.</p>
+              <dl>
+                <dt>Protocol</dt><dd>CDP over WebSocket</dd>
+                <dt>Target</dt><dd>Chromium → localhost:8090</dd>
+                <dt>Auth</dt><dd>Session cookie via login</dd>
+              </dl>
+            </div>
+            <div class="lane http">
+              <h3>HTTP API lane</h3>
+              <p>Checks the same behaviour at the service boundary — in seconds, not minutes.</p>
+              <dl>
+                <dt>Protocol</dt><dd>HTTP / REST (JSON)</dd>
+                <dt>Target</dt><dd>localhost:8080/api/v3</dd>
+                <dt>Auth</dt><dd>API key from .env</dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>How Playwright talks to the browser</h2>
+    <p class="lede">
+      There is no plugin installed in the browser and no remote grid in the middle. The test
+      process opens a single WebSocket to a Chromium instance and speaks the Chrome DevTools
+      Protocol — the same protocol the browser's own developer tools use.
+    </p>
+
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 900 300" role="img" aria-label="Diagram: the Node test process connects over a CDP WebSocket to Chromium, which renders the OpenProject UI, while the same process calls the OpenProject REST API directly over HTTP.">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--ink-3)" />
+          </marker>
+          <marker id="arrow-wire" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--wire)" />
+          </marker>
+          <marker id="arrow-slate" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--slate)" />
+          </marker>
+        </defs>
+
+        <g font-family="ui-monospace, Consolas, monospace" font-size="12.5">
+          <!-- test process -->
+          <rect x="14" y="76" width="196" height="96" rx="3" fill="var(--surface-2)" stroke="var(--rule)" />
+          <text x="30" y="102" fill="var(--ink)" font-size="13.5" font-weight="600">Test process</text>
+          <text x="30" y="122" fill="var(--ink-2)">Node.js · TypeScript</text>
+          <text x="30" y="140" fill="var(--ink-2)">page objects</text>
+          <text x="30" y="158" fill="var(--ink-2)">@playwright/test</text>
+
+          <!-- chromium -->
+          <rect x="352" y="34" width="196" height="86" rx="3" fill="var(--surface-2)" stroke="var(--wire)" />
+          <text x="368" y="60" fill="var(--ink)" font-size="13.5" font-weight="600">Chromium</text>
+          <text x="368" y="80" fill="var(--ink-2)">real browser engine</text>
+          <text x="368" y="98" fill="var(--ink-2)">DOM · JS · network</text>
+
+          <!-- api client -->
+          <rect x="352" y="180" width="196" height="86" rx="3" fill="var(--surface-2)" stroke="var(--slate)" />
+          <text x="368" y="206" fill="var(--ink)" font-size="13.5" font-weight="600">API client</text>
+          <text x="368" y="226" fill="var(--ink-2)">fluent request builder</text>
+          <text x="368" y="244" fill="var(--ink-2)">JSON in / JSON out</text>
+
+          <!-- app -->
+          <rect x="690" y="76" width="196" height="150" rx="3" fill="var(--surface-2)" stroke="var(--rule)" />
+          <text x="706" y="102" fill="var(--ink)" font-size="13.5" font-weight="600">OpenProject</text>
+          <text x="706" y="124" fill="var(--ink-2)">web UI :8090</text>
+          <text x="706" y="142" fill="var(--ink-2)">REST API :8080</text>
+          <text x="706" y="172" fill="var(--ink-3)" font-size="11.5">one deployed</text>
+          <text x="706" y="188" fill="var(--ink-3)" font-size="11.5">application</text>
+
+          <!-- CDP link -->
+          <line x1="212" y1="104" x2="344" y2="78" stroke="var(--wire)" stroke-width="1.6" marker-end="url(#arrow-wire)" />
+          <line x1="344" y1="96" x2="216" y2="120" stroke="var(--wire)" stroke-width="1.2" stroke-dasharray="3 3" marker-end="url(#arrow-wire)" />
+          <text x="222" y="60" fill="var(--wire)" font-size="11.5" letter-spacing="0.06em">CDP · WEBSOCKET</text>
+          <text x="222" y="150" fill="var(--ink-3)" font-size="11">events, DOM state,</text>
+          <text x="222" y="165" fill="var(--ink-3)" font-size="11">screenshots, traces</text>
+
+          <!-- HTTP link from process to api client -->
+          <line x1="212" y1="150" x2="344" y2="206" stroke="var(--slate)" stroke-width="1.4" marker-end="url(#arrow-slate)" />
+
+          <!-- browser to app -->
+          <line x1="556" y1="78" x2="682" y2="110" stroke="var(--ink-3)" stroke-width="1.4" marker-end="url(#arrow)" />
+          <text x="566" y="60" fill="var(--ink-3)" font-size="11">renders the UI</text>
+
+          <!-- api to app -->
+          <line x1="556" y1="222" x2="682" y2="192" stroke="var(--slate)" stroke-width="1.4" marker-end="url(#arrow-slate)" />
+          <text x="566" y="252" fill="var(--slate)" font-size="11">HTTP + API key</text>
+        </g>
+      </svg>
+    </div>
+    <p class="caption">
+      Solid lines are commands going out; the dashed line is the browser reporting back. Because
+      that return channel carries DOM state and screenshots, the same connection that drives the
+      test also produces the evidence attached to a failure.
+    </p>
+
+    <div class="payoff">
+      <div class="card">
+        <h4>Waiting is decided by the browser</h4>
+        <p>
+          The browser reports when an element is actually clickable, so tests do not guess with
+          timers. This is the single biggest source of stability compared with older tooling.
+        </p>
+      </div>
+      <div class="card">
+        <h4>Network is visible and controllable</h4>
+        <p>
+          Requests the page makes can be observed or intercepted from the test — useful for
+          isolating a UI defect from a backend one.
+        </p>
+      </div>
+      <div class="card">
+        <h4>A live session can be inspected</h4>
+        <p>
+          Engineers attach to a paused run over the same protocol to step through it and read the
+          page, which shortens the diagnosis of a new failure.
+        </p>
+      </div>
+      <div class="card">
+        <h4>No agent to install</h4>
+        <p>
+          The browser is launched by the test run itself. Nothing is installed into the product or
+          the environment under test.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Two levels of coverage, one product</h2>
+    <p class="lede">
+      UI tests prove the product works for a person. API tests prove the rules hold at the service
+      boundary — and run fast enough to cover many more cases.
+    </p>
+    <div class="lanes">
+      <div class="lane">
+        <h3>UI tests</h3>
+        <p>
+          Full user journeys through the real interface: invite a member, change a role, create and
+          delete a work package, schedule a meeting. Slower, and the closest thing to a customer's
+          experience.
+        </p>
+        <div class="chips">
+          <span class="chip po">Members</span>
+          <span class="chip po">Work packages</span>
+          <span class="chip po">Boards</span>
+          <span class="chip po">Meetings</span>
+          <span class="chip po">Time &amp; costs</span>
+        </div>
+      </div>
+      <div class="lane http">
+        <h3>HTTP API tests</h3>
+        <p>
+          The same fixture pattern, one layer shorter: no page objects, a fluent client instead.
+          Used for data setup, for cases that are impractical through the UI, and to pin the
+          contract other systems integrate against.
+        </p>
+        <div class="chips">
+          <span class="chip api">client.project(1).workPackages().get()</span>
+          <span class="chip api">.post({ subject })</span>
+          <span class="chip api">.patch({ lockVersion })</span>
+          <span class="chip api">.delete()</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span>Playwright · TypeScript · Chromium</span>
+    <span>UI <code>localhost:8090</code></span>
+    <span>API <code>localhost:8080/api/v3</code></span>
+    <span>Counts reflect the OpenProject suite; a separate reference suite is excluded.</span>
+  </footer>
+</div>
+
+</body>
+</html>

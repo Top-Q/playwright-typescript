@@ -1,0 +1,143 @@
+# OpenProject DOM facts that have cost time before
+
+What you will actually see when you look at the running app. Every entry here was
+paid for by a failed run or a wasted heal iteration — check this list before
+concluding you have found something novel, and add to it when you find something new.
+
+This file is about **OpenProject**, not about tooling. It stays true across
+`playwright-cli` and Playwright upgrades, and it applies whether the locator is written by the
+pipeline or by hand — CLAUDE.md rule 9 is why it exists. For how to *get* a browser in front of the
+app, see [`browser.md`](../../.claude/skills/gen-test/references/browser.md); for addresses, credentials and the source
+checkout, [`environment.md`](environment.md).
+
+## Roles and structure
+
+- **Action "buttons" are often `<a>`.** Use `getByRole('link')`, not
+  `getByRole('button')`. Board delete controls are `<a title="Delete">`.
+- **Duplicate IDs.** `#add-board-button` exists twice (text + icon-only mobile
+  variant). Disambiguate: `#add-board-button[aria-label="Create new board"]`.
+- **Ambiguous links.** `getByRole('link', { name: 'Boards' })` matches two elements on
+  a board view; scope it: `locator('#content-body').getByRole('link', ...)`.
+- **Elements that vanish entirely.** When all boards are deleted,
+  `table.generic-table` is removed rather than rendered empty, so a row count must
+  check for the table's existence first.
+
+- **Heading levels are set by Primer layout components**, not by the page author, so an
+  `h1` in the ERB may render as an `h2`. Do not pin `getByRole('heading', { level: n })`
+  from source alone; confirm the level against the DOM.
+
+## Modules
+
+- **Not every module is enabled.** Several are off by default (Costs is the usual
+  surprise), and a disabled module has no sidebar link and no routes — which looks
+  identical to a module you cannot find. Check Project settings → Modules before
+  concluding the UI is missing.
+
+## Accessible names
+
+- **Never use `exact: true` on a button with an `icon-*` class.** Those classes render
+  an icon-font glyph via `::before`, and Playwright folds CSS `content` into the
+  accessible name. The add-member submit button's real name is `U+F138` + `Add`, so
+  `{ name: 'Add', exact: true }` matches **zero** elements.
+
+  This is invisible in every human-readable view — the ARIA snapshot,
+  `error-context.md`, and `toHaveAccessibleName` failures all print a bare `"Add"`.
+  Scope to a container and use a substring match instead. If you suspect it, decode the
+  bytes: a raw snapshot shows `button "U+f138Add"`.
+
+- **`name:` is a case-insensitive *substring* match unless you pass `exact`.**
+  `getByRole('textbox', { name: 'Name' })` on `/projects/new` also matches the
+  projects list's **"Project name filter"** box — and arriving from that list, the
+  old page is still in the DOM for a moment, so a `waitForLoad()` keyed on it
+  returns against the page being left. The typed value then disappears with the
+  pending navigation and the failure surfaces later as *"Name can't be blank"*.
+  Short, common field names (`Name`, `Type`, `Status`) need `exact: true`, and a
+  `waitForLoad()` is worth pairing with a `waitForURL()` when the destination path
+  is known.
+
+- **Required fields carry the asterisk in the name.** The login fields are
+  `"Username*"` and `"Password*"`, not `"Username"` / `"Password"`. Matching the bare
+  label returns *"does not match any elements"*.
+
+- **Two `Sign in` buttons** on the login page: one in the page header, one in the form.
+  Scope to the form.
+
+## Widgets
+
+- **`ng-select` dropdowns** are not native `<select>`. They need click-then-pick, not
+  `selectOption`. But **check before assuming** — on the add-member form the *user*
+  field is an ng-select while the *role* field (`#member_role_ids`) is a plain
+  `select_tag`, so `selectOption` is correct there.
+- **ng-select panels render outside their form.** `appendTo: "body"` means
+  `.ng-dropdown-panel .ng-option` must be scoped to the page, not to the form; scoping
+  it to the form matches nothing. After picking, wait on `.ng-value` inside the form to
+  confirm the selection actually took.
+- **Escape closes dialogs and dropdowns.** Useful as a component's dismiss method, and
+  worth remembering when a stray open panel is intercepting your clicks.
+
+## Waiting and navigation
+
+- **`waitForLoadState('load')` after a form submit is a no-op.** The current document is
+  already loaded, so it resolves instantly — before the POST navigates. Combined with a
+  `waitForLoad()` that keys on an element present both before and after, a method will
+  return on the stale document and the failure surfaces much later as a missing row.
+  Wait for something that actually changes: the form going hidden, or `waitForURL()` on
+  the controller's success-redirect.
+- **Turbo navigation** does not always trigger a full load, so `waitForURL` patterns may
+  need adjusting. A Turbo `DELETE` following a 302 re-issues as `DELETE` and 404s —
+  capture the URL first, wait for the 302, then `page.goto` the saved URL.
+
+## Projects module
+
+- **`/projects/new` has no `.main-menu`.** The project sidebar does not exist on the
+  create form (`querySelectorAll('.main-menu').length === 0`), so anything that waits
+  on `MainMenuComp` hangs there. Project creation is a *global* area, reached from the
+  application header, not from a project sidebar.
+- **The header quick-add "New project" inherits the current project as parent.** From
+  inside a project the menu item's href is `/projects/new?parent_id=<id>` and the form
+  opens with "Subproject of" pre-filled — the project created is silently a
+  *sub*project. For a top-level project go through `/projects` → "+ Project".
+- **No Identifier field on the create form (v16).** The identifier is generated
+  server-side from the name by `acts_as_url` and is editable only afterwards, at
+  `/projects/:id/identifier`. There is no "Advanced settings" disclosure to expand.
+- **The create form's "Create" button is never disabled**, even with the name empty.
+  Rejection is server-side and renders inline in `.FormControl-inlineValidation` with
+  `aria-invalid` on the input, inside `turbo-frame#projects-new-component` — the URL
+  does not change and no flash banner appears.
+- **"+ Project" exists twice**, like `#add-board-button`: a labelled desktop variant
+  and a hidden icon-only mobile one. `[data-test-selector="workspace-new-button"]`
+  matches both; the accessible name matches only the visible one.
+- **An empty projects table is not an absent one.** With no rows matching the filter,
+  `table#project-table` still renders one `tr.generic-table--empty-row`, so counting
+  `tbody tr` reports 1 for an empty list. Count `tr.op-project-row-component`.
+
+## Members module
+
+- **The members list paginates at 20.** Row lookups that filter rendered `tbody tr`
+  report an existing member as missing once the project passes one page. Force the full
+  list (`per_page=100`) before asserting absence.
+- **The name cell is not the email.** Inviting `a@b.com` renders a name cell of
+  `a @b.com` (firstname/lastname split) and an email cell of `a@b.com`. Row lookup by
+  email works only because the filter is `hasText` over the whole row. The email column
+  renders only for users holding `view_user_email`.
+- **Removing a member does not delete the user account.** It revokes project access only
+  — OpenProject's own dialog says so. Tests that invite by a unique address leave one
+  account per run on the instance.
+- **The sidebar status links carry no `status=` param** in the default "All" view, so
+  `waitForURL(/status=all/)` never resolves. Wait for the URL to *change* instead.
+- **The add-member role dropdown has no blank option**, so the browser preselects the
+  first givable role ("Member"). A user cannot leave it empty; only
+  `selectOption([])` reaches that state.
+- **A role-less add shows no error at all — do not go looking for one.**
+  `MembersController#create` answers the invalid branch with `render "index"` at **200,
+  not a redirect**, and Turbo (drive on, default form mode, no `data-turbo="false"` on
+  this form) discards non-redirect form responses. Verified live: the response body
+  *does* contain `.flash-error` "Roles need to be assigned.", but after the click the
+  DOM is untouched — no banner, no toast, form still open, URL unchanged. The message
+  is `flash.now`, so it does not survive a reload either.
+  Rejections that **redirect** do render normally: no user selected → "Please choose at
+  least one user or group.", and editing an existing member's roles down to none
+  (`#update`) → "Roles need to be assigned.". Read those with
+  `#primerized-flash-messages .flash-error`; the banner carries **no ARIA role**, so
+  `getByRole('alert')` matches zero elements, and the `data-test-selector` the Primer
+  component sets is absent from the deployed build.
