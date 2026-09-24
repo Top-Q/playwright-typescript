@@ -28,6 +28,7 @@ import * as path from 'path';
 import { requireFlagsSurvived } from './cli-args';
 import { PipelineError, RunRecord, makeRunId } from './run-directory';
 import { initRun } from './run-init';
+import { readRequirement } from './vault';
 import { describeRun, findLeakedTestRuns } from './leaked-runs';
 
 const HELP = `
@@ -39,11 +40,13 @@ Options:
   -h, --help            Show this help message
       --spec <ref>      Required. FR id, TC id, or path to a markdown spec
       --app-url <url>   UI base URL to probe (default: http://localhost:8090)
-      --graph <dir>     Requirements graph directory (default: specs/product/graph)
+      --vault <dir>     Requirement vault directory (default: specs/product/vault)
       --out <dir>       Runs root (default: .pipeline/runs)
       --branch <name>   Branch name to create (default: test-gen/<run-id>)
       --no-branch       Do not create a branch
       --skip-gates      Skip gate:catalog/types/lint/gaps (debugging only)
+      --allow-open-cq   Generate even though an open clarification question blocks
+                        the spec; spec.md marks each affected test case
       --json            Emit machine-readable JSON
 
 Exit codes:
@@ -58,56 +61,57 @@ Examples:
 requireFlagsSurvived('pipeline:preflight');
 
 const { values } = parseArgs({
-  args: process.argv.slice(2),
-  options: {
-    help: { type: 'boolean', short: 'h', default: false },
-    spec: { type: 'string' },
-    'app-url': { type: 'string', default: 'http://localhost:8090' },
-    graph: { type: 'string', default: 'specs/product/graph' },
-    out: { type: 'string', default: '.pipeline/runs' },
-    branch: { type: 'string' },
-    'no-branch': { type: 'boolean', default: false },
-    'skip-gates': { type: 'boolean', default: false },
-    json: { type: 'boolean', default: false },
-  },
+    args: process.argv.slice(2),
+    options: {
+        help: { type: 'boolean', short: 'h', default: false },
+        spec: { type: 'string' },
+        'app-url': { type: 'string', default: 'http://localhost:8090' },
+        vault: { type: 'string', default: 'specs/product/vault' },
+        out: { type: 'string', default: '.pipeline/runs' },
+        branch: { type: 'string' },
+        'no-branch': { type: 'boolean', default: false },
+        'skip-gates': { type: 'boolean', default: false },
+        'allow-open-cq': { type: 'boolean', default: false },
+        json: { type: 'boolean', default: false },
+    },
 });
 
 if (values.help) {
-  console.log(HELP.trim());
-  process.exit(0);
+    console.log(HELP.trim());
+    process.exit(0);
 }
 if (!values.spec) {
-  console.error('preflight: --spec is required (an FR id, a TC id, or a markdown path)');
-  process.exit(1);
+    console.error('preflight: --spec is required (an FR id, a TC id, or a markdown path)');
+    process.exit(1);
 }
 const specRef = values.spec;
 
 type Status = 'ok' | 'fail' | 'warn' | 'skip';
 
 interface Check {
-  name: string;
-  status: Status;
-  detail: string;
+    name: string;
+    status: Status;
+    detail: string;
 }
 
 const checks: Check[] = [];
 
 function record(name: string, status: Status, detail = ''): Check {
-  const check = { name, status, detail };
-  checks.push(check);
-  return check;
+    const check = { name, status, detail };
+    checks.push(check);
+    return check;
 }
 
 /** Captured, not inherited: a check's output belongs in its own detail line. */
 function run(command: string, args: string[], useShell = false): { code: number; out: string } {
-  const result = spawnSync(command, args, {
-    encoding: 'utf8',
-    shell: useShell,
-    windowsHide: true,
-  });
-  const out = `${result.stdout ?? ''}${result.stderr ?? ''}`.trim();
-  if (result.error) return { code: 127, out: result.error.message };
-  return { code: result.status ?? 1, out };
+    const result = spawnSync(command, args, {
+        encoding: 'utf8',
+        shell: useShell,
+        windowsHide: true,
+    });
+    const out = `${result.stdout ?? ''}${result.stderr ?? ''}`.trim();
+    if (result.error) return { code: 127, out: result.error.message };
+    return { code: result.status ?? 1, out };
 }
 
 /**
@@ -116,10 +120,10 @@ function run(command: string, args: string[], useShell = false): { code: number;
  * shows the warnings and hides the one line that actually failed the gate.
  */
 function tail(text: string, lines = 6): string {
-  const all = text.split(/\r?\n/).filter(Boolean);
-  const errors = all.filter((line) => /\berror\b/i.test(line));
-  const chosen = errors.length > 0 ? errors.slice(0, lines) : all.slice(-lines);
-  return chosen.map((line) => line.trim()).join('\n    ');
+    const all = text.split(/\r?\n/).filter(Boolean);
+    const errors = all.filter((line) => /\berror\b/i.test(line));
+    const chosen = errors.length > 0 ? errors.slice(0, lines) : all.slice(-lines);
+    return chosen.map((line) => line.trim()).join('\n    ');
 }
 
 const repoRoot = process.cwd();
@@ -128,74 +132,74 @@ const repoRoot = process.cwd();
 
 let baseBranch = '';
 {
-  const head = run('git', ['rev-parse', '--abbrev-ref', 'HEAD']);
-  if (head.code !== 0) {
-    record('git', 'fail', 'not a git repository — the run has nowhere to isolate itself');
-  } else {
-    baseBranch = head.out.trim();
-    if (baseBranch.startsWith('test-gen/')) {
-      // Branching a run off another run's branch buries this run's diff under
-      // the previous one's, and the reviewer diffs against the base branch.
-      record('git', 'warn', `HEAD is \`${baseBranch}\`, itself a run branch`);
+    const head = run('git', ['rev-parse', '--abbrev-ref', 'HEAD']);
+    if (head.code !== 0) {
+        record('git', 'fail', 'not a git repository — the run has nowhere to isolate itself');
     } else {
-      record('git', 'ok', `base branch \`${baseBranch}\``);
+        baseBranch = head.out.trim();
+        if (baseBranch.startsWith('test-gen/')) {
+            // Branching a run off another run's branch buries this run's diff under
+            // the previous one's, and the reviewer diffs against the base branch.
+            record('git', 'warn', `HEAD is \`${baseBranch}\`, itself a run branch`);
+        } else {
+            record('git', 'ok', `base branch \`${baseBranch}\``);
+        }
     }
-  }
 }
 
 // ---------------------------------------------------------------- gates
 
 if (values['skip-gates']) {
-  record('gates', 'skip', '--skip-gates was passed; the baseline is unverified');
+    record('gates', 'skip', '--skip-gates was passed; the baseline is unverified');
 } else {
-  // Driven through npm so package.json stays the single definition of a gate.
-  const gates: [string, string][] = [
-    ['gate:catalog', 'POM catalog matches src/po'],
-    ['gate:types', 'tsc --noEmit'],
-    ['gate:lint', 'eslint .'],
-    ['gate:gaps', 'no GAP- markers remain'],
-  ];
-  for (const [script, description] of gates) {
-    const result = run('npm', ['run', '--silent', script], true);
-    if (result.code === 0) {
-      record(script, 'ok', description);
-    } else if (script === 'gate:gaps') {
-      // Leftover gaps are not a broken baseline — they are a previous run that
-      // aborted mid-flight, and reverting them is the user's call, not ours.
-      record(script, 'fail', `gaps left by an earlier run:\n    ${tail(result.out)}`);
-    } else {
-      record(script, 'fail', `${description} failed:\n    ${tail(result.out)}`);
+    // Driven through npm so package.json stays the single definition of a gate.
+    const gates: [string, string][] = [
+        ['gate:catalog', 'POM catalog matches src/po'],
+        ['gate:types', 'tsc --noEmit'],
+        ['gate:lint', 'eslint .'],
+        ['gate:gaps', 'no GAP- markers remain'],
+    ];
+    for (const [script, description] of gates) {
+        const result = run('npm', ['run', '--silent', script], true);
+        if (result.code === 0) {
+            record(script, 'ok', description);
+        } else if (script === 'gate:gaps') {
+            // Leftover gaps are not a broken baseline — they are a previous run that
+            // aborted mid-flight, and reverting them is the user's call, not ours.
+            record(script, 'fail', `gaps left by an earlier run:\n    ${tail(result.out)}`);
+        } else {
+            record(script, 'fail', `${description} failed:\n    ${tail(result.out)}`);
+        }
     }
-  }
 }
 
 // ------------------------------------------------------------------ app
 
 async function probeApp(url: string): Promise<Check> {
-  try {
-    const response = await fetch(url, {
-      signal: AbortSignal.timeout(5000),
-      redirect: 'manual',
-    });
-    // Any HTTP answer proves the server is up. A 302 to /login is the normal
-    // response here, and demanding 200 would fail an entirely healthy instance.
-    return record('app', 'ok', `${url} responded ${response.status}`);
-  } catch (error) {
-    return record(
-      'app',
-      'fail',
-      `${url} unreachable (${error instanceof Error ? error.message : String(error)})`,
-    );
-  }
+    try {
+        const response = await fetch(url, {
+            signal: AbortSignal.timeout(5000),
+            redirect: 'manual',
+        });
+        // Any HTTP answer proves the server is up. A 302 to /login is the normal
+        // response here, and demanding 200 would fail an entirely healthy instance.
+        return record('app', 'ok', `${url} responded ${response.status}`);
+    } catch (error) {
+        return record(
+            'app',
+            'fail',
+            `${url} unreachable (${error instanceof Error ? error.message : String(error)})`,
+        );
+    }
 }
 
 // -------------------------------------------------------- playwright-cli
 
 function probePlaywrightCli(): void {
-  // shell:true so Windows resolves the shim through PATHEXT, whatever it is.
-  const result = run('playwright-cli --version', [], true);
-  if (result.code === 0) record('playwright-cli', 'ok', result.out.split(/\r?\n/)[0] ?? '');
-  else record('playwright-cli', 'fail', 'not on PATH — the browser stages cannot investigate');
+    // shell:true so Windows resolves the shim through PATHEXT, whatever it is.
+    const result = run('playwright-cli --version', [], true);
+    if (result.code === 0) record('playwright-cli', 'ok', result.out.split(/\r?\n/)[0] ?? '');
+    else record('playwright-cli', 'fail', 'not on PATH — the browser stages cannot investigate');
 }
 
 // ----------------------------------------------------------------- module
@@ -211,23 +215,82 @@ function probePlaywrightCli(): void {
  * objects that were there all along.
  */
 function probeModule(runRecord: RunRecord): void {
-  const poDir = path.join(repoRoot, 'src/po/openproject', runRecord.module);
-  const catalog = path.join(repoRoot, 'pom-catalog/openproject', `${runRecord.module}.json`);
-  const testDir = runRecord.testDirectory ?? runRecord.module;
+    const poDir = path.join(repoRoot, 'src/po/openproject', runRecord.module);
+    const catalog = path.join(repoRoot, 'pom-catalog/openproject', `${runRecord.module}.json`);
+    const testDir = runRecord.testDirectory ?? runRecord.module;
 
-  if (fs.existsSync(poDir) && fs.existsSync(catalog)) {
-    record('module', 'ok', `${runRecord.module} — page objects and catalog present`);
-  } else if (fs.existsSync(poDir)) {
-    record('module', 'warn', `${runRecord.module} has page objects but no ${runRecord.module}.json`);
-  } else {
-    record(
-      'module',
-      'warn',
-      `no src/po/openproject/${runRecord.module} — a new module (stage 2.5 will map it), ` +
-        'or the module mapping in run-init.ts needs an entry',
+    if (fs.existsSync(poDir) && fs.existsSync(catalog)) {
+        record('module', 'ok', `${runRecord.module} — page objects and catalog present`);
+    } else if (fs.existsSync(poDir)) {
+        record(
+            'module',
+            'warn',
+            `${runRecord.module} has page objects but no ${runRecord.module}.json`,
+        );
+    } else {
+        record(
+            'module',
+            'warn',
+            `no src/po/openproject/${runRecord.module} — a new module (stage 2.5 will map it), ` +
+                'or the module mapping in run-init.ts needs an entry',
+        );
+    }
+    record('tests', 'ok', `tests/ui/${testDir}`);
+}
+
+// ------------------------------------------------------- open questions
+
+/**
+ * Clarification questions still open that block a test case in the spec.
+ *
+ * A test generated for a blocked test case asserts a guess, and a green run
+ * then makes the guess look settled — the gap specs/README.md recorded before
+ * the vault made it checkable. Read-only, so it runs with the diagnostics:
+ * failing here leaves no branch and no run directory behind.
+ */
+function probeOpenQuestions(): void {
+    const tc = /^TC-([A-Z]+-\d+)-\d+$/.exec(specRef);
+    const frId = /^FR-[A-Z]+-\d+$/.test(specRef) ? specRef : tc ? `FR-${tc[1]}` : undefined;
+    if (!frId) {
+        record('questions', 'skip', 'not a vault spec');
+        return;
+    }
+    let cases;
+    try {
+        cases = readRequirement(repoRoot, values.vault, frId).requirement.test_cases ?? [];
+    } catch {
+        return; // run-init reports a missing requirement, with the path it looked in
+    }
+    const blocked = cases.filter(
+        (testCase) => (!tc || testCase.id === specRef) && testCase.openQuestions?.length,
     );
-  }
-  record('tests', 'ok', `tests/ui/${testDir}`);
+    if (blocked.length === 0) {
+        record('questions', 'ok', 'no open clarification blocks this spec');
+        return;
+    }
+    const detail = blocked
+        .map(
+            (testCase) =>
+                `${testCase.id} ← ` +
+                (testCase.openQuestions ?? []).map((q) => `${q.id} (${q.title})`).join(', '),
+        )
+        .join('\n    ');
+    if (values['allow-open-cq']) {
+        record(
+            'questions',
+            'warn',
+            `--allow-open-cq: spec.md marks each blocked test case:\n    ${detail}`,
+        );
+    } else {
+        record(
+            'questions',
+            'fail',
+            `an open clarification blocks ${blocked.length} test case(s), so their expected results ` +
+                'are guesses. Answer the question in the vault, generate the unblocked test cases ' +
+                'one by one, or pass --allow-open-cq (with npm.cmd — npm.ps1 drops boolean flags):' +
+                `\n    ${detail}`,
+        );
+    }
 }
 
 // ------------------------------------------------------------ leaked runs
@@ -242,124 +305,126 @@ function probeModule(runRecord: RunRecord): void {
  * offer, not preflight's to make.
  */
 function probeLeakedRuns(): void {
-  const leaked = findLeakedTestRuns(repoRoot);
-  if (!leaked.enumerated) {
-    record(
-      'leaks',
-      'warn',
-      `could not enumerate processes${leaked.reason ? ` — ${leaked.reason}` : ''}`,
-    );
-  } else if (leaked.runs.length === 0) {
-    record('leaks', 'ok', 'no playwright test runs left over');
-  } else {
-    record(
-      'leaks',
-      'warn',
-      `${leaked.runs.length} leaked test run(s) from an earlier session — ` +
-        'run `npm run pipeline:cleanup -- --kill`:\n    ' +
-        leaked.runs.map(describeRun).join('\n    '),
-    );
-  }
+    const leaked = findLeakedTestRuns(repoRoot);
+    if (!leaked.enumerated) {
+        record(
+            'leaks',
+            'warn',
+            `could not enumerate processes${leaked.reason ? ` — ${leaked.reason}` : ''}`,
+        );
+    } else if (leaked.runs.length === 0) {
+        record('leaks', 'ok', 'no playwright test runs left over');
+    } else {
+        record(
+            'leaks',
+            'warn',
+            `${leaked.runs.length} leaked test run(s) from an earlier session — ` +
+                'run `npm run pipeline:cleanup -- --kill`:\n    ' +
+                leaked.runs.map(describeRun).join('\n    '),
+        );
+    }
 }
 
 // ----------------------------------------------------------------- main
 
 async function main(): Promise<number> {
-  await probeApp(values['app-url']);
-  probePlaywrightCli();
-  probeLeakedRuns();
+    await probeApp(values['app-url']);
+    probePlaywrightCli();
+    probeLeakedRuns();
+    probeOpenQuestions();
 
-  const blocked = checks.some((check) => check.status === 'fail');
+    const blocked = checks.some((check) => check.status === 'fail');
 
-  let runId = makeRunId(specRef, new Date());
-  let branch = values.branch ?? `test-gen/${runId}`;
-  let runDir = '';
-  let runRecord: RunRecord | undefined;
+    let runId = makeRunId(specRef, new Date());
+    let branch = values.branch ?? `test-gen/${runId}`;
+    let runDir = '';
+    let runRecord: RunRecord | undefined;
 
-  if (!blocked) {
-    // Mutations start here, spec first: resolving it can still fail, and it is
-    // better to fail with no branch created than to leave one behind.
-    try {
-      const initialised = initRun({
-        specRef,
-        repoRoot,
-        graph: values.graph,
-        out: values.out,
-        runId,
-        branch: values['no-branch'] ? null : branch,
-      });
-      runRecord = initialised.record;
-      runId = initialised.record.runId;
-      runDir = initialised.runDir;
-      record('run', 'ok', runDir);
-      probeModule(initialised.record);
-    } catch (error) {
-      record('run', 'fail', error instanceof PipelineError ? error.message : String(error));
+    if (!blocked) {
+        // Mutations start here, spec first: resolving it can still fail, and it is
+        // better to fail with no branch created than to leave one behind.
+        try {
+            const initialised = initRun({
+                specRef,
+                repoRoot,
+                vault: values.vault,
+                out: values.out,
+                runId,
+                branch: values['no-branch'] ? null : branch,
+            });
+            runRecord = initialised.record;
+            runId = initialised.record.runId;
+            runDir = initialised.runDir;
+            record('run', 'ok', runDir);
+            probeModule(initialised.record);
+        } catch (error) {
+            record('run', 'fail', error instanceof PipelineError ? error.message : String(error));
+        }
+
+        if (runRecord === undefined) {
+            // no run directory, so nothing to branch for
+        } else if (values['no-branch']) {
+            branch = '';
+            record('branch', 'skip', '--no-branch was passed; the run shares the current branch');
+        } else if (run('git', ['rev-parse', '--verify', '--quiet', branch]).code === 0) {
+            record('branch', 'fail', `${branch} already exists`);
+        } else {
+            const created = run('git', ['checkout', '-b', branch]);
+            if (created.code === 0)
+                record('branch', 'ok', `${branch} created from \`${baseBranch}\``);
+            else record('branch', 'fail', `git checkout -b ${branch}: ${tail(created.out, 2)}`);
+        }
     }
 
-    if (runRecord === undefined) {
-      // no run directory, so nothing to branch for
-    } else if (values['no-branch']) {
-      branch = '';
-      record('branch', 'skip', '--no-branch was passed; the run shares the current branch');
-    } else if (run('git', ['rev-parse', '--verify', '--quiet', branch]).code === 0) {
-      record('branch', 'fail', `${branch} already exists`);
-    } else {
-      const created = run('git', ['checkout', '-b', branch]);
-      if (created.code === 0) record('branch', 'ok', `${branch} created from \`${baseBranch}\``);
-      else record('branch', 'fail', `git checkout -b ${branch}: ${tail(created.out, 2)}`);
+    const failed = checks.filter((check) => check.status === 'fail');
+    const ok = failed.length === 0;
+
+    if (values.json) {
+        console.log(
+            JSON.stringify(
+                {
+                    ok,
+                    runId: runRecord ? runId : null,
+                    runDir: runDir || null,
+                    module: runRecord?.module ?? null,
+                    suggestedTestFile: runRecord?.suggestedTestFile ?? null,
+                    branch: branch || null,
+                    baseBranch,
+                    checks,
+                },
+                null,
+                2,
+            ),
+        );
+        return ok ? 0 : 1;
     }
-  }
 
-  const failed = checks.filter((check) => check.status === 'fail');
-  const ok = failed.length === 0;
-
-  if (values.json) {
-    console.log(
-      JSON.stringify(
-        {
-          ok,
-          runId: runRecord ? runId : null,
-          runDir: runDir || null,
-          module: runRecord?.module ?? null,
-          suggestedTestFile: runRecord?.suggestedTestFile ?? null,
-          branch: branch || null,
-          baseBranch,
-          checks,
-        },
-        null,
-        2,
-      ),
-    );
+    const marker: Record<Status, string> = {
+        ok: '  ok  ',
+        fail: 'FAIL  ',
+        warn: 'warn  ',
+        skip: 'skip  ',
+    };
+    console.log(ok ? `preflight: ready — ${runId}` : 'preflight: BLOCKED');
+    for (const check of checks) {
+        console.log(`  ${marker[check.status]}${check.name.padEnd(16)}${check.detail}`);
+    }
+    if (ok && runRecord) {
+        console.log('');
+        console.log(`  run dir     ${runDir}`);
+        console.log(`  module      ${runRecord.module}`);
+        console.log(`  suggested   ${runRecord.suggestedTestFile}`);
+        console.log(`  spec        ${path.posix.normalize(runRecord.specPath)}`);
+    } else if (!ok) {
+        console.log('');
+        console.log('Nothing was created. Fix the failures above and run preflight again.');
+    }
     return ok ? 0 : 1;
-  }
-
-  const marker: Record<Status, string> = {
-    ok: '  ok  ',
-    fail: 'FAIL  ',
-    warn: 'warn  ',
-    skip: 'skip  ',
-  };
-  console.log(ok ? `preflight: ready — ${runId}` : 'preflight: BLOCKED');
-  for (const check of checks) {
-    console.log(`  ${marker[check.status]}${check.name.padEnd(16)}${check.detail}`);
-  }
-  if (ok && runRecord) {
-    console.log('');
-    console.log(`  run dir     ${runDir}`);
-    console.log(`  module      ${runRecord.module}`);
-    console.log(`  suggested   ${runRecord.suggestedTestFile}`);
-    console.log(`  spec        ${path.posix.normalize(runRecord.specPath)}`);
-  } else if (!ok) {
-    console.log('');
-    console.log('Nothing was created. Fix the failures above and run preflight again.');
-  }
-  return ok ? 0 : 1;
 }
 
 main()
-  .then((code) => process.exit(code))
-  .catch((error: unknown) => {
-    console.error(`preflight: ${error instanceof Error ? error.message : String(error)}`);
-    process.exit(1);
-  });
+    .then((code) => process.exit(code))
+    .catch((error: unknown) => {
+        console.error(`preflight: ${error instanceof Error ? error.message : String(error)}`);
+        process.exit(1);
+    });

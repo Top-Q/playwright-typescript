@@ -46,6 +46,8 @@ Gates, app reachability, `playwright-cli`, the run branch and the run directory,
 
 Stop and report if it exits 1. Do not generate on a broken baseline — every failure afterwards becomes unattributable. Leftover gaps mean a previous run aborted mid-flight; surface them and let the user decide.
 
+A `questions` failure means an open clarification in the requirement vault blocks a test case in the spec, so its expected result is a guess. Report the question; do not pass `--allow-open-cq` on your own initiative. The user decides whether to answer it, to generate the unblocked test cases one at a time, or to proceed anyway.
+
 Note the run id and run directory from its output; every agent prompt needs the run directory path.
 
 ### Stage 1 — test-creator

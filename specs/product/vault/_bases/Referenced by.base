@@ -1,0 +1,11 @@
+filters:
+  and:
+    - file.hasLink(this.file)
+    - requirement != this
+views:
+  - type: table
+    name: Referenced by
+    order:
+      - file.name
+      - title
+      - file.tags

@@ -155,3 +155,8 @@ vite.config.ts.timestamp-*
 
 # Test-generation pipeline run artifacts (/gen-test)
 .pipeline/
+
+# Obsidian per-user UI state for the requirement vault (specs/product/vault)
+specs/product/vault/.obsidian/workspace*.json
+specs/product/vault/.obsidian/appearance.json
+specs/product/vault/.obsidian/themes/

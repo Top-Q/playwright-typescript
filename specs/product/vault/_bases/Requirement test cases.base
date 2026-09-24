@@ -1,0 +1,12 @@
+filters:
+  and:
+    - file.hasTag("kind/test-case")
+    - requirement == this
+views:
+  - type: table
+    name: Test cases
+    order:
+      - file.name
+      - type
+      - title
+      - actors

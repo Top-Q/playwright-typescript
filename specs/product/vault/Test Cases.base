@@ -1,0 +1,22 @@
+filters:
+  and:
+    - file.hasTag("kind/test-case")
+views:
+  - type: table
+    name: All test cases
+    order:
+      - file.name
+      - requirement
+      - type
+      - title
+      - actors
+      - automated_by
+  - type: table
+    name: Not automated yet
+    filters:
+      and:
+        - automated_by.length == 0
+    order:
+      - file.name
+      - requirement
+      - title

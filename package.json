@@ -11,11 +11,17 @@
     "catalog": "tsx scripts/build-pom-catalog.ts",
     "catalog:check": "tsx scripts/build-pom-catalog.ts --check",
     "catalog:report": "tsx scripts/build-pom-catalog.ts --report",
+    
+    
+    
+    
+    "vault:lint": "tsx scripts/vault-lint.ts",
     "gate:lint": "eslint .",
     "gate:types": "tsc --noEmit",
     "gate:catalog": "tsx scripts/build-pom-catalog.ts --check",
     "gate:gaps": "tsx .claude/skills/gen-test/scripts/check-gaps.ts",
-    "gate:all": "npm run gate:catalog && npm run gate:types && npm run gate:lint && npm run gate:gaps",
+    "gate:vault": "npm run vault:lint",
+    "gate:all": "npm run gate:catalog && npm run gate:types && npm run gate:lint && npm run gate:gaps && npm run gate:vault",
     "pipeline:preflight": "tsx .claude/skills/gen-test/scripts/preflight.ts",
     "pipeline:init": "tsx .claude/skills/gen-test/scripts/run-init.ts",
     "pipeline:set": "tsx .claude/skills/gen-test/scripts/set-field.ts",

@@ -4,7 +4,7 @@ import { expect } from '@playwright/test';
 
 test(
     'Filter Members list by Role',
-    { tag: ['@ui', '@members', '@regression'] },
+    { tag: ['@ui', '@members', '@regression', '@TC-MEM-009-01'] },
     async ({ readyOverviewPage }) => {
         // The two members this test filters over are created by this test, so it
         // never depends on the project roster another test happened to leave

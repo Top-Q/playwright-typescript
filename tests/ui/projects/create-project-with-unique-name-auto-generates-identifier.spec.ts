@@ -11,7 +11,7 @@ import { expect } from '@playwright/test';
 
 test(
     'Create Project with unique Name auto-generates Identifier',
-    { tag: ['@ui', '@projects', '@regression'] },
+    { tag: ['@ui', '@projects', '@regression', '@TC-PRJ-001-01'] },
     async ({ readyOverviewPage }) => {
         // The project is created and deleted by this test under a name unique to
         // this run, so nothing here depends on data another test or an earlier run

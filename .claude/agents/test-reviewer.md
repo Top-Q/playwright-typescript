@@ -32,6 +32,11 @@ Walk `spec.md`'s Gherkin lines against the test's `test.step()` calls:
 
 A test with no `expect` at all, or whose only assertion is that navigation happened, is a **blocker**.
 
+Two links back to the requirement vault, both **should-fix** when missing:
+
+- Every test carries a `@TC-…` tag for each test case it covers (`run.json`'s `testCaseIds`), and `npm.cmd run vault:lint` passes — run `npm.cmd run vault:lint -- --fix` to write `automated_by` if it only complains about that.
+- Every test case `spec.md` marks **Blocked by open question** has `// Unsettled: CQ-…` above each assertion that depends on the unanswered question.
+
 ### Can each assertion fail?
 
 Take every `expect` in the file **individually** and name the application state that would make it red. Checking that the important ones are real is not enough — a dead assertion sitting among live ones is the one that survives review, and it teaches the next reader that the pipeline ships decoration.
@@ -40,8 +45,8 @@ The common shape is an assertion restating the wait that the line above it alrea
 
 ```typescript
 // The page object's waitForLoad() is `await this.page.waitForURL(/\/work_packages\/details\/\d+/)`.
-detailsPage = await newWorkPackagePage.clickSaveButton();   // returns through waitForLoad()
-expect(detailsPage.page.url()).toMatch(/\/work_packages\/details\/\d+/);  // cannot fail
+detailsPage = await newWorkPackagePage.clickSaveButton(); // returns through waitForLoad()
+expect(detailsPage.page.url()).toMatch(/\/work_packages\/details\/\d+/); // cannot fail
 ```
 
 **Open the page object and read `waitForLoad()`** — you cannot judge this from the test alone, and a confident comment above the assertion claiming it proves persistence is not evidence that it does. Report it as a should-fix, naming the `waitForLoad()` line that already guarantees it. Deleting the assertion is the fix; the surrounding step usually stays.
@@ -80,17 +85,21 @@ Write `review.md`, findings ranked:
 # Review — <run-id>
 
 ## Blockers
+
 - `tests/ui/members/x.spec.ts:44` — the "Then status is Invited" step asserts only that
   the row exists; the status is never read. Spec step 4 is not covered.
 
 ## Should fix
+
 - `src/po/openproject/members/membersPage.ts:88` — `getInviteBanner()` has no
   `@observable-state`; it will be invisible to catalog-based discovery.
 
 ## Nits
+
 - ...
 
 ## Verdict
+
 <one line: ready for review / needs work, and why>
 ```
 

@@ -20,9 +20,9 @@
 import { parseArgs } from 'node:util';
 import * as fs from 'fs';
 import * as path from 'path';
-import { load } from 'js-yaml';
 import { requireFlagsSurvived } from './cli-args';
 import { PipelineError, RunRecord, isMain, kebab, makeRunId, toPosix } from './run-directory';
+import { Requirement, TestCase, readRequirement } from './vault';
 
 const HELP = `
 Usage: run-init --spec <ref> [options]
@@ -32,7 +32,7 @@ Creates .pipeline/runs/<run-id>/ with run.json and spec.md.
 Options:
   -h, --help              Show this help message
       --spec <ref>        Required. FR id, TC id, or path to a markdown spec
-      --graph <dir>       Requirements graph directory (default: specs/product/graph)
+      --vault <dir>       Requirement vault directory (default: specs/product/vault)
       --out <dir>         Runs root (default: .pipeline/runs)
       --run-id <id>       Override the generated run id
       --branch <name>     Record the git branch this run belongs to
@@ -43,26 +43,6 @@ Examples:
   run-init --spec TC-MEM-001-02 --branch test-gen/tc-mem-001-02
   run-init --spec path/to/spec.md
 `;
-
-/** One test case as stored in a specs/product/graph/FR-*.yaml file. */
-interface TestCase {
-    id?: string;
-    type?: string;
-    title?: string;
-    preconditions?: string[];
-    steps?: string[];
-    expected_result?: string;
-}
-
-/** The shape of a specs/product/graph/FR-*.yaml document. */
-interface Requirement {
-    id?: string;
-    module?: string;
-    text?: string;
-    business_rules?: string[];
-    data_fields?: string[];
-    test_cases?: TestCase[];
-}
 
 const FR_ID = /^FR-[A-Z]+-\d+$/;
 const TC_ID = /^TC-(?<fr>[A-Z]+-\d+)-(?<index>\d+)$/;
@@ -83,7 +63,7 @@ export interface ModuleDirs {
  *
  * This replaces `module.split(/[-_/]/)[0]`, which took everything before the
  * first hyphen. That produced the right answer for exactly one of the four
- * modules in `specs/product/graph/`: `members-roles` -> `members`. `work-packages`
+ * modules in the requirement graph: `members-roles` -> `members`. `work-packages`
  * became `work` and `boards` stayed plural, so 23 of 34 requirements resolved to
  * a directory and a catalog file that do not exist — and a well-covered module
  * then presents as bare, sending the run through investigation and scaffolding to
@@ -112,28 +92,6 @@ export function moduleDirectories(module: string | undefined): ModuleDirs {
     return { po: fallback, tests: fallback };
 }
 
-function readRequirement(
-    repoRoot: string,
-    graph: string,
-    frId: string,
-): {
-    requirement: Requirement;
-    file: string;
-} {
-    const file = path.resolve(repoRoot, graph, `${frId}.yaml`);
-    if (!fs.existsSync(file)) {
-        throw new PipelineError(`requirement not found: ${toPosix(path.relative(repoRoot, file))}`);
-    }
-    const parsed = load(fs.readFileSync(file, 'utf8'));
-    if (typeof parsed !== 'object' || parsed === null) {
-        throw new PipelineError(`requirement ${frId} did not parse into an object`);
-    }
-    return {
-        requirement: parsed as Requirement,
-        file: toPosix(path.relative(repoRoot, file)),
-    };
-}
-
 /** Renders one test case as a Given/When/Then block for the test-creator. */
 function renderTestCase(testCase: TestCase, requirement: Requirement): string {
     const lines: string[] = [];
@@ -141,6 +99,13 @@ function renderTestCase(testCase: TestCase, requirement: Requirement): string {
     lines.push('');
     lines.push(`- **Type:** ${testCase.type ?? 'unspecified'}`);
     lines.push(`- **Requirement:** ${requirement.id ?? '?'} — ${requirement.text?.trim() ?? ''}`);
+    for (const question of testCase.openQuestions ?? []) {
+        lines.push(
+            `- **Blocked by open question ${question.id}:** ${question.title} The expected result ` +
+                'below is a guess until it is answered. Mark the assertion that depends on it with ' +
+                `a \`// Unsettled: ${question.id}\` comment.`,
+        );
+    }
     lines.push('');
 
     lines.push('### Scenario');
@@ -163,7 +128,8 @@ export interface InitOptions {
     /** An FR id, a TC id, or a path to a markdown spec. */
     specRef: string;
     repoRoot?: string;
-    graph?: string;
+    /** Requirement vault directory, repo-relative. */
+    vault?: string;
     /** Runs root, repo-relative. */
     out?: string;
     /** Pre-derived id; preflight passes one so the branch can be created first. */
@@ -185,7 +151,7 @@ export interface InitResult {
  */
 export function initRun(options: InitOptions): InitResult {
     const repoRoot = options.repoRoot ?? process.cwd();
-    const graph = options.graph ?? 'specs/product/graph';
+    const vault = options.vault ?? 'specs/product/vault';
     const out = options.out ?? '.pipeline/runs';
     const now = options.now ?? new Date();
     const specRef = options.specRef.trim();
@@ -200,7 +166,7 @@ export function initRun(options: InitOptions): InitResult {
 
     if (FR_ID.test(specRef)) {
         specKind = 'requirement';
-        const { requirement, file } = readRequirement(repoRoot, graph, specRef);
+        const { requirement, file } = readRequirement(repoRoot, vault, specRef);
         sourceFile = file;
         dirs = moduleDirectories(requirement.module);
         const cases = requirement.test_cases ?? [];
@@ -221,13 +187,14 @@ export function initRun(options: InitOptions): InitResult {
     } else if (TC_ID.test(specRef)) {
         specKind = 'test-case';
         const frId = `FR-${TC_ID.exec(specRef)?.groups?.fr ?? ''}`;
-        const { requirement, file } = readRequirement(repoRoot, graph, frId);
-        sourceFile = file;
+        const { requirement } = readRequirement(repoRoot, vault, frId);
         dirs = moduleDirectories(requirement.module);
         const testCase = (requirement.test_cases ?? []).find(
             (candidate) => candidate.id === specRef,
         );
         if (!testCase) throw new PipelineError(`${frId} contains no test case with id ${specRef}`);
+        const file = testCase.file ?? '';
+        sourceFile = file;
         testCaseIds = [specRef];
         slug = kebab(testCase.title ?? specRef);
         specMarkdown = [
@@ -290,7 +257,7 @@ if (isMain('run-init.ts')) {
         options: {
             help: { type: 'boolean', short: 'h', default: false },
             spec: { type: 'string' },
-            graph: { type: 'string', default: 'specs/product/graph' },
+            vault: { type: 'string', default: 'specs/product/vault' },
             out: { type: 'string', default: '.pipeline/runs' },
             'run-id': { type: 'string' },
             branch: { type: 'string' },
@@ -310,7 +277,7 @@ if (isMain('run-init.ts')) {
     try {
         const { record, runDir } = initRun({
             specRef: values.spec,
-            graph: values.graph,
+            vault: values.vault,
             out: values.out,
             runId: values['run-id'],
             branch: values.branch,

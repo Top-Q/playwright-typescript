@@ -1,0 +1,12 @@
+filters:
+  and:
+    - file.hasTag("kind/requirement")
+views:
+  - type: table
+    name: Requirements
+    order:
+      - file.name
+      - source
+      - stories
+      - business_rules
+      - permission_rows

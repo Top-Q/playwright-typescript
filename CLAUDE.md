@@ -113,11 +113,12 @@ reporting it is finishing the job.
 
 ### Evidence
 
-| #   | Rule                                                                                                                                                                               | Enforced by                        |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
-| 23  | A locator ships only with evidence: a cited path in the application's source, or an ARIA snapshot ref from the live DOM. A plausible guess is not evidence.                        | `pipeline:audit` — pipeline only   |
-| 24  | _Relocated 2026-09-06 to [`gen-test/SKILL.md`](.claude/skills/gen-test/SKILL.md) — an orchestration principle, not a rule about this repository. Number retained; never reuse it._ | —                                  |
-| 25  | Check what already exists before building it. The POM catalog is searched — by `@aliases`, not just by exact name — before a new method is written.                                | `plan.md` gap rows — pipeline only |
+| #   | Rule                                                                                                                                                                                                                                                              | Enforced by                        |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| 23  | A locator ships only with evidence: a cited path in the application's source, or an ARIA snapshot ref from the live DOM. A plausible guess is not evidence.                                                                                                       | `pipeline:audit` — pipeline only   |
+| 24  | _Relocated 2026-09-06 to [`gen-test/SKILL.md`](.claude/skills/gen-test/SKILL.md) — an orchestration principle, not a rule about this repository. Number retained; never reuse it._                                                                                | —                                  |
+| 25  | Check what already exists before building it. The POM catalog is searched — by `@aliases`, not just by exact name — before a new method is written.                                                                                                               | `plan.md` gap rows — pipeline only |
+| 29  | A change to what the requirement vault says the app does — a rule, a requirement, an expected result — cites its evidence on the note: a path and line in the application's source, or a live observation. The SRS document is not evidence of what the app does. | review only                        |
 
 Rule 23 is why this repo keeps a Rails checkout of the app under test, and why
 [`openproject-dom.md`](docs/app-under-test/openproject-dom.md) is worth reading before you guess.
@@ -126,9 +127,13 @@ Both limits stated honestly: `pipeline:audit` reads _shape_, so it proves a cita
 that it is correct — and 23 and 25 are checked **only inside `/gen-test`**. Writing a page object by
 hand, nothing enforces either one but you.
 
+Rule 29 is rule 23 applied to the spec. A test built on a wrong requirement can have perfectly
+evidenced locators and still assert behaviour the app does not have — BR-WP-01 and BR-WP-04 did
+exactly that until the source was read. The **correct-requirement** skill is how to meet it.
+
 ### Changing a rule
 
-Edit it here, in a commit that says which of these it does: **add** one (next free number is **29** —
+Edit it here, in a commit that says which of these it does: **add** one (next free number is **30** —
 never reuse a retired one), **amend** one (edit in place, then fix every file that relied on the old
 wording), **retire** one (strike it with a one-line reason and the date, leaving the number
 occupied), **relocate** one (move the text to wherever it is actually operative — a skill, an agent —
@@ -145,7 +150,8 @@ gate, script, agent or pipeline stage, and produced documents rather than code._
 
 - `npm run catalog` after changing anything under `src/po/` — `gate:catalog` fails on a stale
   catalog, and the next agent cannot discover what you added.
-- `npm run gate:all` — catalog, types, lint. `npx eslint <file>` on everything you touched is the
+- `npm run gate:all` — catalog, types, lint, gaps, and the requirement vault (`vault:lint`, after any
+  edit under `specs/product/vault/`). `npx eslint <file>` on everything you touched is the
   minimum (rule 17).
 - `pom-catalog/` is the index of existing page objects. **Search it before writing a new method**
   (rule 25), by `@aliases` rather than exact name. Details:
@@ -156,6 +162,13 @@ gate, script, agent or pipeline stage, and produced documents rather than code._
 Everything under `specs/` specifies **the application under test**, not this repository. Read
 [`specs/README.md`](specs/README.md) before editing a requirement — it owns the format, says which
 directories are consumed, and says which reference material is superseded and must not be trusted.
+
+The requirements live in **`specs/product/vault/`**, an Obsidian vault, and it is the source of truth:
+edit a note in place — there is no generator behind it and no second copy. Three habits keep it
+consistent, and `vault:lint` (part of `gate:all`) fails when one slips: links point one way (test
+case → requirement → rule), related text is embedded rather than copied, and prose never restates a
+property. A test covering a test case carries its `@TC-…` tag; `vault:lint -- --fix` records it in
+the vault.
 
 **Changes to this repository's own tooling need no specification document** — write the code. The
 gates and rules 1–25 govern it, and unlike a document they are executable.
@@ -168,6 +181,9 @@ of it here. What the skill descriptions do not tell you is which one to reach fo
 - **`/gen-test <FR-id|TC-id|path>` is the normal way to create a UI test** — staged pipeline,
   subagents, deterministic gates, its own branch. **write-web-test** / **write-api-test** are the
   single-shot alternative, for when the pipeline is more machinery than the job needs.
+- When a requirement, rule or test case may not match the app — the user doubts it, or a test fails
+  because the spec asserts behaviour the app lacks — **correct-requirement** checks it against the
+  source and corrects it with evidence (rule 29).
 - To learn what the app actually renders, drive it with **playwright-cli**. To learn why a test
   failed, read its trace with **playwright-trace** instead of re-running it (`playwright.config.ts`
   sets `trace: 'on'`, so every action has a DOM snapshot and screenshot). **pause-test** is for the

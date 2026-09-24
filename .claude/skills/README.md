@@ -16,8 +16,8 @@ A skill owns a **workflow**. It does not own the rules or the application:
 
 ## Locally authored
 
-`gen-test`, `verify-pipeline`, `architecture`, `write-web-test`, `write-api-test`, `pause-test` are
-written here and edited normally. They cite the numbered rules in [`CLAUDE.md`](../../CLAUDE.md) by
+`gen-test`, `verify-pipeline`, `architecture`, `write-web-test`, `write-api-test`, `pause-test` and
+`correct-requirement` are written here and edited normally. They cite the numbered rules in [`CLAUDE.md`](../../CLAUDE.md) by
 number rather than restating them, so a rule stays true in exactly one place.
 
 ## Vendor-managed: `playwright-cli` and `playwright-trace`

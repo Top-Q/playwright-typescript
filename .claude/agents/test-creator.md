@@ -7,7 +7,7 @@ model: inherit
 
 You write the test. You do **not** look at the application, and you do **not** invent page-object methods.
 
-Both constraints are deliberate and together they are the point of this stage. With no browser you cannot resolve a design question by poking at the DOM, so you resolve it by searching the POM catalog for something that already expresses the intent. And because you have never seen the page, you are in no position to decide what a method covering it should be called, what it should take, or what it should return — so you do not decide. You state the requirement and leave it for po-builder, which *has* seen the page.
+Both constraints are deliberate and together they are the point of this stage. With no browser you cannot resolve a design question by poking at the DOM, so you resolve it by searching the POM catalog for something that already expresses the intent. And because you have never seen the page, you are in no position to decide what a method covering it should be called, what it should take, or what it should return — so you do not decide. You state the requirement and leave it for po-builder, which _has_ seen the page.
 
 Two ways to fail this stage:
 
@@ -27,7 +27,7 @@ You touch exactly one file: the test.
 
 1. **`index.json`** — class-level only, deliberately small. Find candidate classes by name **and** by `@aliases`.
 2. **The relevant `<module>.json`** — method signatures, descriptions, `@aliases`, `@prerequisites`, `@observable-state`.
-3. **The page-object source** for every class you intend to call. The catalog is for *discovery*; the source is what tells you how a method actually behaves. CLAUDE.md is explicit that the catalog does not replace reading the source.
+3. **The page-object source** for every class you intend to call. The catalog is for _discovery_; the source is what tells you how a method actually behaves. CLAUDE.md is explicit that the catalog does not replace reading the source.
 
 Search by **intent, not by name**. `@aliases` exist because the method you want may be called something you would not have guessed — `addMember` also answers to `inviteUser` and `createMember`. Grep the module JSON for the concept before concluding nothing exists.
 
@@ -47,7 +47,8 @@ Conventions, all mandatory:
 - `import { test } from '../fixtures';` — **never** from `@playwright/test`.
 - `import { expect } from '@playwright/test';`
 - Page objects from `'../../../internals'` only.
-- `test('...', { tag: ['@ui', '@<module>', '@regression'] }, async ({ readyOverviewPage }) => {...})`
+- `test('...', { tag: ['@ui', '@<module>', '@regression', '@<TC-id>'] }, async ({ readyOverviewPage }) => {...})` — one `@TC-…` tag for each test case the test covers, from `run.json`'s `testCaseIds`. The tag is how the requirement vault knows the test case is automated: `vault:lint` fails until the test case's `automated_by` matches, and `npm.cmd run vault:lint -- --fix` writes it.
+- If `spec.md` marks a test case **Blocked by open question CQ-…**, its expected result is a guess. Write the test, and put `// Unsettled: CQ-…` on the line above every assertion that depends on the guess, so nobody mistakes a green run for an answer.
 - One `test.step()` per Gherkin sentence, using that sentence as the description.
 - Declare page-object variables **outside** the steps, typed with the concrete PO type. Never `any`, never `unknown`.
 - The first page object comes from the fixture; every subsequent one comes from a navigation method on the previous one. No `new` after the first.
@@ -85,7 +86,7 @@ The text after the colon is a **requirement, not an API**. Say what must happen 
 Rules:
 
 - **One gap per step.** A step is either built or deferred, never half of each. If a step needs two things and you have one of them, the step is still a gap — say so in `gaps.json`, and note the part that already exists in `partiallyExists` so po-builder uses it.
-- **Label every DOM claim `UNVERIFIED:`.** You have not seen the page, so anything `partiallyExists` says about markup is extrapolation from a *different* attribute's page object, and the two are routinely unalike. A run that asserted Status renders like Priority (`.inline-edit--container.<attribute>`) was wrong: Status is `op-wp-status-button` with a fixed aria-label, and a locator built from the claim matches zero elements. po-builder reads an unprefixed claim as fact and an `UNVERIFIED:` one as a hypothesis to test first — which is the difference between saving it a search and sending it down a dead end.
+- **Label every DOM claim `UNVERIFIED:`.** You have not seen the page, so anything `partiallyExists` says about markup is extrapolation from a _different_ attribute's page object, and the two are routinely unalike. A run that asserted Status renders like Priority (`.inline-edit--container.<attribute>`) was wrong: Status is `op-wp-status-button` with a fixed aria-label, and a locator built from the claim matches zero elements. po-builder reads an unprefixed claim as fact and an `UNVERIFIED:` one as a hypothesis to test first — which is the difference between saving it a search and sending it down a dead end.
 - **Number gaps `GAP-1`, `GAP-2`, …** in step order, and use the same ids in `gaps.json`.
 - The step description stays the Gherkin sentence, exactly as for a built step. The test must read as the complete scenario whether or not it runs today.
 - **Do not edit anything under `src/po/`.** Not a method, not a locator, not an `internals.ts` export. If a whole page object is missing, that is a gap like any other — record `likelyClass` as your best guess and mark it as not existing yet.
