@@ -23,6 +23,9 @@ views:
       - file.name
       - requirement
       - title
+    columnSize:
+      file.name: 211
+      note.requirement: 308
   - type: table
     name: Not automated yet
     filters:
@@ -33,3 +36,5 @@ views:
       - file.name
       - requirement
       - title
+    columnSize:
+      file.name: 211
