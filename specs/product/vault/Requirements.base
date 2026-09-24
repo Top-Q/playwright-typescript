@@ -1,6 +1,7 @@
 filters:
   and:
     - file.hasTag("kind/requirement")
+    - '!file.inFolder("_templates")'
 views:
   - type: table
     name: Requirements

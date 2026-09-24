@@ -68,7 +68,8 @@ function toList(value: string | string[] | undefined): string[] {
 function walk(dir: string): string[] {
     if (!fs.existsSync(dir)) return [];
     return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-        if (entry.name.startsWith('.')) return [];
+        // Obsidian's settings, and the templates new notes are created from.
+        if (entry.name.startsWith('.') || entry.name === '_templates') return [];
         const full = path.join(dir, entry.name);
         if (entry.isDirectory()) return walk(full);
         return full.endsWith('.md') ? [full] : [];

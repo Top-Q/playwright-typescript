@@ -26,6 +26,13 @@
  *      are present and not empty. Part of a note's structure is Markdown — a
  *      test case's steps are the list under `## Steps` — and /gen-test finds
  *      it by heading name, so `## Test steps` would hand it a test with none.
+ *   8. Nothing is left from a template: no `TODO` placeholder, and every
+ *      `module/*` tag names a module hub (a template's `module/MODULE` does not).
+ *   9. Every property is declared in `.obsidian/types.json`, as a list type
+ *      exactly when its values are lists, so Obsidian's editor does not guess.
+ *
+ * `_templates/` holds the templates Obsidian creates notes from; it is not
+ * linted, and nothing else reads it.
  */
 
 import { parseArgs } from 'node:util';
@@ -169,9 +176,9 @@ const HOUSEKEEPING = new Set(['tags', 'aliases']);
 
 /**
  * The `##` sections each kind may have, and the ones it must have. A section
- * that is present is never empty. `Notes` and `Evidence` (rule 29) are allowed on every kind. A kind
- * missing from this table — index notes, module hubs, the SRS root — is laid
- * out freely, because nothing reads its body.
+ * that is present is never empty. `Notes` and `Evidence` (rule 29) are allowed
+ * on every kind. A kind missing from this table — index notes, module hubs, the
+ * SRS root — is laid out freely, because nothing reads its body.
  */
 const BODY: Record<string, { required: string[]; optional?: string[] }> = {
     requirement: { required: ['Requirement', 'Test cases', 'Referenced by'] },
@@ -242,7 +249,8 @@ function toList(value: string | string[] | undefined): string[] {
 /** Every note and every Bases file in the vault; Obsidian's own settings are skipped. */
 function walk(dir: string): string[] {
     return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-        if (entry.name.startsWith('.')) return [];
+        // Obsidian's settings, and the templates new notes are created from.
+        if (entry.name.startsWith('.') || entry.name === '_templates') return [];
         const full = path.join(dir, entry.name);
         if (entry.isDirectory()) return walk(full);
         return /\.(md|base)$/.test(full) ? [full] : [];
@@ -376,6 +384,18 @@ function lint(notes: Map<string, Note>, bases: Set<string>, note: Note): string[
         }
     }
 
+    // Rule 8: a note created from a template has been filled in.
+    const frontmatter = JSON.stringify(note.properties);
+    if (/\bTODO\b/.test(frontmatter) || /\bTODO\b/.test(note.body)) {
+        problems.push(where('still holds a TODO placeholder from its template'));
+    }
+    for (const tag of toList(note.properties.tags).filter((t) => t.startsWith('module/'))) {
+        const module = tag.slice('module/'.length);
+        if (notes.get(module.toLowerCase())?.kind !== 'module') {
+            problems.push(where(`tag ${tag} names no module hub (Modules/${module}.md)`));
+        }
+    }
+
     // Rule 1: every link in the body resolves too.
     for (const match of note.body.replace(/^```[\s\S]*?^```/gm, '').matchAll(LINK)) {
         resolve(match[1], match[2], 'body');
@@ -506,6 +526,35 @@ const bases = new Set(
     files.filter((file) => file.endsWith('.base')).map((file) => path.basename(file).toLowerCase()),
 );
 problems.push(...[...notes.values()].flatMap((note) => lint(notes, bases, note)));
+
+// Obsidian's property editor reads each property's type from .obsidian/types.json
+// and guesses for any it does not find — a guessed "text" for a list of links
+// would be saved back as one string. So every property a note uses is declared
+// there, as a list type exactly when its values are lists.
+const typesFile = path.join(vaultDir, '.obsidian', 'types.json');
+if (fs.existsSync(typesFile)) {
+    const declared =
+        (JSON.parse(fs.readFileSync(typesFile, 'utf8')) as { types?: Record<string, string> })
+            .types ?? {};
+    const listTypes = new Set(['multitext', 'aliases', 'tags']);
+    const reported = new Set<string>();
+    for (const note of notes.values()) {
+        for (const [key, value] of Object.entries(note.properties)) {
+            const type = declared[key];
+            const problem =
+                type === undefined
+                    ? `property ${key} is not declared in .obsidian/types.json`
+                    : Array.isArray(value) !== listTypes.has(type)
+                      ? `property ${key} is ${Array.isArray(value) ? 'a list' : 'a single value'} ` +
+                        `here but "${type}" in .obsidian/types.json`
+                      : undefined;
+            if (problem && !reported.has(`${key}:${problem}`)) {
+                reported.add(`${key}:${problem}`);
+                problems.push(`${note.name}: ${problem}`);
+            }
+        }
+    }
+}
 
 const tagged = taggedTests(repoRoot, path.resolve(repoRoot, values.tests));
 let fixed = 0;

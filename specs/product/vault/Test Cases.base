@@ -1,6 +1,7 @@
 filters:
   and:
     - file.hasTag("kind/test-case")
+    - '!file.inFolder("_templates")'
 views:
   - type: table
     name: All test cases

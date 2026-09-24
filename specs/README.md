@@ -55,6 +55,20 @@ requirement's. Each kind's `##` sections are a closed set too: `/gen-test` finds
 by the `## Steps` heading, so a renamed, missing or empty section fails the lint rather than
 silently producing a test with no steps.
 
+Obsidian itself helps before the lint does, and none of it replaces the lint — nobody in the pipeline
+runs Obsidian, and only a script can block a commit:
+
+- **Templates.** Create a note, then _Templates → Insert template_ and pick one from `_templates/`
+  (requirement, test case, user story, business rule, clarification). Every placeholder is a `TODO`,
+  an unresolved link or `module/MODULE`, all of which `vault:lint` rejects, so a note cannot be
+  committed half-filled. `_templates/` is skipped by the lint, by `/gen-test` and by the vault-wide
+  tables.
+- **Property types.** `.obsidian/types.json` tells the property editor which properties are lists
+  of links and which are text, so it does not guess and rewrite one as the other. `vault:lint` fails
+  when a note uses a property that is not declared there.
+- **Needs attention.** `Home.md` embeds `Needs attention.base`: open questions, test cases with no
+  actor, and test cases no test automates yet.
+
 `/gen-test FR-MEM-001` or `/gen-test TC-MEM-009-01` reads the vault through
 [`gen-test/scripts/vault.ts`](../.claude/skills/gen-test/scripts/vault.ts), which hands the pipeline
 plain text: links reduced to their display text, embeds resolved to what they point at, actors as
@@ -78,6 +92,7 @@ Start at `Home.md` or `SRS/SRS.md`. The folders:
 | `Acceptance Criteria/`                                   | Human-approved Given/When/Then exemplars — the style a criterion should follow                                |
 | `Modules/`                                               | One hub per module: Bases views of everything tagged with it                                                  |
 | `_bases/`                                                | The shared queries notes embed                                                                                |
+| `_templates/`                                            | The templates new notes are created from                                                                      |
 
 ## The SRS is frozen history
 

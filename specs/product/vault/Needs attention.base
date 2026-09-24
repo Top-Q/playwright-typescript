@@ -1,0 +1,35 @@
+filters:
+  and:
+    - '!file.inFolder("_templates")'
+views:
+  - type: table
+    name: Open questions
+    filters:
+      and:
+        - file.hasTag("kind/clarification")
+        - status == "open"
+    order:
+      - file.name
+      - title
+      - blocks
+      - sources
+  - type: table
+    name: Test cases with no actor
+    filters:
+      and:
+        - file.hasTag("kind/test-case")
+        - actors.length == 0
+    order:
+      - file.name
+      - requirement
+      - title
+  - type: table
+    name: Not automated yet
+    filters:
+      and:
+        - file.hasTag("kind/test-case")
+        - automated_by.length == 0
+    order:
+      - file.name
+      - requirement
+      - title

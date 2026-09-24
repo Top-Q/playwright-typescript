@@ -11,6 +11,7 @@ Status legend: 🔴 Open — no answer yet.
 filters:
   and:
     - file.hasTag("kind/clarification")
+    - '!file.inFolder("_templates")'
 views:
   - type: table
     name: Clarification Questions

@@ -21,4 +21,10 @@ This vault is the source of truth for the requirements. Start at the [[SRS]], or
 - [[Clarification Questions]]
 - [[Non-Functional Requirements]]
 
+## Needs attention
+
+Open questions, test cases with no actor, and test cases no test automates yet. New notes start from `_templates/` (Templates → Insert template).
+
+![[Needs attention.base]]
+
 Every note carries a `kind/*` tag, and a `module/*` tag where it belongs to one. `npm.cmd run vault:lint` checks every note against its kind.
