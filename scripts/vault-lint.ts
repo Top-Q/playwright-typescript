@@ -22,6 +22,10 @@
  *   6. A test case's `automated_by` lists exactly the spec files tagged with its
  *      id (`tag: ['@ui', '@TC-WP-004-03']`). The tag is the fact; the property
  *      is a copy for Obsidian, and a copy nobody compares drifts.
+ *   7. Each kind has a closed set of `##` body sections, and its required ones
+ *      are present and not empty. Part of a note's structure is Markdown — a
+ *      test case's steps are the list under `## Steps` — and /gen-test finds
+ *      it by heading name, so `## Test steps` would hand it a test with none.
  */
 
 import { parseArgs } from 'node:util';
@@ -50,6 +54,8 @@ interface Note {
     body: string;
     headings: Set<string>;
     blocks: Set<string>;
+    /** `## heading` → the text under it, in document order. */
+    sections: Map<string, string>;
     kind?: string;
 }
 
@@ -161,6 +167,37 @@ const SCHEMAS: Record<string, Schema> = {
 /** Present on every note and never a fact about the requirement. */
 const HOUSEKEEPING = new Set(['tags', 'aliases']);
 
+/**
+ * The `##` sections each kind may have, and the ones it must have. A section
+ * that is present is never empty. `Notes` and `Evidence` (rule 29) are allowed on every kind. A kind
+ * missing from this table — index notes, module hubs, the SRS root — is laid
+ * out freely, because nothing reads its body.
+ */
+const BODY: Record<string, { required: string[]; optional?: string[] }> = {
+    requirement: { required: ['Requirement', 'Test cases', 'Referenced by'] },
+    // vault.ts, which hands /gen-test its spec, reads these three. Preconditions
+    // is optional: a test case whose only setup is who runs it states that in
+    // `actors`, and vault.ts turns it into the first precondition.
+    'test-case': { required: ['Steps', 'Expected result'], optional: ['Preconditions'] },
+    'user-story': { required: ['Story', 'Referenced by'] },
+    'business-rule': { required: ['Rule', 'Referenced by'] },
+    'rbac-rule': { required: ['Rule', 'Referenced by'] },
+    'acceptance-sample': { required: ['Criteria'] },
+    entity: { required: ['Relationships', 'Attributes', 'Referenced by'] },
+    'user-class': { required: ['RBAC matrix column', 'Referenced by'] },
+    nfr: { required: ['Referenced by'] },
+    permission: { required: ['Referenced by'] },
+    constraint: { required: ['Referenced by'] },
+    'design-constraint': { required: ['Referenced by'] },
+    term: { required: ['Referenced by'] },
+    workflow: { required: ['Referenced by'] },
+    'srs-chapter': { required: ['Referenced by'] },
+    'srs-section': { required: ['Referenced by'] },
+    // A clarification is prose — status, source, question — with no sections.
+    clarification: { required: [] },
+};
+const ANY_KIND_SECTIONS = ['Notes', 'Evidence'];
+
 const ID = /\b(?:NFR|FR|TC|US|BR|CQ|AC|RBAC|DC)-[A-Z0-9]+(?:-[A-Z0-9]+)*\b/g;
 /** `[[target#anchor|display]]`; inside a table the `|` is escaped as `\|`. */
 const LINK = /!?\[\[([^\]|#\\]*)(#\^?[^\]|\\]*)?(?:\\?\|[^\]]*)?\]\]/g;
@@ -180,8 +217,21 @@ function parseNote(file: string): Note {
             [...body.matchAll(/^#{1,6} (.+)$/gm)].map((heading) => heading[1].trim()),
         ),
         blocks: new Set([...body.matchAll(/ \^([\w-]+)$/gm)].map((block) => block[1])),
+        sections: readSections(body),
         kind: tags.find((tag) => tag.startsWith('kind/'))?.slice('kind/'.length),
     };
+}
+
+/** `## heading` → its text; a repeated heading keeps both texts, joined. */
+function readSections(body: string): Map<string, string> {
+    const sections = new Map<string, string>();
+    const parts = body.split(/^## (.+)$/m);
+    for (let index = 1; index < parts.length; index += 2) {
+        const heading = parts[index].trim();
+        const text = parts[index + 1].trim();
+        sections.set(heading, [sections.get(heading), text].filter(Boolean).join('\n'));
+    }
+    return sections;
 }
 
 function toList(value: string | string[] | undefined): string[] {
@@ -299,6 +349,30 @@ function lint(notes: Map<string, Note>, bases: Set<string>, note: Note): string[
                         `${requirement.name}'s ${moduleOf(requirement).join(', ') || '(none)'}`,
                 ),
             );
+        }
+    }
+
+    // Rule 7: the body's sections, which is where half a test case lives.
+    const body = note.kind ? BODY[note.kind] : undefined;
+    if (body) {
+        const allowed = new Set([...body.required, ...(body.optional ?? []), ...ANY_KIND_SECTIONS]);
+        for (const heading of body.required) {
+            if (!note.sections.has(heading)) {
+                problems.push(where(`missing the "## ${heading}" section`));
+            }
+        }
+        for (const [heading, text] of note.sections) {
+            if (!text) {
+                problems.push(where(`the "## ${heading}" section is empty; fill it or remove it`));
+            }
+            if (!allowed.has(heading)) {
+                problems.push(
+                    where(
+                        `unexpected section "## ${heading}"; a ${note.kind} has ` +
+                            [...allowed].map((name) => `"## ${name}"`).join(', '),
+                    ),
+                );
+            }
         }
     }
 

@@ -51,7 +51,9 @@ every kind has a closed schema: required properties, optional ones, and the kind
 link to — anything else fails, which is how reverse lists stay out. It also fails on a link, heading
 or block that does not resolve, an id written as plain text, a title that mentions an id, a
 precondition that restates an actor, and a test case whose module tag differs from its
-requirement's.
+requirement's. Each kind's `##` sections are a closed set too: `/gen-test` finds a test case's steps
+by the `## Steps` heading, so a renamed, missing or empty section fails the lint rather than
+silently producing a test with no steps.
 
 `/gen-test FR-MEM-001` or `/gen-test TC-MEM-009-01` reads the vault through
 [`gen-test/scripts/vault.ts`](../.claude/skills/gen-test/scripts/vault.ts), which hands the pipeline
