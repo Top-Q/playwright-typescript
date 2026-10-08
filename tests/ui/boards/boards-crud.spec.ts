@@ -2,7 +2,13 @@ import { test } from '../fixtures';
 import { BoardsPage, BoardTableComp, NewBoardPage, ListComp } from '../../../internals';
 import { expect } from '@playwright/test';
 
-test('Create basic board with a list', { tag: ['@ui', '@board', '@regression'] }, async ({ readyOverviewPage }) => {
+test('Create basic board with a list', {
+  tag: ['@ui', '@board', '@regression', '@TC-BRD-001-01', '@TC-BRD-003-01'],
+  annotation: [
+    { type: 'built-from', description: 'TC-BRD-001-01@a4131e4e5423f2a9' },
+    { type: 'built-from', description: 'TC-BRD-003-01@96d99d94ab66ba96' },
+  ],
+}, async ({ readyOverviewPage }) => {
 
   let boardsPage: BoardsPage;
   await test.step('Given the user is authenticated as "default"', async () => {
@@ -23,17 +29,25 @@ test('Create basic board with a list', { tag: ['@ui', '@board', '@regression'] }
     newBoardPage = await boardTypePage.clickBasicBoardButton();
   });
 
-  await test.step(`And the user adds a list with the name "${listName}"`, async () => {
-    await newBoardPage.clickAddListToBoardLink();
-    const list: ListComp = newBoardPage.getListByIndex(0);
+  await test.step('Then the board opens with one default list', async () => {
+    expect(await newBoardPage.getListTitles()).toEqual(['Unnamed list']);
+  });
+
+  await test.step(`When the user adds a list and names it "${listName}"`, async () => {
+    const list: ListComp = await newBoardPage.clickAddListToBoardLink();
     await list.fillListName(listName);
+  });
+
+  await test.step('Then, after a reload, the new list follows the default list on the board', async () => {
+    newBoardPage = await newBoardPage.reload();
+    expect(await newBoardPage.getListTitles()).toEqual(['Unnamed list', listName]);
   });
 
   await test.step('And the user returns to the Boards page', async () => {
     boardsPage = await newBoardPage.clickBoardsLink();
   });
 
-  await test.step(`Then the board named "${boardName}" is visible on the Boards page`, async () => {
+  await test.step(`And the board named "${boardName}" is visible on the Boards page`, async () => {
     const boardTable: BoardTableComp = boardsPage.boardTable();
     const exists = await boardTable.isRowForTableWithNameExists(boardName);
     expect(exists).toBe(true);

@@ -2,7 +2,7 @@
   "module": "board",
   "file": "board.json",
   "app": "openproject",
-  "generatedAt": "2026-08-12T15:16:28.027Z",
+  "generatedAt": "2026-10-08T18:43:05.079Z",
   "schemaVersion": 2,
   "classes": [
     {
@@ -228,6 +228,31 @@
           "observableState": "None — returns a component wrapper without interacting"
         },
         {
+          "name": "getListTitles",
+          "signature": "getListTitles(): Promise<string[]>",
+          "description": "Returns the title of every list on the board, in board order.\n\nA new Basic board already has one list, \"Unnamed list\"\n(`modules/boards/app/services/boards/basic_board_create_service.rb:8`),\nso this is never empty for a board that has not had lists deleted.",
+          "aliases": [
+            "getListNames",
+            "listTitles",
+            "getColumns",
+            "getColumnNames"
+          ],
+          "prerequisites": "The board view is open and has at least one list",
+          "observableState": "None — read-only query"
+        },
+        {
+          "name": "reload",
+          "signature": "reload(): Promise<NewBoardPage>",
+          "description": "Reloads the board, so it shows what the server saved rather than what\nthe page last rendered.",
+          "aliases": [
+            "refresh",
+            "reloadBoard",
+            "refreshBoard"
+          ],
+          "prerequisites": "The board view is open",
+          "observableState": "The board is rendered afresh from the server"
+        },
+        {
           "name": "fillBoardName",
           "signature": "fillBoardName(name: string): Promise<void>",
           "description": "Fills the board name textbox and commits the value with Enter.\nThe board saves automatically — no separate save action is needed.",
@@ -240,15 +265,15 @@
         },
         {
           "name": "clickAddListToBoardLink",
-          "signature": "clickAddListToBoardLink(): Promise<void>",
-          "description": "Clicks the \"Add list to board\" link to append a new list to the board.\nReach the new list afterwards with {@link getListByIndex}.",
+          "signature": "clickAddListToBoardLink(): Promise<ListComp>",
+          "description": "Clicks \"Add list to board\", waits for the new list, and returns it.\n\nThe new list is **appended** — it is not the board's first list. A new\nBasic board already has a default list at index 0, so a caller that\nadds a list and then works on index 0 is editing the default list, not\nthe one it added (`addList` → `BoardListsService.addQuery`,\n`board-list-container.component.html:43-47`,\n`board-lists.service.ts:77-96`; appending verified live).",
           "aliases": [
             "addList",
             "addListToBoard",
             "createList"
           ],
           "prerequisites": "The board view is open",
-          "observableState": "A new empty list is appended to the board and becomes interactable"
+          "observableState": "A new list titled \"Unnamed list\" is appended to the board"
         },
         {
           "name": "clickBoardsLink",

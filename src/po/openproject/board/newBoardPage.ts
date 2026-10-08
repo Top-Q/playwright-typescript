@@ -59,9 +59,14 @@ export class NewBoardPage extends BasePage<NewBoardPage> {
     private readonly boardNameTextbox: Locator;    
     private readonly addListToBoardLink: Locator;
     private readonly boardsLink: Locator;
+    private readonly lists: Locator;
 
     constructor(public readonly page: Page) {
         super(page);
+        // One `<board-list>` Angular element per list, in board order. It has no
+        // ARIA role, so it is matched by tag
+        // (`frontend/src/app/features/boards/board/board-list/board-list.component.html`).
+        this.lists = page.locator('board-list').describe('Board lists');
         this.addListToBoardLink = page.getByText('Add list to board')
             .describe('Link to add a new list to the board');
         this.boardNameTextbox = page.getByPlaceholder("Name of this view").first()
@@ -85,8 +90,42 @@ export class NewBoardPage extends BasePage<NewBoardPage> {
      * @returns A `ListComp` for the list at the specified index.
      */
     getListByIndex(index: number): ListComp {
-        const listLocator = this.page.locator("board-list").nth(index);
-        return new ListComp(this.page, listLocator);
+        return new ListComp(this.page, this.lists.nth(index));
+    }
+
+    /**
+     * Returns the title of every list on the board, in board order.
+     *
+     * A new Basic board already has one list, "Unnamed list"
+     * (`modules/boards/app/services/boards/basic_board_create_service.rb:8`),
+     * so this is never empty for a board that has not had lists deleted.
+     *
+     * @aliases getListNames, listTitles, getColumns, getColumnNames
+     * @prerequisites The board view is open and has at least one list
+     * @observable-state None — read-only query
+     * @returns The list titles, left to right.
+     */
+    async getListTitles(): Promise<string[]> {
+        await this.lists.first().waitFor();
+        const titles: string[] = [];
+        for (let i = 0; i < (await this.lists.count()); i++) {
+            titles.push(await this.getListByIndex(i).title.inputValue());
+        }
+        return titles;
+    }
+
+    /**
+     * Reloads the board, so it shows what the server saved rather than what
+     * the page last rendered.
+     *
+     * @aliases refresh, reloadBoard, refreshBoard
+     * @prerequisites The board view is open
+     * @observable-state The board is rendered afresh from the server
+     * @returns The reloaded `NewBoardPage`.
+     */
+    async reload(): Promise<NewBoardPage> {
+        await this.page.reload();
+        return await new NewBoardPage(this.page).waitForLoad();
     }
 
     /**
@@ -104,20 +143,31 @@ export class NewBoardPage extends BasePage<NewBoardPage> {
     }
 
     /**
-     * Clicks the "Add list to board" link to append a new list to the board.
-     * Reach the new list afterwards with {@link getListByIndex}.
+     * Clicks "Add list to board", waits for the new list, and returns it.
+     *
+     * The new list is **appended** — it is not the board's first list. A new
+     * Basic board already has a default list at index 0, so a caller that
+     * adds a list and then works on index 0 is editing the default list, not
+     * the one it added (`addList` → `BoardListsService.addQuery`,
+     * `board-list-container.component.html:43-47`,
+     * `board-lists.service.ts:77-96`; appending verified live).
      *
      * @aliases addList, addListToBoard, createList
      * @prerequisites The board view is open
-     * @observable-state A new empty list is appended to the board and becomes interactable
+     * @observable-state A new list titled "Unnamed list" is appended to the board
+     * @returns A `ListComp` for the new list.
      * @example
      * ```typescript
-     * await newBoardPage.clickAddListToBoardLink();
-     * const list: ListComp = newBoardPage.getListByIndex(0);
+     * const list: ListComp = await newBoardPage.clickAddListToBoardLink();
+     * await list.fillListName('Backlog');
      * ```
      */
-    async clickAddListToBoardLink(): Promise<void> {
+    async clickAddListToBoardLink(): Promise<ListComp> {
+        await this.lists.first().waitFor();
+        const before = await this.lists.count();
         await this.addListToBoardLink.click();
+        await this.lists.nth(before).waitFor();
+        return this.getListByIndex(before);
     }
 
     /**

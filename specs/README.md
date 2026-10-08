@@ -210,11 +210,8 @@ truth** — three things worth knowing before you trust them:
 
 Real holes in coverage, recorded so they are not rediscovered. Nobody is committed to filling them.
 
-- **Two tests are not tagged.** 19 of the 21 tests cover a test case. `Create basic board with a
-list` checks less than the approved test case nearest it: it may rename the board's default list
-  rather than add one, so it needs a stronger assertion, run against the app, before it is tagged.
-  `Delete all boards` is a cleanup utility, not a requirement. **Needs attention → Tests covering no
-  test case** is the worklist.
+- **One test is not tagged:** `Delete all boards`, a cleanup utility rather than a requirement.
+  The other 20 cover a test case. **Needs attention → Tests covering no test case** lists it.
 - **No test case covers BR-WP-04's time-entry clause.** Deleting Work Packages with logged time asks
   whether to delete those entries, keep them without a Work Package, or reassign them; nothing tests
   any of the three.
