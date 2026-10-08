@@ -26,6 +26,11 @@ checkout, [`environment.md`](environment.md).
   `h1` in the ERB may render as an `h2`. Do not pin `getByRole('heading', { level: n })`
   from source alone; confirm the level against the DOM.
 
+- **Primer's `test_selector` is not rendered in this build.** An ERB passing
+  `test_selector: "…"` produces no `data-test-selector` outside OpenProject's test
+  environment, so a locator copied from the source finds nothing. The header's user
+  menu button is one: match it by the `.op-top-menu-user-avatar` it wraps instead.
+
 ## Modules
 
 - **Not every module is enabled.** Several are off by default (Costs is the usual
@@ -120,9 +125,11 @@ checkout, [`environment.md`](environment.md).
   `a @b.com` (firstname/lastname split) and an email cell of `a@b.com`. Row lookup by
   email works only because the filter is `hasText` over the whole row. The email column
   renders only for users holding `view_user_email`.
-- **Removing a member does not delete the user account.** It revokes project access only
-  — OpenProject's own dialog says so. Tests that invite by a unique address leave one
-  account per run on the instance.
+- **Removing a member does not delete the user account**, and on Demo project it does
+  not revoke access either: the project is public, so the user drops to the built-in
+  Non member role and can still view it. What is lost is the Member role's
+  permissions — the work package list's Create button turns disabled. Tests that invite
+  by a unique address leave one account per run on the instance.
 - **The sidebar status links carry no `status=` param** in the default "All" view, so
   `waitForURL(/status=all/)` never resolves. Wait for the URL to *change* instead.
 - **The add-member role dropdown has no blank option**, so the browser preselects the
@@ -141,3 +148,17 @@ checkout, [`environment.md`](environment.md).
   `#primerized-flash-messages .flash-error`; the banner carries **no ARIA role**, so
   `getByRole('alert')` matches zero elements, and the `data-test-selector` the Primer
   component sets is absent from the deployed build.
+
+## Users and sign-in
+
+- **A user's first sign-in lands behind a dialog and a tour.** It redirects to
+  `/?first_time_user=true`, which opens a "Welcome to OpenProject" language dialog;
+  closing it starts an onboarding tour (Skip / Next) over the home page. Both key on that
+  parameter only. Signing in from a deep link — open the protected page, get redirected
+  to `/login?back_url=…`, sign in — returns to that page and shows neither
+  (`IntroPage.signInAndReturnTo`).
+- **The New user form has no password field.** The account is created *invited*, with
+  its login set to the email. Setting a password on its edit page activates it.
+- **Users cannot be deleted on this instance** (`users_deletable_by_admins` is off, and
+  the header shows no Delete). A test retires a user it created by locking it.
+- **Passwords need at least 10 characters**; no character classes are enforced.

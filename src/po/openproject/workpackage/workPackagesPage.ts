@@ -111,6 +111,39 @@ export class WorkPackagesPage extends BasePage<WorkPackagesPage> {
   }
 
   /**
+   * Returns the "+ Create" toolbar button, for a test that asserts on the
+   * control itself rather than clicking it.
+   *
+   * It is rendered for every user who can see the list, and **disabled** for
+   * one without the `work_packages/create` capability in this project
+   * (`wp-create-button.component.ts:83-102`). The capability arrives
+   * asynchronously, so assert with a retrying matcher (`toBeDisabled()`),
+   * never a one-shot read.
+   *
+   * @aliases createButton, getAddWorkPackageButton, addButton, newWorkPackageButton
+   * @prerequisites The work packages list page is open
+   * @observable-state None — returns a locator without interacting
+   * @returns The Create button locator.
+   */
+  getCreateButton(): Locator {
+    return this.createButton;
+  }
+
+  /**
+   * Reloads the list, so it reflects permissions and data changed elsewhere
+   * since it was opened.
+   *
+   * @aliases refresh, reloadPage, refreshList
+   * @prerequisites The work packages list page is open
+   * @observable-state The list is rendered afresh for the signed-in user's current permissions
+   * @returns The reloaded `WorkPackagesPage`.
+   */
+  async reload(): Promise<WorkPackagesPage> {
+    await this.page.reload();
+    return await new WorkPackagesPage(this.page).waitForLoad();
+  }
+
+  /**
    * Clicks the "+ Create" toolbar button to open the work package type dropdown.
    * Use the returned component to select a type (Task, Milestone, Phase, etc.).
    *

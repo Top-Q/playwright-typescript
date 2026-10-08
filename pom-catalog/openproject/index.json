@@ -1,22 +1,76 @@
 {
   "app": "openproject",
   "poRoot": "src/po/openproject",
-  "generatedAt": "2026-08-13T12:03:57.609Z",
+  "generatedAt": "2026-10-08T15:23:28.243Z",
   "schemaVersion": 2,
   "totals": {
-    "modules": 7,
-    "classes": 34,
-    "methods": 162
+    "modules": 8,
+    "classes": 38,
+    "methods": 178
   },
   "coverage": {
-    "methods": 162,
-    "withDescription": 162,
-    "withAliases": 136,
-    "withPrerequisites": 136,
-    "withObservableState": 136,
-    "fullyAnnotated": 136
+    "methods": 178,
+    "withDescription": 178,
+    "withAliases": 152,
+    "withPrerequisites": 152,
+    "withObservableState": 152,
+    "fullyAnnotated": 152
   },
   "modules": [
+    {
+      "module": "administration",
+      "file": "administration.json",
+      "classCount": 4,
+      "methodCount": 11,
+      "classes": [
+        {
+          "name": "AdministrationPage",
+          "kind": "page",
+          "file": "src/po/openproject/administration/administrationPage.ts",
+          "aliases": [
+            "AdminPage",
+            "AdminOverviewPage",
+            "AdministrationOverviewPage"
+          ],
+          "methodCount": 1
+        },
+        {
+          "name": "AdminUsersPage",
+          "kind": "page",
+          "file": "src/po/openproject/administration/adminUsersPage.ts",
+          "aliases": [
+            "UsersPage",
+            "UserListPage",
+            "UsersAdminPage",
+            "AccountsPage"
+          ],
+          "methodCount": 3
+        },
+        {
+          "name": "EditUserPage",
+          "kind": "page",
+          "file": "src/po/openproject/administration/editUserPage.ts",
+          "aliases": [
+            "UserEditPage",
+            "UserSettingsPage",
+            "UserAdminPage",
+            "UserProfileEditPage"
+          ],
+          "methodCount": 2
+        },
+        {
+          "name": "NewUserPage",
+          "kind": "page",
+          "file": "src/po/openproject/administration/newUserPage.ts",
+          "aliases": [
+            "CreateUserPage",
+            "AddUserPage",
+            "UserFormPage"
+          ],
+          "methodCount": 5
+        }
+      ]
+    },
     {
       "module": "board",
       "file": "board.json",
@@ -89,7 +143,7 @@
       "module": "general",
       "file": "general.json",
       "classCount": 6,
-      "methodCount": 19,
+      "methodCount": 22,
       "classes": [
         {
           "name": "GlobalHeaderComp",
@@ -102,7 +156,7 @@
             "QuickAddComp",
             "GlobalMenuComp"
           ],
-          "methodCount": 4
+          "methodCount": 6
         },
         {
           "name": "HomePage",
@@ -116,7 +170,7 @@
           "kind": "page",
           "file": "src/po/openproject/general/loginPage.ts",
           "aliases": [],
-          "methodCount": 3
+          "methodCount": 4
         },
         {
           "name": "MainMenuComp",
@@ -352,7 +406,7 @@
       "module": "workpackage",
       "file": "workpackage.json",
       "classCount": 5,
-      "methodCount": 23,
+      "methodCount": 25,
       "classes": [
         {
           "name": "DeleteWorkPackageDialogComp",
@@ -393,7 +447,7 @@
             "TasksPage",
             "WorkPackagesTablePage"
           ],
-          "methodCount": 10
+          "methodCount": 12
         },
         {
           "name": "WorkPackageTypeMenuComp",

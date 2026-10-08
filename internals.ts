@@ -43,6 +43,12 @@ export * from './src/po/openproject/members/membersPage';
 export * from './src/po/openproject/members/memberTableComp';
 export * from './src/po/openproject/members/memberTableRowComp';
 
+// Open Project - Administration
+export * from './src/po/openproject/administration/administrationPage';
+export * from './src/po/openproject/administration/adminUsersPage';
+export * from './src/po/openproject/administration/newUserPage';
+export * from './src/po/openproject/administration/editUserPage';
+
 // Open Project - Work Packages
 export * from './src/po/openproject/workpackage/workPackagesPage';
 export * from './src/po/openproject/workpackage/workPackageTypeMenuComp';

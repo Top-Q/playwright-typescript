@@ -2,7 +2,7 @@
   "module": "general",
   "file": "general.json",
   "app": "openproject",
-  "generatedAt": "2026-08-13T12:03:57.609Z",
+  "generatedAt": "2026-10-08T15:23:28.243Z",
   "schemaVersion": 2,
   "classes": [
     {
@@ -73,6 +73,33 @@
           ],
           "prerequisites": "Any page is open and the user is signed in",
           "observableState": "The browser navigates to /projects, the application-wide project list"
+        },
+        {
+          "name": "openUserMenu",
+          "signature": "openUserMenu(): Promise<void>",
+          "description": "Opens the user menu behind the avatar in the header. Idempotent.",
+          "aliases": [
+            "openAvatarMenu",
+            "clickAvatar",
+            "openAccountMenu",
+            "openProfileMenu"
+          ],
+          "prerequisites": "Any page is open and the user is signed in",
+          "observableState": "The user menu opens, listing My page, My activity, Account settings, Administration (administrators only) and Sign out"
+        },
+        {
+          "name": "clickAdministrationLink",
+          "signature": "clickAdministrationLink(): Promise<AdministrationPage>",
+          "description": "Opens the Administration overview via the user menu, opening the menu\nfirst if it is closed.",
+          "aliases": [
+            "openAdministration",
+            "goToAdmin",
+            "clickAdmin",
+            "openAdminArea",
+            "navigateToAdministration"
+          ],
+          "prerequisites": "Any page is open and the signed-in user is an administrator",
+          "observableState": "The browser navigates to /admin"
         }
       ]
     },
@@ -123,6 +150,20 @@
           "aliases": [],
           "prerequisites": "",
           "observableState": ""
+        },
+        {
+          "name": "signInAndReturnTo",
+          "signature": "signInAndReturnTo(username: string, password: string, destination: BasePage<T>): Promise<T>",
+          "description": "Signs in on a login page that was reached by opening a protected URL\nwhile signed out, and returns the page object for that URL.\n\nOpening a page that needs a session redirects to\n`/login?back_url=<that page>`, and signing in returns there\n(`redirect_back_or_default`,\n`app/controllers/concerns/accounts/redirect_after_login.rb`). That also\nholds on a user's **first** sign-in, which otherwise lands on\n`/?first_time_user=true` behind a language dialog and an onboarding\ntour (`homescreen_helper.rb:53`, `onboarding_tour_trigger.ts:37`) — so\nthis is the way to sign in a freshly created user.",
+          "aliases": [
+            "signInReturningTo",
+            "loginTo",
+            "signInAs",
+            "loginAndContinue",
+            "signInToDeepLink"
+          ],
+          "prerequisites": "The login page is open, reached through a redirect from the page `destination` represents",
+          "observableState": "The user is signed in and the browser is back on the page originally requested"
         }
       ]
     },

@@ -1,0 +1,207 @@
+{
+  "module": "administration",
+  "file": "administration.json",
+  "app": "openproject",
+  "generatedAt": "2026-10-08T15:23:28.243Z",
+  "schemaVersion": 2,
+  "classes": [
+    {
+      "name": "AdministrationPage",
+      "file": "src/po/openproject/administration/administrationPage.ts",
+      "kind": "page",
+      "description": "# Page Description\nThe Administration overview at `/admin`: a grid of tiles, one per\nadministration area. Only administrators can open it; it is reached from\nthe header's user menu via {@link GlobalHeaderComp.clickAdministrationLink}.",
+      "aliases": [
+        "AdminPage",
+        "AdminOverviewPage",
+        "AdministrationOverviewPage"
+      ],
+      "methods": [
+        {
+          "name": "clickUsersAndPermissionsTile",
+          "signature": "clickUsersAndPermissionsTile(): Promise<AdminUsersPage>",
+          "description": "Opens the users list from the \"Users and permissions\" tile.",
+          "aliases": [
+            "openUsers",
+            "goToUsers",
+            "clickUsers",
+            "openUserAdministration"
+          ],
+          "prerequisites": "The Administration overview is open and the user is an administrator",
+          "observableState": "The browser navigates to /users, the list of every user account"
+        }
+      ]
+    },
+    {
+      "name": "AdminUsersPage",
+      "file": "src/po/openproject/administration/adminUsersPage.ts",
+      "kind": "page",
+      "description": "# Page Description\nThe administration list of user accounts at `/users`, with a filter panel\n(Status, Name) above the table. Administrators only.\n\nNot to be confused with a project's Members page ({@link MembersPage}),\nwhich lists the users *of one project*: this lists every account.",
+      "aliases": [
+        "UsersPage",
+        "UserListPage",
+        "UsersAdminPage",
+        "AccountsPage"
+      ],
+      "methods": [
+        {
+          "name": "clickNewUserButton",
+          "signature": "clickNewUserButton(): Promise<NewUserPage>",
+          "description": "Opens the New user form.",
+          "aliases": [
+            "clickAddUser",
+            "openNewUserForm",
+            "createUser",
+            "addUser",
+            "newUser"
+          ],
+          "prerequisites": "The users list is open",
+          "observableState": "The browser navigates to /users/new"
+        },
+        {
+          "name": "filterByName",
+          "signature": "filterByName(name: string): Promise<AdminUsersPage>",
+          "description": "Filters the list by name and returns the reloaded list.\n\nThe filter is a `GET` form, so applying navigates; the wait is on a\nnon-empty `name=` in the URL, because `waitForLoadState('load')` would\nresolve against the document still on screen (the same trap as\n{@link MembersPage.filterByName}). The filter matches login, first\nname, last name and email.",
+          "aliases": [
+            "searchUsers",
+            "findUser",
+            "filterUsers",
+            "searchUserByName"
+          ],
+          "prerequisites": "The users list is open",
+          "observableState": "The table reloads showing only users matching the name; the URL carries `name`"
+        },
+        {
+          "name": "clickUserByLogin",
+          "signature": "clickUserByLogin(login: string): Promise<EditUserPage>",
+          "description": "Opens a user's edit page from the Username column.\n\nThe link's text is the user's **login** (which, for a user created\nthrough {@link NewUserPage}, is their email), and for an administrator it\nleads to the edit page (`allowed_management_user_profile_path`,\n`app/helpers/users_helper.rb:144`). Filter first with\n{@link filterByName} — the list is paginated.",
+          "aliases": [
+            "openUser",
+            "editUser",
+            "clickUser",
+            "goToUser",
+            "openUserByLogin"
+          ],
+          "prerequisites": "The users list is open and shows the user",
+          "observableState": "The browser navigates to /users/<id>/edit"
+        }
+      ]
+    },
+    {
+      "name": "EditUserPage",
+      "file": "src/po/openproject/administration/editUserPage.ts",
+      "kind": "page",
+      "description": "# Page Description\nThe administrator's edit page for one user, `/users/<id>/edit`, on its\nGeneral tab: the user's attributes, an Authentication section with the\npassword fields, and status actions (Send invitation, Lock permanently /\nUnlock) in the page header.\n\nUsers cannot be deleted on this instance (`users_deletable_by_admins` is\noff, so the header renders no Delete action); locking is how a test retires\na user it created.",
+      "aliases": [
+        "UserEditPage",
+        "UserSettingsPage",
+        "UserAdminPage",
+        "UserProfileEditPage"
+      ],
+      "methods": [
+        {
+          "name": "setPassword",
+          "signature": "setPassword(password: string): Promise<EditUserPage>",
+          "description": "Sets the user's password: fills Password and Confirmation and saves.\n\nSetting a password **activates an invited user**\n(`users_controller.rb:107-116`), which is what makes a user created\nthrough {@link NewUserPage} able to sign in. The save redirects back to\nthis page; the \"Lock permanently\" action appearing is what marks the\nreloaded page, because it is only offered for an active user.\n\nThe password must meet the instance's rules — on this one, at least 10\ncharacters.",
+          "aliases": [
+            "changePassword",
+            "assignPassword",
+            "activateUser",
+            "setUserPassword"
+          ],
+          "prerequisites": "The edit page of a user with internal authentication is open",
+          "observableState": "The user has the password, its status is active, and \"Lock permanently\" is offered"
+        },
+        {
+          "name": "lockPermanently",
+          "signature": "lockPermanently(): Promise<EditUserPage>",
+          "description": "Locks the user permanently, so the account can no longer sign in. The\nheader then offers \"Unlock\" in its place.",
+          "aliases": [
+            "lockUser",
+            "lock",
+            "disableUser",
+            "deactivateUser",
+            "blockUser"
+          ],
+          "prerequisites": "The edit page of an active user is open, and it is not the signed-in administrator's own",
+          "observableState": "The user's status is locked and \"Unlock\" is offered"
+        }
+      ]
+    },
+    {
+      "name": "NewUserPage",
+      "file": "src/po/openproject/administration/newUserPage.ts",
+      "kind": "page",
+      "description": "# Page Description\nThe administrator's New user form at `/users/new`\n(`app/views/users/new.html.erb`).\n\nIt asks only for a name and an email: **there is no password field**. The\naccount is created with status *invited* and its login set to the email\n(`users_controller.rb:309-314`), and creating it lands on the user's edit\npage — where {@link EditUserPage.setPassword} gives it a password and, by\ndoing so, activates it.",
+      "aliases": [
+        "CreateUserPage",
+        "AddUserPage",
+        "UserFormPage"
+      ],
+      "methods": [
+        {
+          "name": "fillFirstName",
+          "signature": "fillFirstName(firstName: string): Promise<void>",
+          "description": "Fills the First name field.",
+          "aliases": [
+            "enterFirstName",
+            "setFirstName",
+            "typeFirstName"
+          ],
+          "prerequisites": "The New user form is open",
+          "observableState": "The First name field holds the text; nothing is saved until {@link clickCreateButton}"
+        },
+        {
+          "name": "fillLastName",
+          "signature": "fillLastName(lastName: string): Promise<void>",
+          "description": "Fills the Last name field.",
+          "aliases": [
+            "enterLastName",
+            "setLastName",
+            "typeLastName"
+          ],
+          "prerequisites": "The New user form is open",
+          "observableState": "The Last name field holds the text; nothing is saved until {@link clickCreateButton}"
+        },
+        {
+          "name": "fillEmail",
+          "signature": "fillEmail(email: string): Promise<void>",
+          "description": "Fills the Email field. The new user's login defaults to this address.",
+          "aliases": [
+            "enterEmail",
+            "setEmail",
+            "typeEmail",
+            "fillMail"
+          ],
+          "prerequisites": "The New user form is open",
+          "observableState": "The Email field holds the text; nothing is saved until {@link clickCreateButton}"
+        },
+        {
+          "name": "clickCreateButton",
+          "signature": "clickCreateButton(): Promise<EditUserPage>",
+          "description": "Submits the form with \"Create\". On success the server redirects to the\nnew user's edit page (`users_controller.rb:96`); an invalid submission\nre-renders the form at `/users`, so waiting for the edit page also fails\nfast on a rejected user.",
+          "aliases": [
+            "submit",
+            "saveUser",
+            "clickCreate",
+            "confirmCreateUser"
+          ],
+          "prerequisites": "First name, last name and email are filled",
+          "observableState": "The user exists with status invited, and the browser shows /users/<id>/edit"
+        },
+        {
+          "name": "createUser",
+          "signature": "createUser(firstName: string, lastName: string, email: string): Promise<EditUserPage>",
+          "description": "Creates a user end to end: fills the name and email and submits. Use the\nindividual fill methods when a test needs to observe the form itself.",
+          "aliases": [
+            "addUser",
+            "createAccount",
+            "registerUser",
+            "newUser"
+          ],
+          "prerequisites": "The New user form is open",
+          "observableState": "The user exists with status invited and login equal to the email; the browser shows its edit page"
+        }
+      ]
+    }
+  ]
+}

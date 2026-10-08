@@ -1,5 +1,5 @@
 import { test } from '../fixtures';
-import { MembersPage } from '../../../internals';
+import { GlobalHeaderComp, IntroPage, MembersPage, WorkPackagesPage } from '../../../internals';
 import { expect } from '@playwright/test';
 
 test(
@@ -133,33 +133,85 @@ test(
 
 test(
     'Remove a member from the project',
-    { tag: ['@ui', '@members', '@regression'] },
-    async ({ readyOverviewPage }) => {
-        const memberEmail = `removeme-${Date.now()}@example.com`;
+    {
+        tag: ['@ui', '@members', '@regression', '@TC-MEM-005-01'],
+        annotation: { type: 'built-from', description: 'TC-MEM-005-01@e4a941137e7c0342' },
+    },
+    async ({ readyOverviewPage, browser }) => {
+        // Two sessions and about a dozen full page loads (admin pages, the
+        // projects list, members, the second user's sign-in) run past the
+        // 60s default on a members list padded by earlier runs.
+        test.setTimeout(120_000);
 
-        let membersPage: MembersPage;
-        await test.step('Given a member is added to the project', async () => {
-            membersPage = await readyOverviewPage
-                .mainMenu()
-                .clickMembersLink();
-            await membersPage.addMember(memberEmail, 'Member');
-            const hasMember = await membersPage.hasMemberWithName(memberEmail);
-            expect(hasMember).toBe(true);
+        // A user who can actually sign in, so that losing the Member role's
+        // permissions can be observed from their side. An invited email
+        // address has no password and cannot.
+        const stamp = Date.now();
+        const memberName = `Removed Member${stamp}`;
+        const memberEmail = `removeme-${stamp}@example.com`;
+        const memberPassword = `Removed-${stamp}`;
+        const adminPage = readyOverviewPage.page;
+        const header = new GlobalHeaderComp(adminPage);
+
+        await test.step(`Given a user "${memberName}" with a password exists`, async () => {
+            const administrationPage = await header.clickAdministrationLink();
+            const usersPage = await administrationPage.clickUsersAndPermissionsTile();
+            const newUserPage = await usersPage.clickNewUserButton();
+            const editUserPage = await newUserPage.createUser('Removed', `Member${stamp}`, memberEmail);
+            await editUserPage.setPassword(memberPassword);
         });
 
-        await test.step('When the user removes the member', async () => {
+        let membersPage: MembersPage;
+        await test.step('And the user is a member of Demo project with the "Member" role', async () => {
+            let projectsPage = await header.clickProjectsModuleLink();
+            projectsPage = await projectsPage.filterByName('Demo project');
+            const overviewPage = await projectsPage.getProjectRowByName('Demo project').clickName();
+            membersPage = await overviewPage.mainMenu().clickMembersLink();
+            await membersPage.addMember(memberName, 'Member');
+            expect(await membersPage.hasMemberWithName(memberName)).toBe(true);
+        });
+
+        const memberContext = await browser.newContext();
+        const memberPage = await memberContext.newPage();
+        let memberWorkPackages: WorkPackagesPage;
+        await test.step('And, signed in, the member can create work packages in Demo project', async () => {
+            await memberPage.goto('http://localhost:8090/projects/demo-project/work_packages');
+            const loginPage = await new IntroPage(memberPage).waitForLoad();
+            memberWorkPackages = await loginPage.signInAndReturnTo(
+                memberEmail,
+                memberPassword,
+                new WorkPackagesPage(memberPage),
+            );
+            await expect(memberWorkPackages.getCreateButton()).toBeEnabled();
+        });
+
+        await test.step('When the administrator removes the member', async () => {
             const row = await membersPage
                 .memberTable()
-                .getRowByMemberName(memberEmail);
+                .getRowByMemberName(memberName);
             await row.removeMember();
         });
 
         await test.step('Then the member no longer appears in the list', async () => {
-            membersPage = await new MembersPage(
-                readyOverviewPage.page,
-            ).waitForLoad();
-            const hasMember = await membersPage.hasMemberWithName(memberEmail);
-            expect(hasMember).toBe(false);
+            membersPage = await new MembersPage(adminPage).waitForLoad();
+            expect(await membersPage.hasMemberWithName(memberName)).toBe(false);
+        });
+
+        await test.step('And on their next page load the user can still view Demo project, as any non-member can', async () => {
+            memberWorkPackages = await memberWorkPackages.reload();
+        });
+
+        await test.step('But can no longer create work packages there', async () => {
+            await expect(memberWorkPackages.getCreateButton()).toBeDisabled();
+        });
+
+        await test.step('Cleanup: lock the user', async () => {
+            await memberContext.close();
+            const administrationPage = await header.clickAdministrationLink();
+            let usersPage = await administrationPage.clickUsersAndPermissionsTile();
+            usersPage = await usersPage.filterByName(memberEmail);
+            const editUserPage = await usersPage.clickUserByLogin(memberEmail);
+            await editUserPage.lockPermanently();
         });
     },
 );

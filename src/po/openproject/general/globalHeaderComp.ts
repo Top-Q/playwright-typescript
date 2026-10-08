@@ -1,5 +1,6 @@
 import { Locator, Page } from '@playwright/test';
 import { BaseComponent } from '../baseComponent';
+import { AdministrationPage } from '../administration/administrationPage';
 import { NewProjectPage } from '../projects/newProjectPage';
 import { ProjectsPage } from '../projects/projectsPage';
 
@@ -35,6 +36,9 @@ export class GlobalHeaderComp extends BaseComponent<GlobalHeaderComp> {
     private readonly globalModulesButton: Locator;
     private readonly globalModulesDialog: Locator;
     private readonly projectsModuleLink: Locator;
+    private readonly userMenuButton: Locator;
+    private readonly userMenuDialog: Locator;
+    private readonly administrationLink: Locator;
 
     constructor(page: Page) {
         super(page, page.getByRole('banner').describe('Application header'));
@@ -62,6 +66,25 @@ export class GlobalHeaderComp extends BaseComponent<GlobalHeaderComp> {
         this.projectsModuleLink = this.globalModulesDialog
             .getByRole('link', { name: 'Projects', exact: true })
             .describe('Global modules: Projects link');
+        // The avatar button's accessible name is the user's initials, and the
+        // `test_selector` it is given (`user_menu.rb:74-78`) is not rendered
+        // outside the test environment. What identifies it is the avatar it
+        // wraps, rendered with `class: "op-top-menu-user-avatar"`
+        // (`lib/redmine/menu_manager/top_menu/user_menu.rb:51`).
+        this.userMenuButton = this.rootComponent
+            .getByRole('button')
+            .filter({ has: this.page.locator('.op-top-menu-user-avatar') })
+            .describe('User menu (avatar) button');
+        // A Primer `dialog` titled "User menu" with the title visually hidden
+        // (`user_menu.rb:54-56`). The dialog itself exposes no accessible name,
+        // so it is found by the heading it contains.
+        this.userMenuDialog = this.page
+            .getByRole('dialog')
+            .filter({ has: this.page.getByRole('heading', { name: 'User menu' }) })
+            .describe('User menu');
+        this.administrationLink = this.userMenuDialog
+            .getByRole('link', { name: 'Administration', exact: true })
+            .describe('User menu: Administration link');
     }
 
     async waitForLoad(): Promise<GlobalHeaderComp> {
@@ -133,5 +156,35 @@ export class GlobalHeaderComp extends BaseComponent<GlobalHeaderComp> {
         await this.openGlobalModulesMenu();
         await this.projectsModuleLink.click();
         return await new ProjectsPage(this.page).waitForLoad();
+    }
+
+    /**
+     * Opens the user menu behind the avatar in the header. Idempotent.
+     *
+     * @aliases openAvatarMenu, clickAvatar, openAccountMenu, openProfileMenu
+     * @prerequisites Any page is open and the user is signed in
+     * @observable-state The user menu opens, listing My page, My activity, Account settings, Administration (administrators only) and Sign out
+     */
+    async openUserMenu(): Promise<void> {
+        if (await this.userMenuDialog.isVisible()) {
+            return;
+        }
+        await this.userMenuButton.click();
+        await this.userMenuDialog.waitFor();
+    }
+
+    /**
+     * Opens the Administration overview via the user menu, opening the menu
+     * first if it is closed.
+     *
+     * @aliases openAdministration, goToAdmin, clickAdmin, openAdminArea, navigateToAdministration
+     * @prerequisites Any page is open and the signed-in user is an administrator
+     * @observable-state The browser navigates to /admin
+     * @returns An `AdministrationPage` for the overview.
+     */
+    async clickAdministrationLink(): Promise<AdministrationPage> {
+        await this.openUserMenu();
+        await this.administrationLink.click();
+        return await new AdministrationPage(this.page).waitForLoad();
     }
 }

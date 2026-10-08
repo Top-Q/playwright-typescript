@@ -17,7 +17,7 @@ tags:
 
 - Given I am a [[Project Manager]] on the [[Member|Members]] page, when I click 'Add member', search for an existing user, select a [[Role]], and click Add, then the user appears in the Members list with the selected Role and Status 'Active'.
 - Given a [[Member]] with [[Role]] '[[Viewer]]', when I edit their Role to '[[Team Member]]', then their permissions update immediately and they can now create [[WorkPackage|Work Packages]] on next login/reload.
-- Given a [[Member]] I want to remove, when I click Remove and confirm, then they no longer appear in the Members list and lose access to the [[Project]].
+- Given a [[Member]] I want to remove, when I click Remove and confirm, then they no longer appear in the Members list and lose their [[Role|Role's]] permissions — on a public [[Project]] they keep only non-member access (corrected 2026-10-08, see [[FR-MEM-005]]).
 - Given I attempt to remove the only [[Member]] with a manage-capable [[Role]], when I confirm removal, then the system blocks the action with an explanatory error.
 
 ## Notes

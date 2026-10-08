@@ -2,7 +2,7 @@
   "module": "workpackage",
   "file": "workpackage.json",
   "app": "openproject",
-  "generatedAt": "2026-08-12T15:16:28.027Z",
+  "generatedAt": "2026-10-08T15:23:28.243Z",
   "schemaVersion": 2,
   "classes": [
     {
@@ -211,6 +211,31 @@
         "WorkPackagesTablePage"
       ],
       "methods": [
+        {
+          "name": "getCreateButton",
+          "signature": "getCreateButton(): Locator",
+          "description": "Returns the \"+ Create\" toolbar button, for a test that asserts on the\ncontrol itself rather than clicking it.\n\nIt is rendered for every user who can see the list, and **disabled** for\none without the `work_packages/create` capability in this project\n(`wp-create-button.component.ts:83-102`). The capability arrives\nasynchronously, so assert with a retrying matcher (`toBeDisabled()`),\nnever a one-shot read.",
+          "aliases": [
+            "createButton",
+            "getAddWorkPackageButton",
+            "addButton",
+            "newWorkPackageButton"
+          ],
+          "prerequisites": "The work packages list page is open",
+          "observableState": "None — returns a locator without interacting"
+        },
+        {
+          "name": "reload",
+          "signature": "reload(): Promise<WorkPackagesPage>",
+          "description": "Reloads the list, so it reflects permissions and data changed elsewhere\nsince it was opened.",
+          "aliases": [
+            "refresh",
+            "reloadPage",
+            "refreshList"
+          ],
+          "prerequisites": "The work packages list page is open",
+          "observableState": "The list is rendered afresh for the signed-in user's current permissions"
+        },
         {
           "name": "clickCreateButton",
           "signature": "clickCreateButton(): Promise<WorkPackageTypeMenuComp>",
