@@ -37,11 +37,11 @@ export const test = base.extend<{
 });
 ```
 
-### `opclient` (API tests)
+### `opclient` (API tests) — removed
 
-Provides an authenticated `OpenProjectClient` for API interactions.
-
-Located at `tests/api/fixtures.ts`.
+`tests/api/fixtures.ts` and the `OpenProjectClient` it provided were removed in `82ea368`.
+There is no API fixture today; see
+[`environment.md`](../../../../docs/app-under-test/environment.md#addresses).
 
 ## Using Fixtures in Tests
 

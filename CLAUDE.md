@@ -9,12 +9,13 @@ spec ids (`TC-WP-…`, `TC-MEM-…`).
 
 Tests run as **admin** against the **Demo project**.
 
-| Surface                                           | URL                     |
-| ------------------------------------------------- | ----------------------- |
-| **UI** — everything a browser drives              | `http://localhost:8090` |
-| **API** — `OpenProjectClient`, tests, `/api/docs` | `http://localhost:8080` |
+| Surface                              | URL                            |
+| ------------------------------------ | ------------------------------ |
+| **UI** — everything a browser drives | `http://localhost:8090`        |
+| **API** — REST API v3, `/api/docs`   | `http://localhost:8090/api/v3` |
 
-`.env`'s unqualified `OPENPROJECT_BASE_URL` is the **API** one, which has misled before.
+One port serves both; `:8080` is not published, and there is no API client in the repo —
+[`environment.md`](docs/app-under-test/environment.md) has how to call the API with a token.
 
 Two documents describe the app itself rather than this repo, and both apply whether you are writing a
 locator by hand or running the pipeline:
@@ -30,8 +31,7 @@ locator by hand or running the pipeline:
 ```
 <project-root>/
 ├── src/po/openproject/     # Page objects and components (basePage.ts, baseComponent.ts, per-module dirs)
-├── src/api/                # Fluent API client (OpenProjectClient)
-├── tests/ui/, tests/api/   # Test specs + fixtures.ts
+├── tests/ui/               # Test specs + fixtures.ts
 ├── pom-catalog/            # Generated index of every page object and method
 ├── specs/                  # Specifications for the app under test — see specs/README.md
 ├── .claude/skills/         # Skills, each self-contained: SKILL.md + references/ + scripts/

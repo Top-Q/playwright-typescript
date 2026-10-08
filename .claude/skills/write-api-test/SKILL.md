@@ -1,15 +1,21 @@
 ---
 name: write-api-test
-description: Generate API test cases using the fluent OpenProjectClient and API fixtures. Use when the user asks to write, create, or generate an API test.
+description: Generate API test cases using the fluent OpenProjectClient and API fixtures — currently out of date, the client was removed (see the notice in the body). Use when the user asks to write, create, or generate an API test.
 ---
 
 # Writing API Tests
+
+> **Out of date: the API client this skill describes no longer exists.** `src/api/`
+> (`OpenProjectClient`) and `tests/api/` (the `opclient` fixture) were removed in `82ea368`.
+> Before writing an API test, the client and fixture have to be restored or rebuilt — tell
+> the user rather than writing a test against imports that do not resolve. How to call the
+> API meanwhile: [`environment.md`](../../../docs/app-under-test/environment.md#addresses).
 
 Use this skill when creating new API test cases for the OpenProject backend.
 
 ## API Documentation
 
-OpenProject API docs are accessible at `http://localhost:8080/api/docs`.
+OpenProject API docs are accessible at `http://localhost:8090/api/docs`.
 
 ## Imports
 

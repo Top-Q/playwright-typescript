@@ -14,14 +14,40 @@ places** and disagreeing when one of them changes.
 | What | Where |
 | --- | --- |
 | **UI** — everything the browser recipes and UI tests touch | `http://localhost:8090` |
-| **API** — `OpenProjectClient`, API tests, `/api/docs` | `http://localhost:8080` |
+| **API** — REST API v3, `/api/docs` | `http://localhost:8090/api/v3` |
 
-These are **two different ports for two different surfaces**, which is the trap. `.env`
-defines `OPENPROJECT_BASE_URL` as the *API* URL (`:8080`) despite the unqualified name;
-it says nothing about the UI. If you are driving a browser, `:8090` is the only correct
-answer and `.env` will mislead you.
+**One port serves both.** The Docker Compose proxy publishes `127.0.0.1:8090` and routes
+`/api/v3` to the same web container as the UI. That container listens on `8080`, but the
+port is not published, so `http://localhost:8080` refuses connections — older docs and
+`.env` files that point the API there are wrong for this setup.
 
-`.env` is gitignored. Do not assume it exists, and do not cite values from it in a doc.
+**There is no API client or API test suite.** `src/api/` (`OpenProjectClient`) and
+`tests/api/` were removed in `82ea368`. To call the API — for test cleanup, or to check a
+fact — use an API token (avatar → Account settings → Access tokens) with basic auth:
+
+```powershell
+curl.exe -u "apikey:<token>" http://localhost:8090/api/v3/users/me
+```
+
+A `POST` with no body, such as `/api/v3/users/<id>/lock`, still needs
+`-H "Content-Type: application/json"`, or it answers 406.
+
+`.env` is gitignored and **read by nothing in the repository** (dotenv is commented out in
+`playwright.config.ts`); its `OPENPROJECT_BASE_URL` points at `:8080`. It is only a place
+to keep the token. Do not assume it exists, and do not cite values from it in a doc.
+
+## Database
+
+When a fact is easier to read from the data than from the UI — whether a project is
+public, a setting's value, a role's permissions — query the database read-only:
+
+```powershell
+docker exec openproject-db-1 psql -U postgres -d openproject -c "select identifier, public from projects;"
+```
+
+Settings live in `settings` (`name`, `value`); built-in roles are `roles.builtin` 1 (Non
+member) and 2 (Anonymous). Never write to it: change state through the UI or the API, so
+the app's own rules run.
 
 ## Credentials
 
