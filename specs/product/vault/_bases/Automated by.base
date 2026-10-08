@@ -1,0 +1,12 @@
+filters:
+  and:
+    - file.hasTag("kind/automated-test")
+    - file.hasLink(this.file)
+views:
+  - type: table
+    name: Automated by
+    order:
+      - file.name
+      - mode
+      - stale
+      - file

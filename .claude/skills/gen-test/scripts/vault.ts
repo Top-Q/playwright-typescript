@@ -28,6 +28,18 @@ export interface TestCase {
     preconditions?: string[];
     steps?: string[];
     expected_result?: string;
+    /**
+     * `approved` once a person has ticked `approved` for this exact text,
+     * `rejected` when they ticked `rejected`, `draft` otherwise. vault-lint
+     * unticks an approval when the text changes.
+     */
+    status?: 'draft' | 'approved' | 'rejected';
+    /**
+     * The hash vault-lint recorded for the approved text. A test built from it
+     * says so in a `built-from` annotation, which is how the vault later tells
+     * that the test case changed under the test.
+     */
+    approvedHash?: string;
     /** Repo-relative path of the note it was read from. */
     file?: string;
     /**
@@ -145,6 +157,11 @@ function items(text: string | undefined, notes: Map<string, Note>): string[] | u
         .map((line) => plain(line.replace(/^(?:- |\d+\. )/, '')));
 }
 
+/** A checkbox property: YAML `true`, as Obsidian writes it. */
+function ticked(value: string | string[] | undefined): boolean {
+    return String(value) === 'true';
+}
+
 function article(noun: string): string {
     return /^[aeiou]/i.test(noun) ? 'an' : 'a';
 }
@@ -174,6 +191,15 @@ function readTestCase(note: Note, notes: Map<string, Note>, repoRoot: string): T
         type: String(note.properties.type),
         title: plain(String(note.properties.title ?? '')),
         expected_result: plain(expandEmbeds(section(note.body, 'Expected result') ?? '', notes)),
+        status: ticked(note.properties.approved)
+            ? 'approved'
+            : ticked(note.properties.rejected)
+              ? 'rejected'
+              : 'draft',
+        approvedHash:
+            ticked(note.properties.approved) && note.properties.approved_hash !== undefined
+                ? String(note.properties.approved_hash)
+                : undefined,
         file: toPosix(path.relative(repoRoot, note.file)),
     };
     if (preconditions !== undefined || actors.length) {

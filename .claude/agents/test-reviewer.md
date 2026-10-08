@@ -34,7 +34,7 @@ A test with no `expect` at all, or whose only assertion is that navigation happe
 
 Two links back to the requirement vault, both **should-fix** when missing:
 
-- Every test carries a `@TC-…` tag for each test case it covers (`run.json`'s `testCaseIds`), and `npm.cmd run vault:lint` passes — run `npm.cmd run vault:lint -- --fix` to write `automated_by` if it only complains about that.
+- Every test carries a `@TC-…` tag and a matching `built-from` annotation for each test case it covers (`run.json`'s `testCaseIds`; the hash is on the test case's **Built from** line in `spec.md`), and `npm.cmd run vault:lint` passes — run `npm.cmd run vault:lint -- --fix` to write the test's note in `Automated Tests/` if it only complains about that.
 - Every test case `spec.md` marks **Blocked by open question** has `// Unsettled: CQ-…` above each assertion that depends on the unanswered question.
 
 ### Can each assertion fail?

@@ -48,6 +48,8 @@ Stop and report if it exits 1. Do not generate on a broken baseline — every fa
 
 A `questions` failure means an open clarification in the requirement vault blocks a test case in the spec, so its expected result is a guess. Report the question; do not pass `--allow-open-cq` on your own initiative. The user decides whether to answer it, to generate the unblocked test cases one at a time, or to proceed anyway.
 
+An `approval` failure means a test case in the spec does not have `approved` ticked in the vault — it is a draft, or was rejected: no person has approved its text, so a test built from it automates something nobody agreed to. Report which ones; never tick `approved` yourself (rule 30), and do not pass `--allow-unapproved` on your own initiative. The user approves them in Obsidian, or chooses to generate the approved test cases one at a time.
+
 Note the run id and run directory from its output; every agent prompt needs the run directory path.
 
 ### Stage 1 — test-creator

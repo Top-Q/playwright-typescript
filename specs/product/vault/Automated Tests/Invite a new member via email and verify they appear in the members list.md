@@ -1,0 +1,12 @@
+---
+title: Invite a new member via email and verify they appear in the members list
+file: tests/ui/members/members-crud.spec.ts
+mode: test
+covers: []
+built_from: []
+stale: []
+tags:
+  - kind/automated-test
+---
+
+Generated from `tests/ui/members/members-crud.spec.ts` by `npm.cmd run vault:lint -- --fix`. Change the test, not this note: the next fix rewrites it.

@@ -32,6 +32,16 @@ views:
       - type
       - title
   - type: table
+    name: Automated tests
+    filters:
+      and:
+        - file.hasTag("kind/automated-test")
+    order:
+      - file.name
+      - covers
+      - mode
+      - stale
+  - type: table
     name: User stories
     filters:
       and:

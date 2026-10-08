@@ -11,12 +11,13 @@ views:
       - type
       - title
       - actors
-      - automated_by
+      - approved
   - type: table
     name: Not automated yet
     filters:
       and:
-        - automated_by.length == 0
+        - approved == true
+        - file.backlinks.filter(value.asFile().hasTag("kind/automated-test")).isEmpty()
     order:
       - file.name
       - requirement

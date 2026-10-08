@@ -4,7 +4,7 @@ type: positive
 title: "TODO: what the test case shows"
 requirement: "[[FR-]]"
 actors: []
-automated_by: []
+approved: false
 tags:
   - kind/test-case
   - module/MODULE
@@ -21,3 +21,7 @@ tags:
 ## Expected result
 
 TODO: what the user can observe afterwards
+
+## Automated by
+
+![[Automated by.base]]

@@ -28,7 +28,7 @@ import * as path from 'path';
 import { requireFlagsSurvived } from './cli-args';
 import { PipelineError, RunRecord, makeRunId } from './run-directory';
 import { initRun } from './run-init';
-import { readRequirement } from './vault';
+import { TestCase, readRequirement } from './vault';
 import { describeRun, findLeakedTestRuns } from './leaked-runs';
 
 const HELP = `
@@ -47,6 +47,9 @@ Options:
       --skip-gates      Skip gate:catalog/types/lint/gaps (debugging only)
       --allow-open-cq   Generate even though an open clarification question blocks
                         the spec; spec.md marks each affected test case
+      --allow-unapproved
+                        Generate even though a test case in the spec is not
+                        approved in the vault; spec.md marks each one
       --json            Emit machine-readable JSON
 
 Exit codes:
@@ -72,6 +75,7 @@ const { values } = parseArgs({
         'no-branch': { type: 'boolean', default: false },
         'skip-gates': { type: 'boolean', default: false },
         'allow-open-cq': { type: 'boolean', default: false },
+        'allow-unapproved': { type: 'boolean', default: false },
         json: { type: 'boolean', default: false },
     },
 });
@@ -238,6 +242,66 @@ function probeModule(runRecord: RunRecord): void {
     record('tests', 'ok', `tests/ui/${testDir}`);
 }
 
+// ------------------------------------------------------- vault test cases
+
+/**
+ * The test cases the spec covers: all of an FR's, or the one a TC id names.
+ * `undefined` when the spec is not from the vault, or its requirement is
+ * missing — run-init reports that, with the path it looked in.
+ */
+function specTestCases(): TestCase[] | undefined {
+    const tc = /^TC-([A-Z]+-\d+)-\d+$/.exec(specRef);
+    const frId = /^FR-[A-Z]+-\d+$/.test(specRef) ? specRef : tc ? `FR-${tc[1]}` : undefined;
+    if (!frId) return undefined;
+    try {
+        const cases = readRequirement(repoRoot, values.vault, frId).requirement.test_cases ?? [];
+        return cases.filter((testCase) => !tc || testCase.id === specRef);
+    } catch {
+        return undefined;
+    }
+}
+
+// ------------------------------------------------------------- approval
+
+/**
+ * Test cases in the spec that no person has approved.
+ *
+ * Claude drafts test cases and a person approves them in the vault; a test
+ * generated from a draft automates text nobody has agreed to. vault-lint
+ * revokes an approval whenever the text changes, so `approved` here means this
+ * exact text. Read-only, like the other diagnostics.
+ */
+function probeApproval(cases: TestCase[] | undefined): void {
+    if (!cases) {
+        record('approval', 'skip', 'not a vault spec');
+        return;
+    }
+    const unapproved = cases.filter((testCase) => testCase.status !== 'approved');
+    if (unapproved.length === 0) {
+        record('approval', 'ok', `${cases.length} test case(s), all approved`);
+        return;
+    }
+    const detail = unapproved
+        .map((testCase) => `${testCase.id} (${testCase.status}) — ${testCase.file}`)
+        .join('\n    ');
+    if (values['allow-unapproved']) {
+        record(
+            'approval',
+            'warn',
+            `--allow-unapproved: spec.md marks each unapproved test case:\n    ${detail}`,
+        );
+    } else {
+        record(
+            'approval',
+            'fail',
+            `${unapproved.length} test case(s) are not approved. Approve them in the vault ` +
+                '(tick `approved`, then `npm.cmd run vault:lint -- --fix`), generate the ' +
+                'approved test cases one by one, or pass --allow-unapproved (with npm.cmd):' +
+                `\n    ${detail}`,
+        );
+    }
+}
+
 // ------------------------------------------------------- open questions
 
 /**
@@ -248,22 +312,12 @@ function probeModule(runRecord: RunRecord): void {
  * the vault made it checkable. Read-only, so it runs with the diagnostics:
  * failing here leaves no branch and no run directory behind.
  */
-function probeOpenQuestions(): void {
-    const tc = /^TC-([A-Z]+-\d+)-\d+$/.exec(specRef);
-    const frId = /^FR-[A-Z]+-\d+$/.test(specRef) ? specRef : tc ? `FR-${tc[1]}` : undefined;
-    if (!frId) {
+function probeOpenQuestions(cases: TestCase[] | undefined): void {
+    if (!cases) {
         record('questions', 'skip', 'not a vault spec');
         return;
     }
-    let cases;
-    try {
-        cases = readRequirement(repoRoot, values.vault, frId).requirement.test_cases ?? [];
-    } catch {
-        return; // run-init reports a missing requirement, with the path it looked in
-    }
-    const blocked = cases.filter(
-        (testCase) => (!tc || testCase.id === specRef) && testCase.openQuestions?.length,
-    );
+    const blocked = cases.filter((testCase) => testCase.openQuestions?.length);
     if (blocked.length === 0) {
         record('questions', 'ok', 'no open clarification blocks this spec');
         return;
@@ -331,7 +385,9 @@ async function main(): Promise<number> {
     await probeApp(values['app-url']);
     probePlaywrightCli();
     probeLeakedRuns();
-    probeOpenQuestions();
+    const cases = specTestCases();
+    probeApproval(cases);
+    probeOpenQuestions(cases);
 
     const blocked = checks.some((check) => check.status === 'fail');
 

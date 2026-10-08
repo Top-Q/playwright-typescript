@@ -11,7 +11,10 @@ import { expect } from '@playwright/test';
 
 test(
     'Assign Work Package to a current Project Member',
-    { tag: ['@ui', '@workpackage', '@regression', '@TC-WP-006-01'] },
+    {
+        tag: ['@ui', '@workpackage', '@regression', '@TC-WP-006-01'],
+        annotation: { type: 'built-from', description: 'TC-WP-006-01@13a3c3926fab5318' },
+    },
     async ({ readyOverviewPage }) => {
         // Step 2 reads the status of every project member one row at a time, and
         // the roster only ever grows on a shared instance, so this test runs for

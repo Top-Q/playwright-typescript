@@ -6,6 +6,9 @@
     "title": "text",
     "type": "text",
     "status": "text",
+    "approved": "checkbox",
+    "rejected": "checkbox",
+    "approved_hash": "text",
     "category": "text",
     "name": "text",
     "section": "text",
@@ -26,7 +29,6 @@
     "permission_rows": "multitext",
     "data_fields": "multitext",
     "actors": "multitext",
-    "automated_by": "multitext",
     "nfr": "multitext",
     "constraints": "multitext",
     "sources": "multitext",
@@ -40,6 +42,11 @@
     "version": "text",
     "prepared_for": "text",
     "prepared_by": "text",
-    "distribution": "text"
+    "distribution": "text",
+    "file": "text",
+    "mode": "text",
+    "covers": "multitext",
+    "built_from": "multitext",
+    "stale": "multitext"
   }
 }

@@ -96,8 +96,13 @@ Otherwise, correct the vault.
   closed-children question'."_ TC-WP-004-04 and TC-WP-013-03 are worked examples.
 - **Drop properties that no longer apply** — a data field the behaviour does not depend on — and say
   so in the notes.
-- **An automated test case** (`automated_by` not empty) means a test asserts the old behaviour. Name
-  it in your report; changing it is a test change under rules 21 and 22, not a note edit.
+- **An approved test case you rewrite loses its approval.** That is intended: the person approved
+  the old text. `vault:lint -- --fix` unticks `approved`; never tick it again yourself
+  (rule 30). Name it in your report so the user can review it under **Awaiting approval**.
+- **An automated test case** (its `## Automated by` table lists a test) means a test asserts the old
+  behaviour. Once the corrected test case is approved again, `vault:lint -- --fix` lists that test
+  under **Needs attention → Stale tests**. Name it in your report; changing it is a test change under
+  rules 21 and 22, not a note edit.
 
 ## 5. Mirror the change into the SRS
 

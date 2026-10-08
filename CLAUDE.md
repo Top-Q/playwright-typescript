@@ -101,12 +101,17 @@ wins and the editor is stale; the diagnostic recipe is in
 
 ### Test integrity
 
-| #   | Rule                                                                                                                                       | Enforced by |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------ | ----------- |
-| 19  | Every test runs in isolation. No test depends on another's side effects, and no test assumes execution order.                              | review only |
-| 20  | A test that deletes an entity creates that entity itself, in the same test.                                                                | review only |
-| 21  | Never weaken a test to make it pass. Deleting an assertion, loosening a matcher, or adding a sleep to close out a red run is a failed run. | review only |
-| 22  | A known product bug is `test.fixme()` with a comment naming the decision or issue — never a silent skip and never a deleted assertion.     | review only |
+| #   | Rule                                                                                                                                                                | Enforced by  |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| 19  | Every test runs in isolation. No test depends on another's side effects, and no test assumes execution order.                                                       | review only  |
+| 20  | A test that deletes an entity creates that entity itself, in the same test.                                                                                         | review only  |
+| 21  | Never weaken a test to make it pass. Deleting an assertion, loosening a matcher, or adding a sleep to close out a red run is a failed run.                          | review only  |
+| 22  | A known product bug is `test.fixme()` with a comment naming the decision or issue — never a silent skip and never a deleted assertion.                              | review only  |
+| 30  | Only a person approves a test case. An agent drafts it (`approved: false`) or revises it, and never ticks `approved`.                                               | review only² |
+| 31  | `tests/ui/saucedemo` tests saucedemo.com, not OpenProject. It is outside the requirement vault: never tag it, draft test cases for it, or count it toward coverage. | `gate:vault` |
+
+² `vault:lint` revokes an approval whenever the approved text changes, and `/gen-test` preflight
+refuses an unapproved test case, but neither can tell who ticked `approved`. The git diff can.
 
 Rule 21 has no escape hatch and needs none: a red run you cannot honestly fix is a result, and
 reporting it is finishing the job.
@@ -133,7 +138,7 @@ exactly that until the source was read. The **correct-requirement** skill is how
 
 ### Changing a rule
 
-Edit it here, in a commit that says which of these it does: **add** one (next free number is **30** —
+Edit it here, in a commit that says which of these it does: **add** one (next free number is **32** —
 never reuse a retired one), **amend** one (edit in place, then fix every file that relied on the old
 wording), **retire** one (strike it with a one-line reason and the date, leaving the number
 occupied), **relocate** one (move the text to wherever it is actually operative — a skill, an agent —
@@ -167,8 +172,13 @@ The requirements live in **`specs/product/vault/`**, an Obsidian vault, and it i
 edit a note in place — there is no generator behind it and no second copy. Three habits keep it
 consistent, and `vault:lint` (part of `gate:all`) fails when one slips: links point one way (test
 case → requirement → rule), related text is embedded rather than copied, and prose never restates a
-property. A test covering a test case carries its `@TC-…` tag; `vault:lint -- --fix` records it in
-the vault.
+property. A test covering a test case carries its `@TC-…` tag and a `built-from` annotation naming
+the approved text it was built from; `vault:lint -- --fix` generates a note per test in
+`Automated Tests/` from them, and lists a test as stale when its test case changes.
+
+Test cases are **drafted by Claude and approved by a person**: each has an `approved` checkbox,
+and a `rejected` one for a test case sent back. `vault:lint -- --fix` records which text was
+approved, and unticks `approved` when that text changes. `/gen-test` refuses a test case that is not approved.
 
 **Changes to this repository's own tooling need no specification document** — write the code. The
 gates and rules 1–25 govern it, and unlike a document they are executable.
@@ -181,6 +191,8 @@ of it here. What the skill descriptions do not tell you is which one to reach fo
 - **`/gen-test <FR-id|TC-id|path>` is the normal way to create a UI test** — staged pipeline,
   subagents, deterministic gates, its own branch. **write-web-test** / **write-api-test** are the
   single-shot alternative, for when the pipeline is more machinery than the job needs.
+- **draft-test-cases** writes new test cases for a requirement as drafts for a person to approve
+  in Obsidian, and revises the ones they reject. It never approves (rule 30).
 - When a requirement, rule or test case may not match the app — the user doubts it, or a test fails
   because the spec asserts behaviour the app lacks — **correct-requirement** checks it against the
   source and corrects it with evidence (rule 29).

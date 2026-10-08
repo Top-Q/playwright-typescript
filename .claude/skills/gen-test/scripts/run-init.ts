@@ -99,6 +99,19 @@ function renderTestCase(testCase: TestCase, requirement: Requirement): string {
     lines.push('');
     lines.push(`- **Type:** ${testCase.type ?? 'unspecified'}`);
     lines.push(`- **Requirement:** ${requirement.id ?? '?'} — ${requirement.text?.trim() ?? ''}`);
+    if (testCase.approvedHash) {
+        lines.push(
+            `- **Built from:** approved text \`${testCase.approvedHash}\`. Annotate the test with ` +
+                `\`{ type: 'built-from', description: '${testCase.id}@${testCase.approvedHash}' }\`.`,
+        );
+    } else {
+        lines.push(
+            `- **Not approved (${testCase.status ?? 'draft'}):** no person has approved this test ` +
+                'case yet; it was included with --allow-unapproved and may still change. There is ' +
+                'no approved text to annotate the test with, so `vault:lint` fails on the test ' +
+                'until the test case is approved and the annotation added.',
+        );
+    }
     for (const question of testCase.openQuestions ?? []) {
         lines.push(
             `- **Blocked by open question ${question.id}:** ${question.title} The expected result ` +

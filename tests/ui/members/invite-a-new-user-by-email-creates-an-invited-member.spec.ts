@@ -4,7 +4,10 @@ import { expect } from '@playwright/test';
 
 test(
     "Invite a new user by email creates an 'Invited' member",
-    { tag: ['@ui', '@members', '@regression', '@TC-MEM-001-02'] },
+    {
+        tag: ['@ui', '@members', '@regression', '@TC-MEM-001-02'],
+        annotation: { type: 'built-from', description: 'TC-MEM-001-02@85e65386d8a249d5' },
+    },
     async ({ readyOverviewPage }) => {
         // Unique local part guarantees the target email has no existing account
         // and keeps the test re-runnable without depending on other tests.
@@ -19,8 +22,7 @@ test(
         });
 
         await test.step('And Target email has no existing account', async () => {
-            const alreadyMember =
-                await membersPage.hasMemberWithName(invitedEmail);
+            const alreadyMember = await membersPage.hasMemberWithName(invitedEmail);
             expect(alreadyMember).toBe(false);
         });
 
@@ -46,9 +48,7 @@ test(
             const isListed = await membersPage.hasMemberWithName(invitedEmail);
             expect(isListed).toBe(true);
 
-            invitedRow = await membersPage
-                .memberTable()
-                .getRowByMemberName(invitedEmail);
+            invitedRow = await membersPage.memberTable().getRowByMemberName(invitedEmail);
 
             const status = await invitedRow.getStatus();
             expect(status.toLowerCase()).toContain('invited');
@@ -66,9 +66,7 @@ test(
 
         await test.step('Cleanup: remove the invited member created by this test', async () => {
             membersPage = await membersPage.clickSidebarAll();
-            const row = await membersPage
-                .memberTable()
-                .getRowByMemberName(invitedEmail);
+            const row = await membersPage.memberTable().getRowByMemberName(invitedEmail);
             await row.removeMember();
         });
     },

@@ -6,7 +6,9 @@
  * Obsidian by people and agents alike. Nothing regenerates it, so nothing
  * repairs it either: this script, run by gate:all, is what stands between an
  * edit and a vault that disagrees with itself. It writes nothing, except with
- * --fix, which rewrites the one derived property (rule 6) from its source.
+ * --fix, which rewrites what is derived: the notes in `Automated Tests/` from
+ * the tests (rule 6), `Dashboard.md` from everything, and approved_hash
+ * (rule 10) — recorded or revoked, never invented.
  *
  * The rules make every fact live in exactly one place:
  *
@@ -19,9 +21,14 @@
  *   4. Titles carry no ids, and an id in prose is a link, never bare text.
  *   5. A precondition does not restate the `actors` property ("Logged in as a
  *      Viewer").
- *   6. A test case's `automated_by` lists exactly the spec files tagged with its
- *      id (`tag: ['@ui', '@TC-WP-004-03']`). The tag is the fact; the property
- *      is a copy for Obsidian, and a copy nobody compares drifts.
+ *   6. Every test under tests/ui and tests/api has a note in `Automated Tests/`
+ *      saying exactly what the code says: its title, mode, the test cases its
+ *      `@TC-…` tags cover, and the approved text of each it was built from (a
+ *      `built-from` annotation, required for every `@TC-…` tag). The code is the
+ *      fact; the note is a copy for Obsidian, and a copy nobody compares drifts.
+ *      Links run test → test case, so a test case lists its tests through a
+ *      Bases query, never a property. Directories in OUTSIDE_THE_VAULT test
+ *      another application: they get no note, and may not cover a test case.
  *   7. Each kind has a closed set of `##` body sections, and its required ones
  *      are present and not empty. Part of a note's structure is Markdown — a
  *      test case's steps are the list under `## Steps` — and /gen-test finds
@@ -30,15 +37,35 @@
  *      `module/*` tag names a module hub (a template's `module/MODULE` does not).
  *   9. Every property is declared in `.obsidian/types.json`, as a list type
  *      exactly when its values are lists, so Obsidian's editor does not guess.
+ *  10. A test case carries two checkboxes, `approved` and the optional
+ *      `rejected`; neither ticked is a draft, and both ticked is an error. An
+ *      approval holds only for the text a person approved: `approved_hash`
+ *      records a hash of that text, and once the text changes the approval is
+ *      stale and --fix unticks it. --fix records an approval a person gave and
+ *      revokes a stale one — it never approves anything itself. A rejected test
+ *      case says why under `## Notes`.
  *
  * `_templates/` holds the templates Obsidian creates notes from; it is not
  * linted, and nothing else reads it.
  */
 
+import { createHash } from 'node:crypto';
 import { parseArgs } from 'node:util';
 import * as fs from 'fs';
 import * as path from 'path';
 import { load } from 'js-yaml';
+import {
+    AutomatedTest,
+    BUILT_FROM,
+    CoveredCase,
+    NOTES_FOLDER,
+    OUTSIDE_THE_VAULT,
+    noteName,
+    readAutomatedTests,
+    renderNote,
+    staleCases,
+} from './automated-tests';
+import { renderDashboard } from './vault-dashboard';
 
 const HELP = `
 Usage: vault-lint [options]
@@ -48,8 +75,11 @@ Checks every note in the requirement vault against the rules for its kind.
 Options:
   -h, --help          Show this help message
       --vault <dir>   Vault directory (default: specs/product/vault)
-      --tests <dir>   Where Playwright specs live (default: tests)
-      --fix           Rewrite each test case's automated_by from the @TC-… tags in the tests
+      --tests <dirs>  Comma-separated directories of the tests the vault tracks
+                      (default: tests/ui,tests/api)
+      --fix           Record approved_hash on a newly approved test case, untick one
+                      whose text changed since its approval, and rewrite Automated Tests/
+                      and Dashboard.md from the tests
 `;
 
 type Properties = Record<string, string | string[] | undefined>;
@@ -93,15 +123,28 @@ const SCHEMAS: Record<string, Schema> = {
             title: [],
             requirement: ['requirement'],
             actors: ['user-class'],
-            automated_by: [],
+            approved: [],
         },
         optional: {
+            rejected: [],
+            approved_hash: [],
             business_rules: RULES,
             permission_rows: ['permission'],
             data_fields: ['entity'],
             nfr: ['nfr'],
             constraints: ['constraint'],
         },
+    },
+    'automated-test': {
+        required: {
+            title: [],
+            file: [],
+            mode: [],
+            covers: ['test-case'],
+            built_from: [],
+            stale: ['test-case'],
+        },
+        optional: {},
     },
     'user-story': { required: { id: [], source: SRS }, optional: { actor: ['user-class'] } },
     'business-rule': { required: { id: [], source: SRS }, optional: {} },
@@ -168,6 +211,8 @@ const SCHEMAS: Record<string, Schema> = {
     },
     'srs-section': { required: { section: [], title: [] }, optional: {} },
     module: { required: {}, optional: {} },
+    // Generated by --fix (rule 6); its layout is free, like an index note's.
+    dashboard: { required: {}, optional: {} },
     index: { required: {}, optional: {} },
 };
 
@@ -185,7 +230,12 @@ const BODY: Record<string, { required: string[]; optional?: string[] }> = {
     // vault.ts, which hands /gen-test its spec, reads these three. Preconditions
     // is optional: a test case whose only setup is who runs it states that in
     // `actors`, and vault.ts turns it into the first precondition.
-    'test-case': { required: ['Steps', 'Expected result'], optional: ['Preconditions'] },
+    'test-case': {
+        required: ['Steps', 'Expected result', 'Automated by'],
+        optional: ['Preconditions'],
+    },
+    // Generated (rule 6): one line of prose saying so, and no sections.
+    'automated-test': { required: [] },
     'user-story': { required: ['Story', 'Referenced by'] },
     'business-rule': { required: ['Rule', 'Referenced by'] },
     'rbac-rule': { required: ['Rule', 'Referenced by'] },
@@ -358,6 +408,22 @@ function lint(notes: Map<string, Note>, bases: Set<string>, note: Note): string[
                 ),
             );
         }
+
+        // Rule 10: checkboxes, not both ticked, and a rejection says why.
+        for (const key of CHECKBOXES) {
+            const value = note.properties[key];
+            if (value !== undefined && typeof value !== 'boolean') {
+                problems.push(
+                    where(`${key} is "${String(value)}"; it is a checkbox — true or false`),
+                );
+            }
+        }
+        if (isTicked(note, 'approved') && isTicked(note, 'rejected')) {
+            problems.push(where('is both approved and rejected; untick one'));
+        }
+        if (isTicked(note, 'rejected') && !note.sections.has('Notes')) {
+            problems.push(where('is rejected but has no "## Notes" section saying why'));
+        }
     }
 
     // Rule 7: the body's sections, which is where half a test case lives.
@@ -431,47 +497,195 @@ function lint(notes: Map<string, Note>, bases: Set<string>, note: Note): string[
     return problems;
 }
 
-// ------------------------------------------------------------ automated_by
+// ---------------------------------------------------------------- approval
 
-/** `'@TC-WP-004-03'` inside a Playwright `tag: [...]`. */
-const TEST_CASE_TAG = /['"`]@(TC-[A-Z]+-\d+-\d+)['"`]/g;
+/** A test case's review checkboxes. Unticked or absent, either one is false. */
+const CHECKBOXES = ['approved', 'rejected'];
 
-function specFiles(dir: string): string[] {
-    if (!fs.existsSync(dir)) return [];
-    return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-        const full = path.join(dir, entry.name);
-        if (entry.isDirectory()) return specFiles(full);
-        return entry.name.endsWith('.spec.ts') ? [full] : [];
+function isTicked(note: Note, key: string): boolean {
+    return String(note.properties[key]) === 'true';
+}
+
+/** Not part of what a person approves: the review itself, derived and housekeeping properties. */
+const NOT_APPROVED = new Set([...CHECKBOXES, 'approved_hash', ...HOUSEKEEPING]);
+
+/**
+ * A hash of everything a person approves when approving a test case: its
+ * properties (type, title, requirement, actors, rules …) and the sections a
+ * test is generated from. `## Notes` is left out, so discussing a test case
+ * does not revoke its approval. An embedded block (`![[TC-X#^setup]]`) counts
+ * as the text it shows, so editing the block revokes every test case that
+ * embeds it, not only the one it lives in.
+ */
+function approvalHash(notes: Map<string, Note>, note: Note): string {
+    const properties = Object.keys(note.properties)
+        .filter((key) => !NOT_APPROVED.has(key))
+        .sort()
+        .map((key) => [key, note.properties[key]]);
+    const embedded = (text: string): string =>
+        text.replace(/!\[\[([^\]|#]+)#\^([\w-]+)\]\]/g, (embed, target: string, block: string) => {
+            const body = notes.get(target.toLowerCase())?.body ?? '';
+            return new RegExp(`^(.*) \\^${block}$`, 'm').exec(body)?.[1] ?? embed;
+        });
+    const sections = ['Preconditions', 'Steps', 'Expected result'].map((heading) => [
+        heading,
+        embedded(note.sections.get(heading) ?? ''),
+    ]);
+    return createHash('sha256')
+        .update(JSON.stringify({ properties, sections }))
+        .digest('hex')
+        .slice(0, 16);
+}
+
+/** Rewrites a note's `approved` and `approved_hash` in its frontmatter, leaving every other line alone. */
+function writeApproval(note: Note, approved: boolean, hash?: string): void {
+    const content = fs.readFileSync(note.file, 'utf8').replace(/\r\n/g, '\n');
+    const updated = content.replace(/^---\n[\s\S]*?\n---\n/, (frontmatter) =>
+        frontmatter
+            .replace(/^approved_hash:.*\n/m, '')
+            .replace(
+                /^approved:.*\n/m,
+                `approved: ${approved}\n${hash ? `approved_hash: ${hash}\n` : ''}`,
+            ),
+    );
+    fs.writeFileSync(note.file, updated);
+}
+
+// --------------------------------------------------------- automated tests
+
+/** Each test case's module tags and, when it is approved, its approved_hash. */
+function coveredCases(notes: Map<string, Note>): Map<string, CoveredCase> {
+    const cases = new Map<string, CoveredCase>();
+    for (const note of notes.values()) {
+        if (note.kind !== 'test-case') continue;
+        cases.set(note.name, {
+            modules: toList(note.properties.tags).filter((tag) => tag.startsWith('module/')),
+            approvedHash: isTicked(note, 'approved')
+                ? String(note.properties.approved_hash ?? '') || undefined
+                : undefined,
+        });
+    }
+    return cases;
+}
+
+/** The target of the first link in a property: `[[FR-WP-004]]` → `FR-WP-004`. */
+function linkTarget(value: string | string[] | undefined): string {
+    LINK.lastIndex = 0;
+    return LINK.exec(String(toList(value)[0] ?? ''))?.[1] ?? '';
+}
+
+/** `Dashboard.md` as it should read: coverage computed from the notes and the tests. */
+function dashboard(notes: Map<string, Note>, tests: AutomatedTest[]): string {
+    const all = [...notes.values()];
+    const moduleOf = (note: Note): string | undefined =>
+        toList(note.properties.tags)
+            .find((tag) => tag.startsWith('module/'))
+            ?.slice('module/'.length);
+    const cases = coveredCases(notes);
+    return renderDashboard({
+        modules: new Map(
+            all
+                .filter((note) => note.kind === 'module')
+                .map((note) => [
+                    note.name,
+                    String(toList(note.properties.aliases)[0] ?? note.name),
+                ]),
+        ),
+        requirements: all
+            .filter((note) => note.kind === 'requirement')
+            .map((note) => ({ name: note.name, module: moduleOf(note) }))
+            .sort((a, b) => a.name.localeCompare(b.name, 'en', { numeric: true })),
+        testCases: all
+            .filter((note) => note.kind === 'test-case')
+            .map((note) => ({
+                name: note.name,
+                requirement: linkTarget(note.properties.requirement),
+                module: moduleOf(note),
+                type: String(note.properties.type),
+                state: isTicked(note, 'approved')
+                    ? ('approved' as const)
+                    : isTicked(note, 'rejected')
+                      ? ('rejected' as const)
+                      : ('draft' as const),
+            })),
+        tests: tests.map((test) => ({
+            note: noteName(test),
+            mode: test.mode,
+            covers: [...test.covers].sort(),
+            stale: staleCases(test, cases),
+        })),
     });
 }
 
-/**
- * Test case id → the spec files tagged with it, repo-relative and sorted.
- *
- * The tag in the test file is the fact; `automated_by` in the vault is a copy,
- * kept so Obsidian can show and query it. A copy nobody compares drifts, so this
- * compares it — and `--fix` rewrites it from the tags.
- */
-function taggedTests(repoRoot: string, testsDir: string): Map<string, string[]> {
-    const tagged = new Map<string, string[]>();
-    for (const file of specFiles(testsDir)) {
-        const relative = path.relative(repoRoot, file).split(path.sep).join('/');
-        for (const match of fs.readFileSync(file, 'utf8').matchAll(TEST_CASE_TAG)) {
-            const files = tagged.get(match[1]) ?? [];
-            if (!files.includes(relative)) files.push(relative);
-            tagged.set(match[1], files.sort());
-        }
-    }
-    return tagged;
+const DASHBOARD = 'Dashboard.md';
+
+/** A file's text with LF line endings (a checkout may have made them CRLF); undefined when absent. */
+function readNormalized(file: string): string | undefined {
+    return fs.existsSync(file) ? fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n') : undefined;
 }
 
-/** Rewrites a note's `automated_by` property in place, leaving every other line alone. */
-function writeAutomatedBy(note: Note, files: string[]): void {
-    const content = fs.readFileSync(note.file, 'utf8').replace(/\r\n/g, '\n');
-    const value = files.length
-        ? `automated_by:\n${files.map((file) => `  - ${file}`).join('\n')}\n`
-        : 'automated_by: []\n';
-    fs.writeFileSync(note.file, content.replace(/^automated_by:.*\n(?: {2}- .*\n)*/m, value));
+/**
+ * Rule 6: the note each test should have in `Automated Tests/` (name → full
+ * text), and what is wrong with the tests' links to the vault.
+ */
+function automatedTestNotes(
+    notes: Map<string, Note>,
+    tests: AutomatedTest[],
+): { expected: Map<string, string>; problems: string[] } {
+    const problems: string[] = [];
+    const cases = coveredCases(notes);
+    const expected = new Map<string, string>();
+    const taken = new Map<string, string>();
+    for (const test of tests) {
+        const title = `${test.file} "${test.titlePath.join(' › ')}"`;
+        problems.push(...test.problems);
+        for (const id of test.covers) {
+            const testCase = cases.get(id);
+            if (!testCase) {
+                problems.push(`${title}: tagged @${id}, which is not a test case in the vault`);
+            } else if (!test.builtFrom.has(id)) {
+                problems.push(
+                    `${title}: tagged @${id} but has no ${BUILT_FROM} annotation saying which ` +
+                        'approved text it was built from — ' +
+                        (testCase.approvedHash
+                            ? `check the test against ${id}, then add ` +
+                              `{ type: '${BUILT_FROM}', description: '${id}@${testCase.approvedHash}' }`
+                            : `${id} is not approved yet; approve it, then annotate the test`),
+                );
+            }
+        }
+        for (const id of test.builtFrom.keys()) {
+            if (!test.covers.includes(id)) {
+                problems.push(
+                    `${title}: has a ${BUILT_FROM} annotation for ${id} but no @${id} tag`,
+                );
+            }
+        }
+        const name = noteName(test);
+        const clash = taken.get(name.toLowerCase());
+        if (clash) {
+            problems.push(`${title}: has the same title as ${clash}; rename one of them`);
+            continue;
+        }
+        taken.set(name.toLowerCase(), title);
+        expected.set(name, renderNote(test, cases));
+    }
+    return { expected, problems };
+}
+
+/** `Automated Tests/` as it is on disk: note name → text. */
+function generatedNotes(vaultDir: string): Map<string, string> {
+    const dir = path.join(vaultDir, NOTES_FOLDER);
+    if (!fs.existsSync(dir)) return new Map();
+    return new Map(
+        fs
+            .readdirSync(dir)
+            .filter((file) => file.endsWith('.md'))
+            .map((file) => [
+                path.basename(file, '.md'),
+                fs.readFileSync(path.join(dir, file), 'utf8').replace(/\r\n/g, '\n'),
+            ]),
+    );
 }
 
 // -------------------------------------------------------------------- main
@@ -481,7 +695,7 @@ const { values } = parseArgs({
     options: {
         help: { type: 'boolean', short: 'h', default: false },
         vault: { type: 'string', default: 'specs/product/vault' },
-        tests: { type: 'string', default: 'tests' },
+        tests: { type: 'string', default: 'tests/ui,tests/api' },
         fix: { type: 'boolean', default: false },
     },
 });
@@ -498,13 +712,136 @@ if (!fs.existsSync(vaultDir)) {
     process.exit(1);
 }
 
-const files = walk(vaultDir);
+interface Vault {
+    files: string[];
+    notes: Map<string, Note>;
+    bases: Set<string>;
+}
+
 // Obsidian resolves [[Name]] case-insensitively, so lookups do too — keyed by
-// the lowercased name. Two files whose names differ only by case are
-// ambiguous: `![[Test cases.base]]` once embedded the vault-wide `Test
-// Cases.base` instead of the per-requirement query, and a case-sensitive
-// lookup called that resolved.
+// the lowercased name.
+function loadVault(): Vault {
+    const files = walk(vaultDir);
+    return {
+        files,
+        notes: new Map(
+            files
+                .filter((file) => file.endsWith('.md'))
+                .map((file) => [path.basename(file, '.md').toLowerCase(), parseNote(file)]),
+        ),
+        bases: new Set(
+            files
+                .filter((file) => file.endsWith('.base'))
+                .map((file) => path.basename(file).toLowerCase()),
+        ),
+    };
+}
+
+/**
+ * Rule 10. Only a person approves a test case, by ticking `approved`; this
+ * records which text they approved, and notices when that text changes. Each
+ * finding carries the problem to report and the fix to apply instead.
+ */
+function approvalFindings(
+    notes: Map<string, Note>,
+): { note: Note; problem: string; fix: () => void; revokes: boolean }[] {
+    const findings: { note: Note; problem: string; fix: () => void; revokes: boolean }[] = [];
+    for (const note of notes.values()) {
+        if (note.kind !== 'test-case' || note.properties.approved === undefined) continue;
+        const approved = isTicked(note, 'approved');
+        const stored = note.properties.approved_hash;
+        if (approved && stored === undefined) {
+            findings.push({
+                note,
+                problem:
+                    'approved, but the approval is not recorded yet — run `npm.cmd run vault:lint -- --fix`',
+                fix: () => writeApproval(note, true, approvalHash(notes, note)),
+                revokes: false,
+            });
+        } else if (approved && String(stored) !== approvalHash(notes, note)) {
+            findings.push({
+                note,
+                problem:
+                    'changed since it was approved, so the approval no longer holds — ' +
+                    '`npm.cmd run vault:lint -- --fix` unticks it for re-approval',
+                fix: () => writeApproval(note, false),
+                revokes: true,
+            });
+        } else if (!approved && stored !== undefined) {
+            findings.push({
+                note,
+                problem: 'is not approved but still carries an approved_hash',
+                fix: () => writeApproval(note, false),
+                revokes: false,
+            });
+        }
+    }
+    return findings;
+}
+
+const testDirs = values.tests
+    .split(',')
+    .map((dir) => dir.trim())
+    .filter(Boolean);
+const tests = readAutomatedTests(repoRoot, testDirs);
+
+// --fix rewrites in dependency order — approvals first, because a test's
+// `stale` list depends on them — then checks the result like any other run.
+if (values.fix) {
+    const findings = approvalFindings(loadVault().notes);
+    findings.forEach((finding) => finding.fix());
+    const recorded = findings.filter((f) => !f.revokes && isTicked(f.note, 'approved'));
+    const revoked = findings.filter((f) => f.revokes);
+    if (recorded.length) {
+        console.log(
+            `vault-lint: recorded the approval of ${recorded.map((f) => f.note.name).join(', ')}`,
+        );
+    }
+    if (revoked.length) {
+        console.log(
+            'vault-lint: changed since approval, unticked approved — re-approve in Obsidian: ' +
+                revoked.map((f) => f.note.name).join(', '),
+        );
+    }
+
+    const { expected } = automatedTestNotes(loadVault().notes, tests);
+    const actual = generatedNotes(vaultDir);
+    const dir = path.join(vaultDir, NOTES_FOLDER);
+    let written = 0;
+    let removed = 0;
+    for (const [name, text] of expected) {
+        if (actual.get(name) === text) continue;
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(path.join(dir, `${name}.md`), text);
+        written++;
+    }
+    for (const name of actual.keys()) {
+        if (expected.has(name)) continue;
+        fs.rmSync(path.join(dir, `${name}.md`));
+        removed++;
+    }
+    if (written || removed) {
+        console.log(
+            `vault-lint: ${NOTES_FOLDER}/ — wrote ${written} note(s), removed ${removed} ` +
+                'whose test is gone or out of scope',
+        );
+    }
+
+    // Last: the dashboard counts the notes written above.
+    const board = dashboard(loadVault().notes, tests);
+    const boardFile = path.join(vaultDir, DASHBOARD);
+    if (readNormalized(boardFile) !== board) {
+        fs.writeFileSync(boardFile, board);
+        console.log(`vault-lint: rewrote ${DASHBOARD}`);
+    }
+}
+
+const { files, notes, bases } = loadVault();
 const problems: string[] = [];
+
+// Two files whose names differ only by case are ambiguous: `![[Test
+// cases.base]]` once embedded the vault-wide `Test Cases.base` instead of the
+// per-requirement query, and a case-sensitive lookup called that resolved.
 const byName = new Map<string, string[]>();
 for (const file of files) {
     const key = path.basename(file).toLowerCase();
@@ -517,14 +854,6 @@ for (const [, clashing] of byName) {
         );
     }
 }
-const notes = new Map(
-    files
-        .filter((file) => file.endsWith('.md'))
-        .map((file) => [path.basename(file, '.md').toLowerCase(), parseNote(file)]),
-);
-const bases = new Set(
-    files.filter((file) => file.endsWith('.base')).map((file) => path.basename(file).toLowerCase()),
-);
 problems.push(...[...notes.values()].flatMap((note) => lint(notes, bases, note)));
 
 // Obsidian's property editor reads each property's type from .obsidian/types.json
@@ -556,36 +885,56 @@ if (fs.existsSync(typesFile)) {
     }
 }
 
-const tagged = taggedTests(repoRoot, path.resolve(repoRoot, values.tests));
-let fixed = 0;
-for (const [id, testFiles] of tagged) {
-    if (notes.get(id.toLowerCase())?.kind !== 'test-case') {
+problems.push(
+    ...approvalFindings(notes).map((finding) => `${finding.note.name}: ${finding.problem}`),
+);
+
+// Rule 6: Automated Tests/ says exactly what the code says.
+const automated = automatedTestNotes(notes, tests);
+problems.push(...automated.problems);
+
+// Rule 31 (CLAUDE.md): a test of another application never covers a test case.
+for (const test of readAutomatedTests(repoRoot, OUTSIDE_THE_VAULT, [])) {
+    if (test.covers.length || test.builtFrom.size) {
         problems.push(
-            `${testFiles.join(', ')}: tagged @${id}, which is not a test case in the vault`,
+            `${test.file} "${test.titlePath.join(' › ')}": tests an application outside the ` +
+                'vault (rule 31), so it may not carry @TC-… tags or built-from annotations',
         );
     }
 }
-for (const note of notes.values()) {
-    if (note.kind !== 'test-case') continue;
-    const expected = tagged.get(note.name) ?? [];
-    const actual = toList(note.properties.automated_by).map(String).sort();
-    if (actual.join('\n') === expected.join('\n')) continue;
-    if (values.fix) {
-        writeAutomatedBy(note, expected);
-        fixed++;
-    } else {
-        problems.push(
-            `${note.name}: automated_by is [${actual.join(', ')}] but the tests tagged ` +
-                `@${note.name} are [${expected.join(', ')}] — run \`npm.cmd run vault:lint -- --fix\``,
-        );
-    }
+const onDisk = generatedNotes(vaultDir);
+const outOfDate = [
+    ...[...automated.expected]
+        .filter(([name, text]) => onDisk.get(name) !== text)
+        .map(([name]) => name),
+    ...[...onDisk.keys()].filter((name) => !automated.expected.has(name)),
+];
+if (outOfDate.length) {
+    problems.push(
+        `${NOTES_FOLDER}/: ${outOfDate.length} note(s) differ from the tests ` +
+            `(${outOfDate.slice(0, 3).join(', ')}${outOfDate.length > 3 ? ', …' : ''}) — ` +
+            'run `npm.cmd run vault:lint -- --fix`',
+    );
 }
-if (fixed)
-    console.log(`vault-lint: rewrote automated_by on ${fixed} test case(s) from the test tags`);
+
+if (readNormalized(path.join(vaultDir, DASHBOARD)) !== dashboard(notes, tests)) {
+    problems.push(`${DASHBOARD}: out of date — run \`npm.cmd run vault:lint -- --fix\``);
+}
+
+// Not a failure: a stale test is a fact to act on, not an inconsistency. It is
+// listed in Obsidian under Needs attention → Stale tests, and on the dashboard.
+const coverage = coveredCases(notes);
+const stale = tests.filter((test) => staleCases(test, coverage).length > 0);
+if (stale.length) {
+    console.log(
+        `vault-lint: ${stale.length} test(s) were built from text that is no longer the approved ` +
+            `test case — review them: ${stale.map((test) => test.titlePath.join(' › ')).join('; ')}`,
+    );
+}
 
 problems.forEach((problem) => console.error(problem));
 if (problems.length) {
     console.error(`vault-lint: ${problems.length} problem(s) in ${notes.size} note(s)`);
     process.exit(1);
 }
-console.log(`vault-lint: ${notes.size} note(s), no problems`);
+console.log(`vault-lint: ${notes.size} note(s), ${tests.length} test(s), no problems`);

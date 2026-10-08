@@ -3,6 +3,24 @@ filters:
     - '!file.inFolder("_templates")'
 views:
   - type: table
+    name: Awaiting approval
+    filters:
+      and:
+        - file.hasTag("kind/test-case")
+        - approved != true
+    groupBy:
+      property: requirement
+      direction: ASC
+    order:
+      - file.name
+      - approved
+      - rejected
+      - type
+      - title
+      - actors
+    columnSize:
+      file.name: 211
+  - type: table
     name: Open questions
     filters:
       and:
@@ -31,10 +49,32 @@ views:
     filters:
       and:
         - file.hasTag("kind/test-case")
-        - automated_by.length == 0
+        - file.backlinks.filter(value.asFile().hasTag("kind/automated-test")).isEmpty()
+        - approved == true
     order:
       - file.name
       - requirement
       - title
     columnSize:
       file.name: 211
+  - type: table
+    name: Stale tests
+    filters:
+      and:
+        - file.hasTag("kind/automated-test")
+        - stale.length > 0
+    order:
+      - file.name
+      - stale
+      - covers
+      - file
+  - type: table
+    name: Tests covering no test case
+    filters:
+      and:
+        - file.hasTag("kind/automated-test")
+        - covers.length == 0
+    order:
+      - file.name
+      - mode
+      - file

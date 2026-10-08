@@ -4,7 +4,10 @@ import { expect } from '@playwright/test';
 
 test(
     "New Work Package defaults to Status='New' and Priority='Normal'",
-    { tag: ['@ui', '@workpackage', '@regression', '@TC-WP-003-01'] },
+    {
+        tag: ['@ui', '@workpackage', '@regression', '@TC-WP-003-01'],
+        annotation: { type: 'built-from', description: 'TC-WP-003-01@a56d0906e304bb60' },
+    },
     async ({ readyOverviewPage }) => {
         // The work package is created and deleted by this test, under a subject
         // unique to this run, so nothing here depends on data another test or an
