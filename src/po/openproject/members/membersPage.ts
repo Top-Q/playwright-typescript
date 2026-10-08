@@ -320,18 +320,26 @@ export class MembersPage extends BasePage<MembersPage> {
     }
 
     /**
-     * Types a name into the filter panel's Name field and applies the filter,
-     * waiting for the resulting page load.
+     * Types a name into the filter panel's Name field, applies the filter, and
+     * returns the reloaded list with the whole filtered set on one page.
+     *
+     * Same `GET` form as {@link filterByRole}, with the same trap: a plain
+     * `waitForLoadState('load')` resolves against the document still on
+     * screen, so a caller reading the table right after saw the *unfiltered*
+     * list — and a presence check passed on it regardless. The wait is on a
+     * non-empty `name=` in the URL instead.
      *
      * @aliases searchMemberByName, applyNameFilter, filterMembers
      * @prerequisites The filter panel is open — call {@link openFilter} first
-     * @observable-state The members table reloads showing only members matching the name
-     * @param name - The member name to filter by.
+     * @observable-state The members table reloads showing only members matching the name, on a single page; the URL carries `name`
+     * @param name - The member name, or part of it, to filter by.
+     * @returns The reloaded `MembersPage` showing the filtered list.
      */
-    async filterByName(name: string): Promise<void> {
+    async filterByName(name: string): Promise<MembersPage> {
         await this.filterNameInput.fill(name);
         await this.filterApplyButton.click();
-        await this.page.waitForLoadState('load');
+        await this.page.waitForURL(/[?&]name=[^&]/);
+        return await this.showAllOnOnePage();
     }
 
     /**

@@ -2,7 +2,7 @@
   "module": "members",
   "file": "members.json",
   "app": "openproject",
-  "generatedAt": "2026-08-12T15:16:28.027Z",
+  "generatedAt": "2026-10-08T14:59:48.812Z",
   "schemaVersion": 2,
   "classes": [
     {
@@ -141,15 +141,15 @@
         },
         {
           "name": "filterByName",
-          "signature": "filterByName(name: string): Promise<void>",
-          "description": "Types a name into the filter panel's Name field and applies the filter,\nwaiting for the resulting page load.",
+          "signature": "filterByName(name: string): Promise<MembersPage>",
+          "description": "Types a name into the filter panel's Name field, applies the filter, and\nreturns the reloaded list with the whole filtered set on one page.\n\nSame `GET` form as {@link filterByRole}, with the same trap: a plain\n`waitForLoadState('load')` resolves against the document still on\nscreen, so a caller reading the table right after saw the *unfiltered*\nlist — and a presence check passed on it regardless. The wait is on a\nnon-empty `name=` in the URL instead.",
           "aliases": [
             "searchMemberByName",
             "applyNameFilter",
             "filterMembers"
           ],
           "prerequisites": "The filter panel is open — call {@link openFilter} first",
-          "observableState": "The members table reloads showing only members matching the name"
+          "observableState": "The members table reloads showing only members matching the name, on a single page; the URL carries `name`"
         },
         {
           "name": "filterByRole",

@@ -210,10 +210,10 @@ truth** — three things worth knowing before you trust them:
 
 Real holes in coverage, recorded so they are not rediscovered. Nobody is committed to filling them.
 
-- **Five tests are not tagged.** 16 of the 21 tests cover a test case. Four check less than the
-  approved test case nearest them: removing, filtering and searching members (no check that
-  other members are hidden, or that a removed member loses access), and `Create basic board with a
-list`, which may rename the board's default list rather than add one. Each needs a stronger
+- **Four tests are not tagged.** 17 of the 21 tests cover a test case. Three check less than the
+  approved test case nearest them: removing a member and the sidebar's Invited view (no check that
+  a removed member loses access, or that only invited members are listed), and `Create basic board
+with a list`, which may rename the board's default list rather than add one. Each needs a stronger
   assertion, run against the app, before it is tagged. `Delete all boards` is a cleanup utility,
   not a requirement. **Needs attention → Tests covering no test case** is the worklist.
 - **No test case covers BR-WP-04's time-entry clause.** Deleting Work Packages with logged time asks

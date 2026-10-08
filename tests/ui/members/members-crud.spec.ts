@@ -166,9 +166,13 @@ test(
 
 test(
     'Filter members by name and verify filtered results',
-    { tag: ['@ui', '@members', '@regression'] },
+    {
+        tag: ['@ui', '@members', '@regression', '@TC-MEM-003-03'],
+        annotation: { type: 'built-from', description: 'TC-MEM-003-03@c85003b2f83c3c19' },
+    },
     async ({ readyOverviewPage }) => {
-        const memberEmail = `filterable-${Date.now()}@example.com`;
+        const nameFragment = `filterable-${Date.now()}`;
+        const memberEmail = `${nameFragment}@example.com`;
 
         let membersPage: MembersPage;
         await test.step('Given a member is added to the project', async () => {
@@ -178,14 +182,20 @@ test(
             await membersPage.addMember(memberEmail, 'Member');
         });
 
-        await test.step('When the user filters by the member email', async () => {
-            await membersPage.openFilter();
-            await membersPage.filterByName(memberEmail);
+        await test.step('And other members whose names do not match are listed', async () => {
+            const names = await membersPage.memberTable().getAllMemberNames();
+            expect(names.filter((name) => !name.includes(nameFragment)).length).toBeGreaterThan(0);
         });
 
-        await test.step('Then the matching member is shown in filtered results', async () => {
-            const hasMember = await membersPage.hasMemberWithName(memberEmail);
-            expect(hasMember).toBe(true);
+        await test.step(`When the user filters by the partial name "${nameFragment}"`, async () => {
+            await membersPage.openFilter();
+            membersPage = await membersPage.filterByName(nameFragment);
+        });
+
+        await test.step('Then only members whose name matches are shown', async () => {
+            const names = await membersPage.memberTable().getAllMemberNames();
+            expect(names.length).toBeGreaterThan(0);
+            expect(names.filter((name) => !name.includes(nameFragment))).toEqual([]);
         });
 
         // Cleanup: reload page to clear filter, then remove the member
