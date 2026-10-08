@@ -54,6 +54,38 @@ test('Create basic board with a list', {
   });
 });
 
+test('Rename an existing list', {
+  tag: ['@ui', '@board', '@regression', '@TC-BRD-003-02'],
+  annotation: { type: 'built-from', description: 'TC-BRD-003-02@d2a8960f06ae19e6' },
+}, async ({ readyOverviewPage }) => {
+
+  const boardName = `Automated board ${crypto.randomUUID().slice(0, 8)}`;
+
+  let newBoardPage: NewBoardPage;
+  await test.step(`Given a basic board "${boardName}" has a list named "To Do"`, async () => {
+    const boardsPage = await readyOverviewPage.mainMenu().clickBoardsLink();
+    const boardTypePage = await boardsPage.clickCreateBoardButton();
+    await boardTypePage.fillBoardName(boardName);
+    newBoardPage = await boardTypePage.clickBasicBoardButton();
+    await newBoardPage.getListByIndex(0).fillListName('To Do');
+    newBoardPage = await newBoardPage.reload();
+    expect(await newBoardPage.getListTitles()).toEqual(['To Do']);
+  });
+
+  await test.step('When the user renames the list to "Backlog"', async () => {
+    await newBoardPage.getListByIndex(0).fillListName('Backlog');
+  });
+
+  await test.step('Then the list is named "Backlog"', async () => {
+    expect(await newBoardPage.getListTitles()).toEqual(['Backlog']);
+  });
+
+  await test.step('And the name persists after a reload', async () => {
+    newBoardPage = await newBoardPage.reload();
+    expect(await newBoardPage.getListTitles()).toEqual(['Backlog']);
+  });
+});
+
 test('Create and delete a board', {
   tag: ['@ui', '@board', '@regression', '@TC-BRD-007-01'],
   annotation: { type: 'built-from', description: 'TC-BRD-007-01@f1fd4c0fe4864f6b' },
