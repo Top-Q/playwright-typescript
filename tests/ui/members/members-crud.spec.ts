@@ -270,7 +270,10 @@ test(
 
 test(
     'Sidebar navigation shows invited members',
-    { tag: ['@ui', '@members', '@regression'] },
+    {
+        tag: ['@ui', '@members', '@regression', '@TC-MEM-009-02'],
+        annotation: { type: 'built-from', description: 'TC-MEM-009-02@cec5de35ecd9c173' },
+    },
     async ({ readyOverviewPage }) => {
         const memberEmail = `invited-${Date.now()}@example.com`;
 
@@ -282,6 +285,12 @@ test(
             await membersPage.addMember(memberEmail, 'Member');
         });
 
+        await test.step('And members who are not invited are listed too', async () => {
+            const statuses = await membersPage.memberTable().getAllMemberStatuses();
+            expect(statuses).toContain('invited');
+            expect(statuses.filter((status) => status !== 'invited').length).toBeGreaterThan(0);
+        });
+
         await test.step('When the user clicks the "Invited" sidebar link', async () => {
             membersPage = await membersPage.clickSidebarInvited();
         });
@@ -289,6 +298,11 @@ test(
         await test.step('Then the invited member is shown in the list', async () => {
             const hasMember = await membersPage.hasMemberWithName(memberEmail);
             expect(hasMember).toBe(true);
+        });
+
+        await test.step('And only invited members are shown', async () => {
+            const statuses = await membersPage.memberTable().getAllMemberStatuses();
+            expect(statuses.filter((status) => status !== 'invited')).toEqual([]);
         });
 
         // Cleanup: go back to All and remove

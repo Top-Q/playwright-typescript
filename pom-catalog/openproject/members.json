@@ -2,7 +2,7 @@
   "module": "members",
   "file": "members.json",
   "app": "openproject",
-  "generatedAt": "2026-10-08T14:59:48.812Z",
+  "generatedAt": "2026-10-08T18:31:45.642Z",
   "schemaVersion": 2,
   "classes": [
     {
@@ -289,6 +289,19 @@
             "listMemberNames",
             "getMemberNames",
             "getAllMembers"
+          ],
+          "prerequisites": "The Members page is open",
+          "observableState": "None — read-only query"
+        },
+        {
+          "name": "getAllMemberStatuses",
+          "signature": "getAllMemberStatuses(): Promise<string[]>",
+          "description": "Returns the Status cell of every member currently displayed, trimmed,\nin table order — \"active\", \"invited\", \"locked permanently\" or\n\"registered\" (`translate_user_status`, `app/components/members/row_component.rb:147-149`).\nReflects the active filter and status view, like {@link getAllMemberNames}.",
+          "aliases": [
+            "listMemberStatuses",
+            "getStatuses",
+            "getMemberStatuses",
+            "statusColumn"
           ],
           "prerequisites": "The Members page is open",
           "observableState": "None — read-only query"

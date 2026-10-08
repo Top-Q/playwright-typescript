@@ -119,4 +119,21 @@ export class MemberTableComp extends BaseComponent<MemberTableComp> {
         const nameLinks = this.rootLocator.locator('tbody tr td.name a');
         return await nameLinks.allInnerTexts();
     }
+
+    /**
+     * Returns the Status cell of every member currently displayed, trimmed,
+     * in table order — "active", "invited", "locked permanently" or
+     * "registered" (`translate_user_status`, `app/components/members/row_component.rb:147-149`).
+     * Reflects the active filter and status view, like {@link getAllMemberNames}.
+     *
+     * @aliases listMemberStatuses, getStatuses, getMemberStatuses, statusColumn
+     * @prerequisites The Members page is open
+     * @observable-state None — read-only query
+     * @returns The displayed members' statuses, in table order.
+     */
+    async getAllMemberStatuses(): Promise<string[]> {
+        await this.nameColumnHeader.waitFor();
+        const statusCells = this.rootLocator.locator('tbody tr td.status');
+        return (await statusCells.allInnerTexts()).map((status) => status.trim());
+    }
 }
