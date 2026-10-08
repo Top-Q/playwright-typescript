@@ -1,20 +1,20 @@
 {
   "app": "openproject",
   "poRoot": "src/po/openproject",
-  "generatedAt": "2026-10-08T18:43:05.079Z",
+  "generatedAt": "2026-10-08T19:18:11.498Z",
   "schemaVersion": 2,
   "totals": {
     "modules": 8,
     "classes": 38,
-    "methods": 181
+    "methods": 183
   },
   "coverage": {
-    "methods": 181,
-    "withDescription": 181,
-    "withAliases": 155,
-    "withPrerequisites": 155,
-    "withObservableState": 155,
-    "fullyAnnotated": 155
+    "methods": 183,
+    "withDescription": 183,
+    "withAliases": 157,
+    "withPrerequisites": 157,
+    "withObservableState": 157,
+    "fullyAnnotated": 157
   },
   "modules": [
     {
@@ -75,7 +75,7 @@
       "module": "board",
       "file": "board.json",
       "classCount": 6,
-      "methodCount": 18,
+      "methodCount": 20,
       "classes": [
         {
           "name": "BoardsPage",
@@ -85,7 +85,7 @@
             "BoardsListPage",
             "BoardOverviewPage"
           ],
-          "methodCount": 3
+          "methodCount": 5
         },
         {
           "name": "BoardTableComp",

@@ -86,6 +86,48 @@ test('Rename an existing list', {
   });
 });
 
+test('A board title that duplicates another in a different case is accepted', {
+  tag: ['@ui', '@board', '@regression', '@TC-BRD-001-03'],
+  annotation: { type: 'built-from', description: 'TC-BRD-001-03@885ef05aff35b909' },
+}, async ({ readyOverviewPage }) => {
+
+  const suffix = crypto.randomUUID().slice(0, 8);
+  const firstTitle = `Sprint Board ${suffix}`;
+  const secondTitle = `sprint board ${suffix}`;
+
+  let boardsPage: BoardsPage;
+  await test.step(`Given a board titled "${firstTitle}" exists in the project`, async () => {
+    boardsPage = await readyOverviewPage.mainMenu().clickBoardsLink();
+    const boardTypePage = await boardsPage.clickCreateBoardButton();
+    await boardTypePage.fillBoardName(firstTitle);
+    const newBoardPage = await boardTypePage.clickBasicBoardButton();
+    boardsPage = await newBoardPage.clickBoardsLink();
+  });
+
+  await test.step(`When the user creates a board titled "${secondTitle}"`, async () => {
+    const boardTypePage = await boardsPage.clickCreateBoardButton();
+    await boardTypePage.fillBoardName(secondTitle);
+    const newBoardPage = await boardTypePage.clickBasicBoardButton();
+    boardsPage = await newBoardPage.clickBoardsLink();
+  });
+
+  await test.step('Then both boards are listed on the Boards overview', async () => {
+    boardsPage = await boardsPage.showAllOnOnePage();
+    const names = await boardsPage.getBoardNames();
+    expect(names.filter((name) => name.toLowerCase() === firstTitle.toLowerCase()).sort())
+      .toEqual([firstTitle, secondTitle].sort());
+  });
+
+  await test.step('Cleanup: delete both boards', async () => {
+    const boardTable: BoardTableComp = boardsPage.boardTable();
+    for (const title of [firstTitle, secondTitle]) {
+      const row = await boardTable.getRowByBoardName(title);
+      await row.clickDeleteButtonAndAcceptDeletion();
+      await boardTable.refresh();
+    }
+  });
+});
+
 test('Create and delete a board', {
   tag: ['@ui', '@board', '@regression', '@TC-BRD-007-01'],
   annotation: { type: 'built-from', description: 'TC-BRD-007-01@f1fd4c0fe4864f6b' },

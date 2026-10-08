@@ -2,7 +2,7 @@
   "module": "board",
   "file": "board.json",
   "app": "openproject",
-  "generatedAt": "2026-10-08T18:43:05.079Z",
+  "generatedAt": "2026-10-08T19:18:11.498Z",
   "schemaVersion": 2,
   "classes": [
     {
@@ -48,6 +48,31 @@
           ],
           "prerequisites": "The boards page is open and the list has at least `index + 1` boards",
           "observableState": "None — read-only query"
+        },
+        {
+          "name": "getBoardNames",
+          "signature": "getBoardNames(): Promise<string[]>",
+          "description": "Returns the name of every board on the current page of the list,\nexactly as displayed and in table order.\n\nUnlike {@link BoardTableComp.isRowForTableWithNameExists}, which is a\ncase-insensitive substring match, this lets a caller tell\n'Sprint Board' from 'sprint board'. The list is paginated (20 per page,\nsorted by name) — call {@link showAllOnOnePage} first to see them all.",
+          "aliases": [
+            "listBoardNames",
+            "getAllBoardNames",
+            "boardNames",
+            "getBoardTitles"
+          ],
+          "prerequisites": "The boards page is open",
+          "observableState": "None — read-only query"
+        },
+        {
+          "name": "showAllOnOnePage",
+          "signature": "showAllOnOnePage(): Promise<BoardsPage>",
+          "description": "Reloads the list with a page size of 100, so a board is not missed for\nbeing on a later page.\n\nThe boards table is paginated (`paginated?` is true in\n`modules/boards/app/components/boards/table_component.rb:46-48`), sorted\nby name, at the instance's default of 20 per page; 100 is the other\nallowed size (`per_page_options` \"20, 100\").",
+          "aliases": [
+            "disablePagination",
+            "showAllBoards",
+            "expandPageSize"
+          ],
+          "prerequisites": "The boards page is open",
+          "observableState": "The list shows up to 100 boards on one page"
         }
       ]
     },

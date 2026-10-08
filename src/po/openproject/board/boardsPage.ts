@@ -256,4 +256,44 @@ export class BoardsPage extends BasePage<BoardsPage> {
     async getBoardNameByIndex(index: number): Promise<string> {
         return await this.boardNamesTds.nth(index).innerText();
     }
+
+    /**
+     * Returns the name of every board on the current page of the list,
+     * exactly as displayed and in table order.
+     *
+     * Unlike {@link BoardTableComp.isRowForTableWithNameExists}, which is a
+     * case-insensitive substring match, this lets a caller tell
+     * 'Sprint Board' from 'sprint board'. The list is paginated (20 per page,
+     * sorted by name) — call {@link showAllOnOnePage} first to see them all.
+     *
+     * @aliases listBoardNames, getAllBoardNames, boardNames, getBoardTitles
+     * @prerequisites The boards page is open
+     * @observable-state None — read-only query
+     * @returns The displayed board names.
+     */
+    async getBoardNames(): Promise<string[]> {
+        await this.boardTable().waitForLoad();
+        return await this.boardNamesTds.allInnerTexts();
+    }
+
+    /**
+     * Reloads the list with a page size of 100, so a board is not missed for
+     * being on a later page.
+     *
+     * The boards table is paginated (`paginated?` is true in
+     * `modules/boards/app/components/boards/table_component.rb:46-48`), sorted
+     * by name, at the instance's default of 20 per page; 100 is the other
+     * allowed size (`per_page_options` "20, 100").
+     *
+     * @aliases disablePagination, showAllBoards, expandPageSize
+     * @prerequisites The boards page is open
+     * @observable-state The list shows up to 100 boards on one page
+     * @returns The reloaded `BoardsPage`.
+     */
+    async showAllOnOnePage(): Promise<BoardsPage> {
+        const url = new URL(this.page.url());
+        url.searchParams.set('per_page', '100');
+        await this.page.goto(url.toString());
+        return await new BoardsPage(this.page).waitForLoad();
+    }
 }
