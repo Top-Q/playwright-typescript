@@ -59,6 +59,7 @@ Prohibited, without exception:
 - Weakening, loosening, or deleting an assertion so it stops failing.
 - `test.skip` / `test.fixme` slipped in quietly. If a test genuinely must be disabled, say so loudly in your report and in `heal-report.md`.
 - Changing what the test verifies so that it no longer covers the spec step in `plan.md`.
+- Removing or editing a `@TC-…` tag or `built-from` annotation. They record which approved text the test was built from; a hash changed without checking the test against the new text claims a review that never happened.
 
 If your diagnosis is that **the application is wrong** — the test correctly encodes the spec and the app does not honour it — then stop. Do not bend the test. Record it in `heal-report.md` as a candidate bug with the evidence, and report it. A found bug is a successful outcome for this pipeline, not a failure.
 

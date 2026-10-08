@@ -69,6 +69,8 @@ Steps appear in the HTML report and traces, making failures easy to locate.
    ```typescript
    test('create task', { tag: ['@ui', '@task', '@regression'] }, async ({ ... }) => {
    ```
+   A test built from a vault test case also carries its `@TC-…` tag and a `built-from` annotation —
+   see *Linking the test to the vault* in [write-web-test](../../write-web-test/SKILL.md).
 7. **Test isolation** — each test is self-contained, creates its own data, cleans up if needed
 
 ## Test Grouping

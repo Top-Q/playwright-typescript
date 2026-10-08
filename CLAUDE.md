@@ -174,7 +174,10 @@ consistent, and `vault:lint` (part of `gate:all`) fails when one slips: links po
 case → requirement → rule), related text is embedded rather than copied, and prose never restates a
 property. A test covering a test case carries its `@TC-…` tag and a `built-from` annotation naming
 the approved text it was built from; `vault:lint -- --fix` generates a note per test in
-`Automated Tests/` from them, and lists a test as stale when its test case changes.
+`Automated Tests/` from them, and lists a test as stale when its test case changes. A stale test is
+cleared by reviewing it against the new text, changing it if needed, and only then updating the
+hash in its annotation — never the hash alone. `Automated Tests/` and `Dashboard.md` are generated
+by that same `--fix`; never edit them by hand.
 
 Test cases are **drafted by Claude and approved by a person**: each has an `approved` checkbox,
 and a `rejected` one for a test case sent back. `vault:lint -- --fix` records which text was

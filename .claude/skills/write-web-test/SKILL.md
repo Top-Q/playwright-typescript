@@ -34,6 +34,30 @@ test('description', { tag: ['@ui', '@task', '@regression'] }, async ({ readyOver
 - One `test.step()` per Gherkin sentence — use the sentence exactly (or a very close, readable phrasing) as the step description
 - Use the `tag` field to categorize: `@ui`, `@api`, `@regression`, `@task`, `@board`, etc.
 
+## Linking the test to the vault
+
+When the test is built from a test case in the requirement vault (`specs/product/vault/Test Cases/`):
+
+1. **Check it is approved.** Its `approved` property must be `true`. A draft or rejected test case
+   has text no person agreed to; report it and stop. Never tick `approved` yourself (rule 30). If
+   the requirement has no test cases yet, the **draft-test-cases** skill writes them for a person
+   to approve.
+2. **Tag and annotate it.** One `@TC-…` tag per test case the test covers, and one `built-from`
+   annotation per test case, naming that test case's `approved_hash`:
+
+   ```typescript
+   test('filter members by role', {
+       tag: ['@ui', '@members', '@TC-MEM-009-01'],
+       annotation: { type: 'built-from', description: 'TC-MEM-009-01@9aa64be3b5821796' },
+   }, async ({ readyOverviewPage }) => { ... });
+   ```
+
+3. **Generate its note**: `npm.cmd run vault:lint -- --fix` writes it in `Automated Tests/` and
+   refreshes `Dashboard.md`. Both are generated; never edit them by hand.
+
+A test that covers no test case needs neither, and shows up in the vault as "not traced".
+`tests/ui/saucedemo` is outside the vault: never tag it (rule 31).
+
 ## Variable Typing
 
 Always define variables with the specific page object type. Never use `any` or `unknown`.
@@ -123,7 +147,7 @@ For investigating an entire module (multiple pages, navigation flows), spawn the
 
 ## Step-by-Step Workflow
 
-1. **Understand the requirement** — read the business requirement carefully
+1. **Understand the requirement** — read the business requirement carefully; if it is a vault test case, check it is approved (see *Linking the test to the vault*)
 2. **Check what POs exist** — look in `src/po/openproject/` and `internals.ts` for relevant page objects
 3. **Decision gate:**
    - **Unknown module** (no PO directory exists) → spawn **`module-investigator`**, then scaffold POs via architecture skill
@@ -134,3 +158,4 @@ For investigating an entire module (multiple pages, navigation flows), spawn the
 6. **Run the test** — execute with `npx playwright test <file>` and verify it passes
 7. **Debug failures** — if the test fails, diagnose and fix (up to 3 iterations)
 8. **Lint all touched files** — run `npx eslint <file>` on every generated or modified file and fix all errors
+9. **Update the vault** — `npm.cmd run vault:lint -- --fix` if the test covers a test case, then `npm.cmd run vault:lint` must pass

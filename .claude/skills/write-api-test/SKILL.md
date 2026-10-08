@@ -57,6 +57,14 @@ test('should create a work package via API', { tag: ['@api', '@task'] }, async (
 - Group related tests with `test.describe()`
 - Use specific types for response bodies, not generic `Record<string, unknown>`
 
+## Linking the test to the vault
+
+`tests/api` is tracked in the requirement vault like `tests/ui`. When the test is built from a vault
+test case, follow *Linking the test to the vault* in the
+[write-web-test skill](../write-web-test/SKILL.md): the test case must be `approved` (never tick it
+yourself, rule 30), and the test carries a `@TC-…` tag plus a `built-from` annotation naming the
+test case's `approved_hash`. Then run `npm.cmd run vault:lint -- --fix`.
+
 ## Environment
 
 Configuration is loaded from `.env`:
