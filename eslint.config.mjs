@@ -14,6 +14,9 @@ export default [
       'coverage/**',
       'playwright-report/**',
       'test-results/**',
+      // Obsidian's settings and community plugins (bundled, minified JS) for
+      // the requirement vault. Not project code.
+      'specs/product/vault/.obsidian/**',
       // Gitignored /gen-test run artifacts. Nothing in here is project code, and
       // anything .ts-shaped that lands in a run directory is outside tsconfig's
       // project service — which fails gate:lint with a parsing error rather than

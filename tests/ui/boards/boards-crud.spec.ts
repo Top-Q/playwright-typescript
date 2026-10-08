@@ -40,7 +40,10 @@ test('Create basic board with a list', { tag: ['@ui', '@board', '@regression'] }
   });
 });
 
-test('Create and delete a board', { tag: ['@ui', '@board', '@regression'] }, async ({ readyOverviewPage }) => {
+test('Create and delete a board', {
+  tag: ['@ui', '@board', '@regression', '@TC-BRD-007-01'],
+  annotation: { type: 'built-from', description: 'TC-BRD-007-01@f1fd4c0fe4864f6b' },
+}, async ({ readyOverviewPage }) => {
 
   let boardsPage: BoardsPage;
   await test.step('Given the user is authenticated as "default"', async () => {

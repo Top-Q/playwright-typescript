@@ -4,7 +4,10 @@ import { expect } from '@playwright/test';
 
 test(
     'Create a one-time meeting and verify it appears on the meetings list',
-    { tag: ['@ui', '@meetings', '@regression'] },
+    {
+        tag: ['@ui', '@meetings', '@regression', '@TC-MTG-001-01'],
+        annotation: { type: 'built-from', description: 'TC-MTG-001-01@44f3eb844eaae014' },
+    },
     async ({ readyOverviewPage }) => {
         const meetingTitle = `Test Meeting ${Date.now()}`;
 
@@ -33,7 +36,10 @@ test(
 
 test(
     'Add an agenda item to a meeting',
-    { tag: ['@ui', '@meetings', '@regression'] },
+    {
+        tag: ['@ui', '@meetings', '@regression', '@TC-MTG-002-01'],
+        annotation: { type: 'built-from', description: 'TC-MTG-002-01@8b6be67f88c94b10' },
+    },
     async ({ readyOverviewPage }) => {
         const meetingTitle = `Agenda Test ${Date.now()}`;
         const agendaItemTitle = 'Discuss project timeline';
@@ -62,7 +68,10 @@ test(
 
 test(
     'Delete a meeting from the meeting show page',
-    { tag: ['@ui', '@meetings', '@regression'] },
+    {
+        tag: ['@ui', '@meetings', '@regression', '@TC-MTG-003-01'],
+        annotation: { type: 'built-from', description: 'TC-MTG-003-01@6a1e823c3c6e1982' },
+    },
     async ({ readyOverviewPage, page }) => {
         const meetingTitle = `Delete Me ${Date.now()}`;
 

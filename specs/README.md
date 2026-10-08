@@ -25,6 +25,11 @@ business_rules: ['[[BR-WP-01]]']
 tags: [kind/requirement, module/work-packages]
 ```
 
+A requirement found in the app rather than the SRS has no `source`; it carries an `## Evidence`
+section instead, citing the source code or the passing test that observes it (`vault-lint` rule 11).
+The Meetings requirements and FR-WP-016 are written that way, from the tests, because this is a
+demo and its tests, not the reverse-engineered SRS, are the record of what the app does.
+
 ```yaml
 # Test Cases/TC-WP-004-03.md — properties, then ## Preconditions, ## Steps, ## Expected result, ## Automated by
 id: TC-WP-004-03
@@ -205,11 +210,12 @@ truth** — three things worth knowing before you trust them:
 
 Real holes in coverage, recorded so they are not rediscovered. Nobody is committed to filling them.
 
-- **Most tests predate the `@TC-…` tags.** Five of the 21 tests are tagged — the ones earlier
-  `/gen-test` runs recorded against a test case. `boards-crud`, `members-crud`, `workpackage-crud`
-  and `meetings` cover requirements too, but which test cases each covers was never recorded; tagging
-  one means reading it against the vault, then adding the tag and a `built-from` annotation.
-  **Needs attention → Tests covering no test case** is the worklist.
+- **Five tests are not tagged.** 16 of the 21 tests cover a test case. Four check less than the
+  approved test case nearest them: removing, filtering and searching members (no check that
+  other members are hidden, or that a removed member loses access), and `Create basic board with a
+list`, which may rename the board's default list rather than add one. Each needs a stronger
+  assertion, run against the app, before it is tagged. `Delete all boards` is a cleanup utility,
+  not a requirement. **Needs attention → Tests covering no test case** is the worklist.
 - **No test case covers BR-WP-04's time-entry clause.** Deleting Work Packages with logged time asks
   whether to delete those entries, keep them without a Work Package, or reassign them; nothing tests
   any of the three.

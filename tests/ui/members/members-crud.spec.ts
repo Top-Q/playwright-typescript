@@ -4,7 +4,10 @@ import { expect } from '@playwright/test';
 
 test(
     'Invite a new member via email and verify they appear in the members list',
-    { tag: ['@ui', '@members', '@regression'] },
+    {
+        tag: ['@ui', '@members', '@regression', '@TC-MEM-001-02'],
+        annotation: { type: 'built-from', description: 'TC-MEM-001-02@85e65386d8a249d5' },
+    },
     async ({ readyOverviewPage }) => {
         const memberEmail = `testmember-${Date.now()}@example.com`;
 
@@ -44,7 +47,10 @@ test(
 
 test(
     'Invite a member with "Reader" role and verify the assigned role',
-    { tag: ['@ui', '@members', '@regression'] },
+    {
+        tag: ['@ui', '@members', '@regression', '@TC-MEM-002-03'],
+        annotation: { type: 'built-from', description: 'TC-MEM-002-03@82c04af9faf420b0' },
+    },
     async ({ readyOverviewPage }) => {
         const memberEmail = `reader-${Date.now()}@example.com`;
 
@@ -79,7 +85,10 @@ test(
 
 test(
     'Change a member role from Member to Project admin',
-    { tag: ['@ui', '@members', '@regression'] },
+    {
+        tag: ['@ui', '@members', '@regression', '@TC-MEM-004-01'],
+        annotation: { type: 'built-from', description: 'TC-MEM-004-01@8b0d826d28c89af2' },
+    },
     async ({ readyOverviewPage }) => {
         const memberEmail = `rolechange-${Date.now()}@example.com`;
 

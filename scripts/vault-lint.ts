@@ -44,6 +44,9 @@
  *      stale and --fix unticks it. --fix records an approval a person gave and
  *      revokes a stale one — it never approves anything itself. A rejected test
  *      case says why under `## Notes`.
+ *  11. A requirement comes from somewhere: an SRS section in `source`, or,
+ *      for one found in the app rather than the SRS, an `## Evidence` section
+ *      citing the source code or a test that observes it (rule 29).
  *
  * `_templates/` holds the templates Obsidian creates notes from; it is not
  * linted, and nothing else reads it.
@@ -108,8 +111,11 @@ const RULES = ['business-rule', 'rbac-rule'];
 /** An empty list of kinds means the property is plain data, not a link. */
 const SCHEMAS: Record<string, Schema> = {
     requirement: {
-        required: { id: [], source: SRS },
+        // `source` is optional: a requirement found in the app rather than the
+        // SRS cites its `## Evidence` instead (rule 11).
+        required: { id: [] },
         optional: {
+            source: SRS,
             stories: ['user-story'],
             business_rules: RULES,
             permission_rows: ['permission'],
@@ -424,6 +430,15 @@ function lint(notes: Map<string, Note>, bases: Set<string>, note: Note): string[
         if (isTicked(note, 'rejected') && !note.sections.has('Notes')) {
             problems.push(where('is rejected but has no "## Notes" section saying why'));
         }
+    }
+
+    // Rule 11: a requirement says where it comes from.
+    if (
+        note.kind === 'requirement' &&
+        note.properties.source === undefined &&
+        !note.sections.has('Evidence')
+    ) {
+        problems.push(where('has neither a source nor an "## Evidence" section'));
     }
 
     // Rule 7: the body's sections, which is where half a test case lives.

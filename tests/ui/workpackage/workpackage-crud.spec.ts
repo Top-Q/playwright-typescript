@@ -10,7 +10,10 @@ import { expect } from '@playwright/test';
 test.describe('Work Packages CRUD', () => {
   test(
     'Create work package (task)',
-    { tag: ['@ui', '@task', '@regression'] },
+    {
+      tag: ['@ui', '@task', '@regression', '@TC-WP-001-04'],
+      annotation: { type: 'built-from', description: 'TC-WP-001-04@7de9aad457e852bd' },
+    },
     async ({ readyOverviewPage }) => {
       const workPackageType = 'task';
       const name = `Auto WP ${crypto.randomUUID()}`;
@@ -77,7 +80,10 @@ test.describe('Work Packages CRUD', () => {
 
   test(
     'Delete work package (task)',
-    { tag: ['@ui', '@task', '@regression'] },
+    {
+      tag: ['@ui', '@task', '@regression', '@TC-WP-016-01'],
+      annotation: { type: 'built-from', description: 'TC-WP-016-01@390d2fdbc2aef256' },
+    },
     async ({ readyOverviewPage }) => {
       const workPackageType = 'task';
       const name = `Auto WP ${crypto.randomUUID()}`;
@@ -120,7 +126,10 @@ test.describe('Work Packages CRUD', () => {
 
   test(
     'Create work package (phase)',
-    { tag: ['@ui', '@phase', '@regression'] },
+    {
+      tag: ['@ui', '@phase', '@regression', '@TC-WP-001-05'],
+      annotation: { type: 'built-from', description: 'TC-WP-001-05@ccdb8c468ea67f57' },
+    },
     async ({ readyOverviewPage }) => {
       const workPackageType = 'phase';
       const name = `Auto WP ${crypto.randomUUID()}`;
@@ -169,7 +178,10 @@ test.describe('Work Packages CRUD', () => {
 
   test(
     'Delete work package (phase)',
-    { tag: ['@ui', '@phase', '@regression'] },
+    {
+      tag: ['@ui', '@phase', '@regression', '@TC-WP-016-02'],
+      annotation: { type: 'built-from', description: 'TC-WP-016-02@1ac5f26cbb9c657c' },
+    },
     async ({ readyOverviewPage }) => {
       const workPackageType = 'phase';
       const name = `Auto WP ${crypto.randomUUID()}`;
