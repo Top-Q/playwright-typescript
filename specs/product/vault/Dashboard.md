@@ -45,8 +45,8 @@ All 137 test cases are ✅ Approved.
 %%{init: {"themeVariables":{"pie1":"#3987e5","pie2":"#d95926","pie3":"#898781","pie4":"#199e70","pieOpacity":"1","pieStrokeColor":"#898781","pieStrokeWidth":"1px","pieOuterStrokeColor":"#898781","pieOuterStrokeWidth":"1px"}}}%%
 pie showData title By type
     "positive" : 81
-    "negative" : 25
-    "other (6 types)" : 17
+    "negative" : 24
+    "other (6 types)" : 18
     "permission" : 14
 ```
 
